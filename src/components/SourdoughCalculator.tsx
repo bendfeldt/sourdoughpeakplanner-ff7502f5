@@ -6,18 +6,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb } from 'lucide-react';
+import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2 } from 'lucide-react';
 import { 
   FlourType, 
   FLOUR_DATA, 
   calculateFeedingSchedule, 
   formatDateTime,
-  type FeedingRatio 
+  generateId,
+  type FeedingRatio,
+  type FlourBlendItem 
 } from '@/lib/sourdough-calculator';
 
 export function SourdoughCalculator() {
-  const [flourType, setFlourType] = useState<FlourType>('bread-flour');
-  const [proteinContent, setProteinContent] = useState(FLOUR_DATA['bread-flour'].baseProtein);
+  const [flourBlend, setFlourBlend] = useState<FlourBlendItem[]>([
+    { id: generateId(), flourType: 'bread-flour', percentage: 100, proteinContent: FLOUR_DATA['bread-flour'].baseProtein }
+  ]);
   const [feedingRatio, setFeedingRatio] = useState<FeedingRatio>({ starter: 1, flour: 1, water: 1 });
   const [temperature, setTemperature] = useState(24);
   const [targetPeakStart, setTargetPeakStart] = useState(() => {
@@ -34,20 +37,43 @@ export function SourdoughCalculator() {
   });
   const [showResults, setShowResults] = useState(false);
 
+  const totalPercentage = useMemo(() => {
+    return flourBlend.reduce((sum, item) => sum + item.percentage, 0);
+  }, [flourBlend]);
+
   const result = useMemo(() => {
     return calculateFeedingSchedule({
-      flourType,
-      proteinContent,
+      flourBlend,
       feedingRatio,
       temperature,
       targetPeakStart,
       targetPeakEnd,
     });
-  }, [flourType, proteinContent, feedingRatio, temperature, targetPeakStart, targetPeakEnd]);
+  }, [flourBlend, feedingRatio, temperature, targetPeakStart, targetPeakEnd]);
 
-  const handleFlourChange = (type: FlourType) => {
-    setFlourType(type);
-    setProteinContent(FLOUR_DATA[type].baseProtein);
+  const addFlour = () => {
+    setFlourBlend([
+      ...flourBlend,
+      { id: generateId(), flourType: 'all-purpose', percentage: 0, proteinContent: FLOUR_DATA['all-purpose'].baseProtein }
+    ]);
+  };
+
+  const removeFlour = (id: string) => {
+    if (flourBlend.length > 1) {
+      setFlourBlend(flourBlend.filter(f => f.id !== id));
+    }
+  };
+
+  const updateFlour = (id: string, updates: Partial<FlourBlendItem>) => {
+    setFlourBlend(flourBlend.map(f => {
+      if (f.id !== id) return f;
+      const updated = { ...f, ...updates };
+      // If flour type changed, update protein to default for that flour
+      if (updates.flourType && !updates.proteinContent) {
+        updated.proteinContent = FLOUR_DATA[updates.flourType].baseProtein;
+      }
+      return updated;
+    }));
   };
 
   const formatTimeForInput = (date: Date) => {
@@ -79,43 +105,109 @@ export function SourdoughCalculator() {
       <div className="grid md:grid-cols-2 gap-6">
         {/* Input Section */}
         <div className="space-y-6">
-          {/* Flour Type */}
+          {/* Flour Blend */}
           <Card className="border-border/50 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg font-display">
-                <Wheat className="h-5 w-5 text-primary" />
-                Flour Type
-              </CardTitle>
-              <CardDescription>{FLOUR_DATA[flourType].description}</CardDescription>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg font-display">
+                  <Wheat className="h-5 w-5 text-primary" />
+                  Flour Blend
+                </CardTitle>
+                <Badge 
+                  variant={totalPercentage === 100 ? "default" : "destructive"}
+                  className="text-xs"
+                >
+                  {totalPercentage}%
+                </Badge>
+              </div>
+              <CardDescription>Add multiple flours with their percentages and protein levels</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Select value={flourType} onValueChange={(v) => handleFlourChange(v as FlourType)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(FLOUR_DATA).map(([key, info]) => (
-                    <SelectItem key={key} value={key}>
-                      {info.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {flourBlend.map((flour, index) => (
+                <div key={flour.id} className="p-4 rounded-lg bg-muted/30 border border-border/30 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <Select 
+                      value={flour.flourType} 
+                      onValueChange={(v) => updateFlour(flour.id, { flourType: v as FlourType })}
+                    >
+                      <SelectTrigger className="flex-1">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(FLOUR_DATA).map(([key, info]) => (
+                          <SelectItem key={key} value={key}>
+                            {info.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {flourBlend.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeFlour(flour.id)}
+                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <p className="text-xs text-muted-foreground">
+                    {FLOUR_DATA[flour.flourType].description}
+                  </p>
 
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <Label>Protein Content</Label>
-                  <span className="text-sm font-medium text-primary">{proteinContent.toFixed(1)}%</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Percentage (%)</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        value={flour.percentage}
+                        onChange={(e) => updateFlour(flour.id, { percentage: Number(e.target.value) || 0 })}
+                        className="text-center"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">Protein (%)</Label>
+                      <Input
+                        type="number"
+                        min={6}
+                        max={18}
+                        step={0.1}
+                        value={flour.proteinContent}
+                        onChange={(e) => updateFlour(flour.id, { proteinContent: Number(e.target.value) || 10 })}
+                        className="text-center"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <Slider
-                  value={[proteinContent]}
-                  onValueChange={([v]) => setProteinContent(v)}
-                  min={8}
-                  max={16}
-                  step={0.5}
-                  className="py-2"
-                />
-              </div>
+              ))}
+
+              <Button
+                variant="outline"
+                onClick={addFlour}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Flour
+              </Button>
+
+              {totalPercentage !== 100 && (
+                <p className="text-xs text-destructive">
+                  Flour percentages should total 100% (currently {totalPercentage}%)
+                </p>
+              )}
+
+              {flourBlend.length > 1 && (
+                <div className="pt-2 border-t border-border/30">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Blended protein</span>
+                    <span className="font-medium text-primary">{result.blendedProtein.toFixed(1)}%</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -126,7 +218,7 @@ export function SourdoughCalculator() {
                 <Scale className="h-5 w-5 text-primary" />
                 Feeding Ratio
               </CardTitle>
-              <CardDescription>Starter : Flour : Water</CardDescription>
+              <CardDescription>Starter : Flour : Water (in grams)</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-3">
@@ -183,7 +275,7 @@ export function SourdoughCalculator() {
             <CardContent className="space-y-2">
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Room temperature</span>
-                <span className="text-sm font-medium text-primary">{temperature}°C / {Math.round(temperature * 9/5 + 32)}°F</span>
+                <span className="text-sm font-medium text-primary">{temperature}°C</span>
               </div>
               <Slider
                 value={[temperature]}
@@ -231,6 +323,7 @@ export function SourdoughCalculator() {
             onClick={() => setShowResults(true)} 
             className="w-full h-12 text-lg font-medium"
             size="lg"
+            disabled={totalPercentage !== 100}
           >
             Calculate Feeding Schedule
           </Button>
@@ -279,12 +372,18 @@ export function SourdoughCalculator() {
                       <span className="text-muted-foreground">Estimated peak</span>
                       <span className="font-medium">{formatDateTime(result.estimatedPeakTime)}</span>
                     </div>
-                    <div className="flex justify-between items-center py-2">
+                    <div className="flex justify-between items-center py-2 border-b border-border/30">
                       <span className="text-muted-foreground">Peak window</span>
                       <span className="font-medium text-sm">
                         {formatDateTime(result.peakWindowStart)} — {formatDateTime(result.peakWindowEnd)}
                       </span>
                     </div>
+                    {flourBlend.length > 1 && (
+                      <div className="flex justify-between items-center py-2">
+                        <span className="text-muted-foreground">Blended protein</span>
+                        <span className="font-medium">{result.blendedProtein.toFixed(1)}%</span>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

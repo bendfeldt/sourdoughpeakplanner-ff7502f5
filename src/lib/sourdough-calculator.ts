@@ -45,6 +45,13 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   },
 };
 
+export interface FlourBlendItem {
+  id: string;
+  flourType: FlourType;
+  percentage: number; // percentage of total flour (0-100)
+  proteinContent: number;
+}
+
 export interface FeedingRatio {
   starter: number;
   flour: number;
@@ -52,8 +59,7 @@ export interface FeedingRatio {
 }
 
 export interface CalculationInput {
-  flourType: FlourType;
-  proteinContent: number;
+  flourBlend: FlourBlendItem[];
   feedingRatio: FeedingRatio;
   temperature: number; // Celsius
   targetPeakStart: Date;
@@ -71,14 +77,50 @@ export interface CalculationResult {
   starterAmount: number;
   flourAmount: number;
   waterAmount: number;
+  blendedProtein: number;
+  blendedFermentationModifier: number;
 }
 
-// Base fermentation time at 24°C (75°F) for 1:1:1 ratio
+// Base fermentation time at 24°C for 1:1:1 ratio
 const BASE_FERMENTATION_HOURS = 6;
 
+function calculateBlendedValues(flourBlend: FlourBlendItem[]): { 
+  avgProtein: number; 
+  avgFermentationModifier: number; 
+  avgBaseProtein: number;
+} {
+  if (flourBlend.length === 0) {
+    return { avgProtein: 12, avgFermentationModifier: 1, avgBaseProtein: 12 };
+  }
+
+  let totalPercentage = 0;
+  let weightedProtein = 0;
+  let weightedFermentationModifier = 0;
+  let weightedBaseProtein = 0;
+
+  for (const item of flourBlend) {
+    const flourInfo = FLOUR_DATA[item.flourType];
+    const pct = item.percentage;
+    totalPercentage += pct;
+    weightedProtein += item.proteinContent * pct;
+    weightedFermentationModifier += flourInfo.fermentationModifier * pct;
+    weightedBaseProtein += flourInfo.baseProtein * pct;
+  }
+
+  if (totalPercentage === 0) {
+    return { avgProtein: 12, avgFermentationModifier: 1, avgBaseProtein: 12 };
+  }
+
+  return {
+    avgProtein: weightedProtein / totalPercentage,
+    avgFermentationModifier: weightedFermentationModifier / totalPercentage,
+    avgBaseProtein: weightedBaseProtein / totalPercentage,
+  };
+}
+
 function calculateFermentationTime(input: CalculationInput): number {
-  const { flourType, proteinContent, feedingRatio, temperature } = input;
-  const flourInfo = FLOUR_DATA[flourType];
+  const { flourBlend, feedingRatio, temperature } = input;
+  const { avgProtein, avgFermentationModifier, avgBaseProtein } = calculateBlendedValues(flourBlend);
   
   // Temperature factor (Q10 rule: fermentation doubles every 10°C increase)
   // Reference temperature: 24°C
@@ -89,11 +131,11 @@ function calculateFermentationTime(input: CalculationInput): number {
   const ratioFactor = (feedingRatio.flour / feedingRatio.starter);
   
   // Protein factor - higher protein slightly slows fermentation
-  const proteinFactor = 1 + (proteinContent - flourInfo.baseProtein) * 0.03;
+  const proteinFactor = 1 + (avgProtein - avgBaseProtein) * 0.03;
   
   // Calculate total fermentation time
   const fermentationHours = BASE_FERMENTATION_HOURS * 
-    flourInfo.fermentationModifier * 
+    avgFermentationModifier * 
     temperatureFactor * 
     ratioFactor * 
     proteinFactor;
@@ -103,6 +145,7 @@ function calculateFermentationTime(input: CalculationInput): number {
 
 export function calculateFeedingSchedule(input: CalculationInput): CalculationResult {
   const fermentationHours = calculateFermentationTime(input);
+  const { avgProtein, avgFermentationModifier } = calculateBlendedValues(input.flourBlend);
   
   // Calculate when to feed to hit the target window
   const targetMidpoint = new Date(
@@ -136,12 +179,12 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
   }
   
   if (input.temperature < 20) {
-    suggestions.push('Cooler temperatures will result in slower but more flavorful fermentation');
+    suggestions.push('Cooler temperatures will result in slower but more flavourful fermentation');
   } else if (input.temperature > 28) {
-    suggestions.push('Warmer temperatures may lead to faster but less complex flavor development');
+    suggestions.push('Warmer temperatures may lead to faster but less complex flavour development');
   }
   
-  // Calculate actual amounts (assuming 100g total for simplicity)
+  // Calculate actual amounts in grams (100g total)
   const totalParts = input.feedingRatio.starter + input.feedingRatio.flour + input.feedingRatio.water;
   const multiplier = 100 / totalParts;
   
@@ -156,14 +199,16 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
     starterAmount: Math.round(input.feedingRatio.starter * multiplier),
     flourAmount: Math.round(input.feedingRatio.flour * multiplier),
     waterAmount: Math.round(input.feedingRatio.water * multiplier),
+    blendedProtein: avgProtein,
+    blendedFermentationModifier: avgFermentationModifier,
   };
 }
 
 export function formatTime(date: Date): string {
-  return date.toLocaleTimeString('en-US', { 
-    hour: 'numeric', 
+  return date.toLocaleTimeString('en-GB', { 
+    hour: '2-digit', 
     minute: '2-digit',
-    hour12: true 
+    hour12: false 
   });
 }
 
@@ -180,12 +225,16 @@ export function formatDateTime(date: Date): string {
   if (isToday) return `Today at ${timeStr}`;
   if (isTomorrow) return `Tomorrow at ${timeStr}`;
   
-  return date.toLocaleDateString('en-US', { 
+  return date.toLocaleDateString('en-GB', { 
     weekday: 'short',
     month: 'short', 
     day: 'numeric',
-    hour: 'numeric',
+    hour: '2-digit',
     minute: '2-digit',
-    hour12: true
+    hour12: false
   });
+}
+
+export function generateId(): string {
+  return Math.random().toString(36).substring(2, 9);
 }
