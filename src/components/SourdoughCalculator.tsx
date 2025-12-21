@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Globe, Cookie, Zap, Beaker } from 'lucide-react';
 import { 
   FlourType, 
   FLOUR_DATA, 
@@ -16,25 +17,33 @@ import {
   type FeedingRatio,
   type FlourBlendItem 
 } from '@/lib/sourdough-calculator';
+import { useI18n, Language } from '@/lib/i18n';
 
 export function SourdoughCalculator() {
+  const { t, language, setLanguage } = useI18n();
+  
   const [flourBlend, setFlourBlend] = useState<FlourBlendItem[]>([
     { id: generateId(), flourType: 'bread-flour', percentage: 100, proteinContent: FLOUR_DATA['bread-flour'].baseProtein }
   ]);
   const [feedingRatio, setFeedingRatio] = useState<FeedingRatio>({ starter: 1, flour: 1, water: 1 });
   const [temperature, setTemperature] = useState(24);
-  const [targetPeakStart, setTargetPeakStart] = useState(() => {
+  const [useTargetWindow, setUseTargetWindow] = useState(false);
+  const [targetPeakStart, setTargetPeakStart] = useState<Date | null>(() => {
     const d = new Date();
     d.setHours(d.getHours() + 6);
     d.setMinutes(0);
     return d;
   });
-  const [targetPeakEnd, setTargetPeakEnd] = useState(() => {
+  const [targetPeakEnd, setTargetPeakEnd] = useState<Date | null>(() => {
     const d = new Date();
     d.setHours(d.getHours() + 10);
     d.setMinutes(0);
     return d;
   });
+  const [oldSourdoughAmount, setOldSourdoughAmount] = useState(50);
+  const [isSweetMode, setIsSweetMode] = useState(false);
+  const [sugarPercentage, setSugarPercentage] = useState(10);
+  const [isAlwaysOn, setIsAlwaysOn] = useState(false);
   const [showResults, setShowResults] = useState(false);
 
   const totalPercentage = useMemo(() => {
@@ -48,8 +57,13 @@ export function SourdoughCalculator() {
       temperature,
       targetPeakStart,
       targetPeakEnd,
+      useTargetWindow,
+      oldSourdoughAmount,
+      isSweetMode,
+      sugarPercentage,
+      isAlwaysOn,
     });
-  }, [flourBlend, feedingRatio, temperature, targetPeakStart, targetPeakEnd]);
+  }, [flourBlend, feedingRatio, temperature, targetPeakStart, targetPeakEnd, useTargetWindow, oldSourdoughAmount, isSweetMode, sugarPercentage, isAlwaysOn]);
 
   const addFlour = () => {
     setFlourBlend([
@@ -68,7 +82,6 @@ export function SourdoughCalculator() {
     setFlourBlend(flourBlend.map(f => {
       if (f.id !== id) return f;
       const updated = { ...f, ...updates };
-      // If flour type changed, update protein to default for that flour
       if (updates.flourType && !updates.proteinContent) {
         updated.proteinContent = FLOUR_DATA[updates.flourType].baseProtein;
       }
@@ -76,11 +89,16 @@ export function SourdoughCalculator() {
     }));
   };
 
-  const formatTimeForInput = (date: Date) => {
+  const formatTimeForInput = (date: Date | null) => {
+    if (!date) return '';
     return date.toTimeString().slice(0, 5);
   };
 
-  const handleTimeChange = (timeStr: string, setter: (d: Date) => void) => {
+  const handleTimeChange = (timeStr: string, setter: (d: Date | null) => void) => {
+    if (!timeStr) {
+      setter(null);
+      return;
+    }
     const [hours, minutes] = timeStr.split(':').map(Number);
     const newDate = new Date();
     newDate.setHours(hours, minutes, 0, 0);
@@ -90,15 +108,39 @@ export function SourdoughCalculator() {
     setter(newDate);
   };
 
+  const getFlourName = (flourType: FlourType): string => {
+    return t(flourType as any) || FLOUR_DATA[flourType].name;
+  };
+
+  const getFlourDescription = (flourType: FlourType): string => {
+    return t(`${flourType}-desc` as any) || FLOUR_DATA[flourType].description;
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
+      {/* Language Selector */}
+      <div className="flex justify-end">
+        <div className="flex items-center gap-2">
+          <Globe className="h-4 w-4 text-muted-foreground" />
+          <Select value={language} onValueChange={(v) => setLanguage(v as Language)}>
+            <SelectTrigger className="w-32">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="en">{t('english')}</SelectItem>
+              <SelectItem value="da">{t('danish')}</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
       {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground tracking-tight">
-          Sourdough Peak Calculator
+          {t('title')}
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-          Calculate the perfect feeding time for your sourdough starter to peak exactly when you need it.
+          {t('subtitle')}
         </p>
       </div>
 
@@ -111,7 +153,7 @@ export function SourdoughCalculator() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-lg font-display">
                   <Wheat className="h-5 w-5 text-primary" />
-                  Flour Blend
+                  {t('flourBlend')}
                 </CardTitle>
                 <Badge 
                   variant={totalPercentage === 100 ? "default" : "destructive"}
@@ -120,10 +162,10 @@ export function SourdoughCalculator() {
                   {totalPercentage}%
                 </Badge>
               </div>
-              <CardDescription>Add multiple flours with their percentages and protein levels</CardDescription>
+              <CardDescription>{t('flourBlendDesc')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {flourBlend.map((flour, index) => (
+              {flourBlend.map((flour) => (
                 <div key={flour.id} className="p-4 rounded-lg bg-muted/30 border border-border/30 space-y-3">
                   <div className="flex items-center justify-between gap-2">
                     <Select 
@@ -134,9 +176,9 @@ export function SourdoughCalculator() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {Object.entries(FLOUR_DATA).map(([key, info]) => (
+                        {Object.keys(FLOUR_DATA).map((key) => (
                           <SelectItem key={key} value={key}>
-                            {info.name}
+                            {getFlourName(key as FlourType)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -154,23 +196,25 @@ export function SourdoughCalculator() {
                   </div>
                   
                   <p className="text-xs text-muted-foreground">
-                    {FLOUR_DATA[flour.flourType].description}
+                    {getFlourDescription(flour.flourType)}
                   </p>
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Percentage (%)</Label>
-                      <Input
-                        type="number"
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <Label className="text-xs text-muted-foreground">{t('percentage')}</Label>
+                        <span className="text-xs font-medium">{flour.percentage}%</span>
+                      </div>
+                      <Slider
+                        value={[flour.percentage]}
+                        onValueChange={([v]) => updateFlour(flour.id, { percentage: v })}
                         min={0}
                         max={100}
-                        value={flour.percentage}
-                        onChange={(e) => updateFlour(flour.id, { percentage: Number(e.target.value) || 0 })}
-                        className="text-center"
+                        step={1}
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-xs text-muted-foreground">Protein (%)</Label>
+                      <Label className="text-xs text-muted-foreground">{t('protein')} (%)</Label>
                       <Input
                         type="number"
                         min={6}
@@ -191,23 +235,48 @@ export function SourdoughCalculator() {
                 className="w-full"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Add Flour
+                {t('addFlour')}
               </Button>
 
               {totalPercentage !== 100 && (
                 <p className="text-xs text-destructive">
-                  Flour percentages should total 100% (currently {totalPercentage}%)
+                  {t('flourPercentageWarning')} ({totalPercentage}%)
                 </p>
               )}
 
               {flourBlend.length > 1 && (
                 <div className="pt-2 border-t border-border/30">
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">Blended protein</span>
+                    <span className="text-muted-foreground">{t('blendedProtein')}</span>
                     <span className="font-medium text-primary">{result.blendedProtein.toFixed(1)}%</span>
                   </div>
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          {/* Old Sourdough Amount */}
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg font-display">
+                <Beaker className="h-5 w-5 text-primary" />
+                {t('oldSourdough')}
+              </CardTitle>
+              <CardDescription>{t('oldSourdoughDesc')}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <div className="flex justify-between">
+                <span className="text-sm text-muted-foreground">{t('grams')}</span>
+                <span className="text-sm font-medium text-primary">{oldSourdoughAmount}g</span>
+              </div>
+              <Slider
+                value={[oldSourdoughAmount]}
+                onValueChange={([v]) => setOldSourdoughAmount(v)}
+                min={10}
+                max={200}
+                step={5}
+                className="py-2"
+              />
             </CardContent>
           </Card>
 
@@ -216,18 +285,19 @@ export function SourdoughCalculator() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg font-display">
                 <Scale className="h-5 w-5 text-primary" />
-                Feeding Ratio
+                {t('feedingRatio')}
               </CardTitle>
-              <CardDescription>Starter : Flour : Water (in grams)</CardDescription>
+              <CardDescription>{t('feedingRatioDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <Label className="text-xs text-muted-foreground">Starter</Label>
+                  <Label className="text-xs text-muted-foreground">{t('starter')}</Label>
                   <Input
                     type="number"
-                    min={1}
+                    min={0.1}
                     max={10}
+                    step={0.1}
                     value={feedingRatio.starter}
                     onChange={(e) => setFeedingRatio({ ...feedingRatio, starter: Number(e.target.value) || 1 })}
                     className="text-center"
@@ -235,11 +305,12 @@ export function SourdoughCalculator() {
                 </div>
                 <span className="text-2xl text-muted-foreground font-light mt-5">:</span>
                 <div className="flex-1">
-                  <Label className="text-xs text-muted-foreground">Flour</Label>
+                  <Label className="text-xs text-muted-foreground">{t('flour')}</Label>
                   <Input
                     type="number"
-                    min={1}
+                    min={0.1}
                     max={10}
+                    step={0.1}
                     value={feedingRatio.flour}
                     onChange={(e) => setFeedingRatio({ ...feedingRatio, flour: Number(e.target.value) || 1 })}
                     className="text-center"
@@ -247,11 +318,12 @@ export function SourdoughCalculator() {
                 </div>
                 <span className="text-2xl text-muted-foreground font-light mt-5">:</span>
                 <div className="flex-1">
-                  <Label className="text-xs text-muted-foreground">Water</Label>
+                  <Label className="text-xs text-muted-foreground">{t('water')}</Label>
                   <Input
                     type="number"
-                    min={1}
+                    min={0.1}
                     max={10}
+                    step={0.1}
                     value={feedingRatio.water}
                     onChange={(e) => setFeedingRatio({ ...feedingRatio, water: Number(e.target.value) || 1 })}
                     className="text-center"
@@ -259,7 +331,7 @@ export function SourdoughCalculator() {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground mt-3">
-                Common ratios: 1:1:1 (quick), 1:2:2 (moderate), 1:5:5 (slow)
+                {t('commonRatios')}
               </p>
             </CardContent>
           </Card>
@@ -269,12 +341,12 @@ export function SourdoughCalculator() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg font-display">
                 <Thermometer className="h-5 w-5 text-primary" />
-                Ambient Temperature
+                {t('ambientTemperature')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">Room temperature</span>
+                <span className="text-sm text-muted-foreground">{t('roomTemperature')}</span>
                 <span className="text-sm font-medium text-primary">{temperature}°C</span>
               </div>
               <Slider
@@ -291,32 +363,90 @@ export function SourdoughCalculator() {
           {/* Target Peak Window */}
           <Card className="border-border/50 shadow-sm">
             <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-lg font-display">
-                <Clock className="h-5 w-5 text-primary" />
-                Target Peak Window
-              </CardTitle>
-              <CardDescription>When do you need your starter to be at peak?</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">From</Label>
-                  <Input
-                    type="time"
-                    value={formatTimeForInput(targetPeakStart)}
-                    onChange={(e) => handleTimeChange(e.target.value, setTargetPeakStart)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">To</Label>
-                  <Input
-                    type="time"
-                    value={formatTimeForInput(targetPeakEnd)}
-                    onChange={(e) => handleTimeChange(e.target.value, setTargetPeakEnd)}
-                  />
-                </div>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg font-display">
+                  <Clock className="h-5 w-5 text-primary" />
+                  {t('targetPeakWindow')}
+                </CardTitle>
+                <Switch
+                  checked={useTargetWindow}
+                  onCheckedChange={setUseTargetWindow}
+                />
               </div>
-            </CardContent>
+              <CardDescription>{t('targetWindowDesc')}</CardDescription>
+            </CardHeader>
+            {useTargetWindow && (
+              <CardContent>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">{t('from')}</Label>
+                    <Input
+                      type="time"
+                      value={formatTimeForInput(targetPeakStart)}
+                      onChange={(e) => handleTimeChange(e.target.value, setTargetPeakStart)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs text-muted-foreground">{t('to')}</Label>
+                    <Input
+                      type="time"
+                      value={formatTimeForInput(targetPeakEnd)}
+                      onChange={(e) => handleTimeChange(e.target.value, setTargetPeakEnd)}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
+          {/* Sweet Sourdough */}
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg font-display">
+                  <Cookie className="h-5 w-5 text-primary" />
+                  {t('sweetSourdough')}
+                </CardTitle>
+                <Switch
+                  checked={isSweetMode}
+                  onCheckedChange={setIsSweetMode}
+                />
+              </div>
+              <CardDescription>{t('sweetSourdoughDesc')}</CardDescription>
+            </CardHeader>
+            {isSweetMode && (
+              <CardContent className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">{t('sugarAmount')}</span>
+                  <span className="text-sm font-medium text-primary">{sugarPercentage}%</span>
+                </div>
+                <Slider
+                  value={[sugarPercentage]}
+                  onValueChange={([v]) => setSugarPercentage(v)}
+                  min={5}
+                  max={30}
+                  step={1}
+                  className="py-2"
+                />
+              </CardContent>
+            )}
+          </Card>
+
+          {/* Always On */}
+          <Card className="border-border/50 shadow-sm">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg font-display">
+                  <Zap className="h-5 w-5 text-primary" />
+                  {t('alwaysOn')}
+                </CardTitle>
+                <Switch
+                  checked={isAlwaysOn}
+                  onCheckedChange={setIsAlwaysOn}
+                />
+              </div>
+              <CardDescription>{t('alwaysOnDesc')}</CardDescription>
+            </CardHeader>
           </Card>
 
           <Button 
@@ -325,7 +455,7 @@ export function SourdoughCalculator() {
             size="lg"
             disabled={totalPercentage !== 100}
           >
-            Calculate Feeding Schedule
+            {t('calculateSchedule')}
           </Button>
         </div>
 
@@ -337,50 +467,64 @@ export function SourdoughCalculator() {
               <Card className="border-2 border-primary/20 bg-card shadow-lg overflow-hidden">
                 <div className="bg-primary/5 px-6 py-4 border-b border-border/50">
                   <h3 className="font-display text-xl font-semibold text-foreground">
-                    Your Feeding Schedule
+                    {t('yourFeedingSchedule')}
                   </h3>
                 </div>
                 <CardContent className="pt-6 space-y-6">
                   <div className="text-center p-6 rounded-xl bg-secondary/50 border border-border/50">
-                    <p className="text-sm text-muted-foreground mb-1">Feed your starter at</p>
+                    <p className="text-sm text-muted-foreground mb-1">{t('feedStarterAt')}</p>
                     <p className="text-3xl font-display font-bold text-primary">
-                      {formatDateTime(result.feedingTime)}
+                      {formatDateTime(result.feedingTime, language)}
+                    </p>
+                  </div>
+
+                  <div className="text-center p-6 rounded-xl bg-primary/10 border border-primary/20">
+                    <p className="text-sm text-muted-foreground mb-1">{t('estimatedPeak')}</p>
+                    <p className="text-3xl font-display font-bold text-primary">
+                      {formatDateTime(result.estimatedPeakTime, language)}
                     </p>
                   </div>
 
                   <div className="grid grid-cols-3 gap-3 text-center">
                     <div className="p-4 rounded-lg bg-muted/50">
                       <p className="text-2xl font-bold text-foreground">{result.starterAmount}g</p>
-                      <p className="text-xs text-muted-foreground mt-1">Starter</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('starter')}</p>
                     </div>
                     <div className="p-4 rounded-lg bg-muted/50">
                       <p className="text-2xl font-bold text-foreground">{result.flourAmount}g</p>
-                      <p className="text-xs text-muted-foreground mt-1">Flour</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('flour')}</p>
                     </div>
                     <div className="p-4 rounded-lg bg-muted/50">
                       <p className="text-2xl font-bold text-foreground">{result.waterAmount}g</p>
-                      <p className="text-xs text-muted-foreground mt-1">Water</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('water')}</p>
                     </div>
                   </div>
 
+                  {isSweetMode && (
+                    <div className="text-center p-3 rounded-lg bg-muted/50">
+                      <p className="text-lg font-bold text-foreground">{result.sugarAmount}g</p>
+                      <p className="text-xs text-muted-foreground mt-1">{t('powderedSugar')}</p>
+                    </div>
+                  )}
+
                   <div className="space-y-3 pt-2">
                     <div className="flex justify-between items-center py-2 border-b border-border/30">
-                      <span className="text-muted-foreground">Time to peak</span>
-                      <span className="font-medium">{result.hoursToReachPeak.toFixed(1)} hours</span>
+                      <span className="text-muted-foreground">{t('timeToPeak')}</span>
+                      <span className="font-medium">{result.hoursToReachPeak.toFixed(1)} {t('hours')}</span>
                     </div>
                     <div className="flex justify-between items-center py-2 border-b border-border/30">
-                      <span className="text-muted-foreground">Estimated peak</span>
-                      <span className="font-medium">{formatDateTime(result.estimatedPeakTime)}</span>
-                    </div>
-                    <div className="flex justify-between items-center py-2 border-b border-border/30">
-                      <span className="text-muted-foreground">Peak window</span>
+                      <span className="text-muted-foreground">{t('peakWindow')}</span>
                       <span className="font-medium text-sm">
-                        {formatDateTime(result.peakWindowStart)} — {formatDateTime(result.peakWindowEnd)}
+                        {formatDateTime(result.peakWindowStart, language)} — {formatDateTime(result.peakWindowEnd, language)}
                       </span>
+                    </div>
+                    <div className="flex justify-between items-center py-2 border-b border-border/30">
+                      <span className="text-muted-foreground">{t('totalSourdough')}</span>
+                      <span className="font-medium text-primary text-lg">{result.totalSourdoughAmount}g</span>
                     </div>
                     {flourBlend.length > 1 && (
                       <div className="flex justify-between items-center py-2">
-                        <span className="text-muted-foreground">Blended protein</span>
+                        <span className="text-muted-foreground">{t('blendedProtein')}</span>
                         <span className="font-medium">{result.blendedProtein.toFixed(1)}%</span>
                       </div>
                     )}
@@ -388,31 +532,56 @@ export function SourdoughCalculator() {
                 </CardContent>
               </Card>
 
-              {/* Status Badge */}
-              <Card className={`border-2 ${result.isWithinTargetWindow ? 'border-success/30 bg-success/5' : 'border-warning/30 bg-warning/5'}`}>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    {result.isWithinTargetWindow ? (
-                      <CheckCircle className="h-6 w-6 text-success shrink-0 mt-0.5" />
-                    ) : (
-                      <AlertCircle className="h-6 w-6 text-warning shrink-0 mt-0.5" />
-                    )}
-                    <div>
-                      <Badge 
-                        variant="outline" 
-                        className={result.isWithinTargetWindow ? 'border-success text-success' : 'border-warning text-warning'}
-                      >
-                        {result.isWithinTargetWindow ? 'Perfect timing!' : 'Timing adjustment needed'}
-                      </Badge>
-                      <p className="text-sm text-muted-foreground mt-2">
-                        {result.isWithinTargetWindow 
-                          ? 'Your starter will peak within your target window.' 
-                          : 'The estimated peak time falls outside your target window.'}
-                      </p>
-                    </div>
+              {/* Flour Breakdown */}
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg font-display">
+                    <Wheat className="h-5 w-5 text-primary" />
+                    {t('flourBreakdown')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {result.flourBreakdown.map((item, i) => (
+                      <div key={i} className="flex justify-between items-center py-2 border-b border-border/30 last:border-0">
+                        <div>
+                          <span className="font-medium">{getFlourName(item.flourType)}</span>
+                          <span className="text-xs text-muted-foreground ml-2">({item.proteinContent}% {t('protein')})</span>
+                        </div>
+                        <span className="font-bold text-primary">{item.amountGrams}g</span>
+                      </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Status Badge */}
+              {useTargetWindow && (
+                <Card className={`border-2 ${result.isWithinTargetWindow ? 'border-success/30 bg-success/5' : 'border-warning/30 bg-warning/5'}`}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start gap-3">
+                      {result.isWithinTargetWindow ? (
+                        <CheckCircle className="h-6 w-6 text-success shrink-0 mt-0.5" />
+                      ) : (
+                        <AlertCircle className="h-6 w-6 text-warning shrink-0 mt-0.5" />
+                      )}
+                      <div>
+                        <Badge 
+                          variant="outline" 
+                          className={result.isWithinTargetWindow ? 'border-success text-success' : 'border-warning text-warning'}
+                        >
+                          {result.isWithinTargetWindow ? t('perfectTiming') : t('timingAdjustmentNeeded')}
+                        </Badge>
+                        <p className="text-sm text-muted-foreground mt-2">
+                          {result.isWithinTargetWindow 
+                            ? t('starterWillPeak')
+                            : t('peakOutsideWindow')}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Suggestions */}
               {result.suggestions.length > 0 && (
@@ -420,15 +589,15 @@ export function SourdoughCalculator() {
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg font-display">
                       <Lightbulb className="h-5 w-5 text-primary" />
-                      Tips
+                      {t('tips')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {result.suggestions.map((suggestion, i) => (
+                      {result.suggestions.map((suggestionKey, i) => (
                         <li key={i} className="flex gap-2 text-sm text-muted-foreground">
                           <span className="text-primary">•</span>
-                          {suggestion}
+                          {t(suggestionKey as any)}
                         </li>
                       ))}
                     </ul>
@@ -443,10 +612,10 @@ export function SourdoughCalculator() {
                   <Clock className="h-8 w-8 text-primary/60" />
                 </div>
                 <h3 className="font-display text-lg font-medium text-foreground mb-2">
-                  Ready to Calculate
+                  {t('readyToCalculate')}
                 </h3>
                 <p className="text-sm text-muted-foreground max-w-xs">
-                  Configure your starter settings on the left and click calculate to see your optimal feeding schedule.
+                  {t('configureSettings')}
                 </p>
               </CardContent>
             </Card>
