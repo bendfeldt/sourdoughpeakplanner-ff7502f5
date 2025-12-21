@@ -26,6 +26,7 @@ export function SourdoughCalculator() {
     { id: generateId(), flourType: 'bread-flour', percentage: 100, proteinContent: FLOUR_DATA['bread-flour'].baseProtein }
   ]);
   const [feedingRatio, setFeedingRatio] = useState<FeedingRatio>({ starter: 1, flour: 1, water: 1 });
+  const [ratioInputs, setRatioInputs] = useState({ starter: '1', flour: '1', water: '1' });
   const [temperature, setTemperature] = useState(24);
   const [useTargetWindow, setUseTargetWindow] = useState(false);
   const [targetPeakStart, setTargetPeakStart] = useState<Date | null>(() => {
@@ -216,12 +217,20 @@ export function SourdoughCalculator() {
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">{t('protein')} (%)</Label>
                       <Input
-                        type="number"
-                        min={6}
-                        max={18}
-                        step={0.1}
+                        type="text"
+                        inputMode="decimal"
                         value={flour.proteinContent}
-                        onChange={(e) => updateFlour(flour.id, { proteinContent: Number(e.target.value) || 10 })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === '' || val === '-') {
+                            updateFlour(flour.id, { proteinContent: 0 });
+                            return;
+                          }
+                          const num = parseFloat(val);
+                          if (!isNaN(num)) {
+                            updateFlour(flour.id, { proteinContent: num });
+                          }
+                        }}
                         className="text-center"
                       />
                     </div>
@@ -294,12 +303,23 @@ export function SourdoughCalculator() {
                 <div className="flex-1">
                   <Label className="text-xs text-muted-foreground">{t('starter')}</Label>
                   <Input
-                    type="number"
-                    min={0.1}
-                    max={10}
-                    step={0.1}
-                    value={feedingRatio.starter}
-                    onChange={(e) => setFeedingRatio({ ...feedingRatio, starter: Number(e.target.value) || 1 })}
+                    type="text"
+                    inputMode="decimal"
+                    value={ratioInputs.starter}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setRatioInputs({ ...ratioInputs, starter: val });
+                      const num = parseFloat(val);
+                      if (!isNaN(num) && num > 0) {
+                        setFeedingRatio({ ...feedingRatio, starter: num });
+                      }
+                    }}
+                    onBlur={() => {
+                      const num = parseFloat(ratioInputs.starter);
+                      if (isNaN(num) || num <= 0) {
+                        setRatioInputs({ ...ratioInputs, starter: String(feedingRatio.starter) });
+                      }
+                    }}
                     className="text-center"
                   />
                 </div>
@@ -307,12 +327,23 @@ export function SourdoughCalculator() {
                 <div className="flex-1">
                   <Label className="text-xs text-muted-foreground">{t('flour')}</Label>
                   <Input
-                    type="number"
-                    min={0.1}
-                    max={10}
-                    step={0.1}
-                    value={feedingRatio.flour}
-                    onChange={(e) => setFeedingRatio({ ...feedingRatio, flour: Number(e.target.value) || 1 })}
+                    type="text"
+                    inputMode="decimal"
+                    value={ratioInputs.flour}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setRatioInputs({ ...ratioInputs, flour: val });
+                      const num = parseFloat(val);
+                      if (!isNaN(num) && num > 0) {
+                        setFeedingRatio({ ...feedingRatio, flour: num });
+                      }
+                    }}
+                    onBlur={() => {
+                      const num = parseFloat(ratioInputs.flour);
+                      if (isNaN(num) || num <= 0) {
+                        setRatioInputs({ ...ratioInputs, flour: String(feedingRatio.flour) });
+                      }
+                    }}
                     className="text-center"
                   />
                 </div>
@@ -320,12 +351,23 @@ export function SourdoughCalculator() {
                 <div className="flex-1">
                   <Label className="text-xs text-muted-foreground">{t('water')}</Label>
                   <Input
-                    type="number"
-                    min={0.1}
-                    max={10}
-                    step={0.1}
-                    value={feedingRatio.water}
-                    onChange={(e) => setFeedingRatio({ ...feedingRatio, water: Number(e.target.value) || 1 })}
+                    type="text"
+                    inputMode="decimal"
+                    value={ratioInputs.water}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setRatioInputs({ ...ratioInputs, water: val });
+                      const num = parseFloat(val);
+                      if (!isNaN(num) && num > 0) {
+                        setFeedingRatio({ ...feedingRatio, water: num });
+                      }
+                    }}
+                    onBlur={() => {
+                      const num = parseFloat(ratioInputs.water);
+                      if (isNaN(num) || num <= 0) {
+                        setRatioInputs({ ...ratioInputs, water: String(feedingRatio.water) });
+                      }
+                    }}
                     className="text-center"
                   />
                 </div>
