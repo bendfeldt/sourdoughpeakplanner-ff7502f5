@@ -3,12 +3,17 @@ export type FlourType =
   | 'bread-flour'
   | 'whole-wheat'
   | 'rye'
-  | 'spelt';
+  | 'spelt'
+  | 'oland-wheat'
+  | 'danish-wheat'
+  | 'oat-flour'
+  | 'fuldkornsmel'
+  | 'manitoba';
 
 export interface FlourInfo {
   name: string;
   baseProtein: number;
-  fermentationModifier: number; // multiplier for fermentation time
+  fermentationModifier: number;
   description: string;
 }
 
@@ -43,12 +48,42 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
     fermentationModifier: 0.85,
     description: 'Ancient grain, slightly faster fermentation',
   },
+  'oland-wheat': {
+    name: 'Øland Wheat',
+    baseProtein: 11.5,
+    fermentationModifier: 0.95,
+    description: 'Danish heritage wheat, excellent flavour',
+  },
+  'danish-wheat': {
+    name: 'Danish Wheat',
+    baseProtein: 11,
+    fermentationModifier: 1.0,
+    description: 'Traditional Danish flour, type XX',
+  },
+  'oat-flour': {
+    name: 'Oat Flour',
+    baseProtein: 12,
+    fermentationModifier: 0.9,
+    description: 'Adds moisture and softness',
+  },
+  'fuldkornsmel': {
+    name: 'Fuldkornsmel',
+    baseProtein: 12.5,
+    fermentationModifier: 0.75,
+    description: 'Full grain Danish flour, robust flavour',
+  },
+  'manitoba': {
+    name: 'Manitoba',
+    baseProtein: 14.5,
+    fermentationModifier: 1.2,
+    description: 'Very high protein Canadian wheat',
+  },
 };
 
 export interface FlourBlendItem {
   id: string;
   flourType: FlourType;
-  percentage: number; // percentage of total flour (0-100)
+  percentage: number;
   proteinContent: number;
 }
 
@@ -61,9 +96,21 @@ export interface FeedingRatio {
 export interface CalculationInput {
   flourBlend: FlourBlendItem[];
   feedingRatio: FeedingRatio;
-  temperature: number; // Celsius
-  targetPeakStart: Date;
-  targetPeakEnd: Date;
+  temperature: number;
+  targetPeakStart: Date | null;
+  targetPeakEnd: Date | null;
+  useTargetWindow: boolean;
+  oldSourdoughAmount: number;
+  isSweetMode: boolean;
+  sugarPercentage: number;
+  isAlwaysOn: boolean;
+}
+
+export interface FlourBreakdownItem {
+  flourType: FlourType;
+  percentage: number;
+  amountGrams: number;
+  proteinContent: number;
 }
 
 export interface CalculationResult {
@@ -77,11 +124,13 @@ export interface CalculationResult {
   starterAmount: number;
   flourAmount: number;
   waterAmount: number;
+  sugarAmount: number;
+  totalSourdoughAmount: number;
   blendedProtein: number;
   blendedFermentationModifier: number;
+  flourBreakdown: FlourBreakdownItem[];
 }
 
-// Base fermentation time at 24°C for 1:1:1 ratio
 const BASE_FERMENTATION_HOURS = 6;
 
 function calculateBlendedValues(flourBlend: FlourBlendItem[]): { 
@@ -119,41 +168,56 @@ function calculateBlendedValues(flourBlend: FlourBlendItem[]): {
 }
 
 function calculateFermentationTime(input: CalculationInput): number {
-  const { flourBlend, feedingRatio, temperature } = input;
+  const { flourBlend, feedingRatio, temperature, isSweetMode, sugarPercentage, isAlwaysOn } = input;
   const { avgProtein, avgFermentationModifier, avgBaseProtein } = calculateBlendedValues(flourBlend);
   
-  // Temperature factor (Q10 rule: fermentation doubles every 10°C increase)
-  // Reference temperature: 24°C
+  // Always on mode means starter is kept at peak, so very short time to peak
+  if (isAlwaysOn) {
+    return 1;
+  }
+  
+  // Temperature factor (Q10 rule)
   const tempDiff = temperature - 24;
   const temperatureFactor = Math.pow(0.5, tempDiff / 10);
   
-  // Ratio factor - higher flour:starter ratio = longer fermentation
+  // Ratio factor
   const ratioFactor = (feedingRatio.flour / feedingRatio.starter);
   
-  // Protein factor - higher protein slightly slows fermentation
+  // Protein factor
   const proteinFactor = 1 + (avgProtein - avgBaseProtein) * 0.03;
   
-  // Calculate total fermentation time
+  // Sugar slows down fermentation
+  const sugarFactor = isSweetMode ? 1 + (sugarPercentage * 0.02) : 1;
+  
   const fermentationHours = BASE_FERMENTATION_HOURS * 
     avgFermentationModifier * 
     temperatureFactor * 
     ratioFactor * 
-    proteinFactor;
+    proteinFactor *
+    sugarFactor;
   
-  return Math.max(2, Math.min(24, fermentationHours)); // Clamp between 2-24 hours
+  return Math.max(1, Math.min(36, fermentationHours));
 }
 
 export function calculateFeedingSchedule(input: CalculationInput): CalculationResult {
   const fermentationHours = calculateFermentationTime(input);
   const { avgProtein, avgFermentationModifier } = calculateBlendedValues(input.flourBlend);
   
-  // Calculate when to feed to hit the target window
-  const targetMidpoint = new Date(
-    (input.targetPeakStart.getTime() + input.targetPeakEnd.getTime()) / 2
-  );
+  let feedingTime: Date;
+  let estimatedPeakTime: Date;
   
-  const feedingTime = new Date(targetMidpoint.getTime() - fermentationHours * 60 * 60 * 1000);
-  const estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
+  if (input.useTargetWindow && input.targetPeakStart && input.targetPeakEnd) {
+    // If using target window, calculate feeding time to hit the window
+    const targetMidpoint = new Date(
+      (input.targetPeakStart.getTime() + input.targetPeakEnd.getTime()) / 2
+    );
+    feedingTime = new Date(targetMidpoint.getTime() - fermentationHours * 60 * 60 * 1000);
+    estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
+  } else {
+    // No target window - use current time as feeding time
+    feedingTime = new Date();
+    estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
+  }
   
   // Peak window is about 1-2 hours around the peak
   const peakWindowHours = 1.5;
@@ -161,32 +225,54 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
   const peakWindowEnd = new Date(estimatedPeakTime.getTime() + peakWindowHours * 30 * 60 * 1000);
   
   // Check if peak falls within target window
-  const isWithinTargetWindow = 
+  const isWithinTargetWindow = !input.useTargetWindow || (
+    input.targetPeakStart && 
+    input.targetPeakEnd &&
     estimatedPeakTime >= input.targetPeakStart && 
-    estimatedPeakTime <= input.targetPeakEnd;
+    estimatedPeakTime <= input.targetPeakEnd
+  );
   
   // Generate suggestions
   const suggestions: string[] = [];
   
-  if (!isWithinTargetWindow) {
+  if (input.useTargetWindow && !isWithinTargetWindow && input.targetPeakStart) {
     if (estimatedPeakTime < input.targetPeakStart) {
-      suggestions.push('Consider feeding later or using a higher flour ratio to slow fermentation');
-      suggestions.push('You could also lower the temperature to extend fermentation time');
+      suggestions.push('feedLaterOrHigherRatio');
+      suggestions.push('lowerTempToExtend');
     } else {
-      suggestions.push('Consider feeding earlier or using a lower flour ratio to speed up fermentation');
-      suggestions.push('Increasing ambient temperature will also speed things up');
+      suggestions.push('feedEarlierOrLowerRatio');
+      suggestions.push('increaseTempToSpeed');
     }
   }
   
   if (input.temperature < 20) {
-    suggestions.push('Cooler temperatures will result in slower but more flavourful fermentation');
+    suggestions.push('coolerSlowerFlavourful');
   } else if (input.temperature > 28) {
-    suggestions.push('Warmer temperatures may lead to faster but less complex flavour development');
+    suggestions.push('warmerFasterLessComplex');
   }
   
-  // Calculate actual amounts in grams (100g total)
+  if (input.isSweetMode) {
+    suggestions.push('sweetSlowerFermentation');
+  }
+  
+  // Calculate amounts based on old sourdough amount
+  const oldStarterAmount = input.oldSourdoughAmount;
   const totalParts = input.feedingRatio.starter + input.feedingRatio.flour + input.feedingRatio.water;
-  const multiplier = 100 / totalParts;
+  const starterPart = input.feedingRatio.starter / totalParts;
+  
+  // If old sourdough = 50g and ratio is 1:1:1, then we add 50g flour and 50g water
+  const flourAmount = Math.round((oldStarterAmount / input.feedingRatio.starter) * input.feedingRatio.flour);
+  const waterAmount = Math.round((oldStarterAmount / input.feedingRatio.starter) * input.feedingRatio.water);
+  const sugarAmount = input.isSweetMode ? Math.round(flourAmount * (input.sugarPercentage / 100)) : 0;
+  const totalSourdoughAmount = oldStarterAmount + flourAmount + waterAmount + sugarAmount;
+  
+  // Calculate flour breakdown
+  const flourBreakdown: FlourBreakdownItem[] = input.flourBlend.map(item => ({
+    flourType: item.flourType,
+    percentage: item.percentage,
+    amountGrams: Math.round((flourAmount * item.percentage) / 100),
+    proteinContent: item.proteinContent,
+  }));
   
   return {
     feedingTime,
@@ -196,11 +282,14 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
     hoursToReachPeak: fermentationHours,
     isWithinTargetWindow,
     suggestions,
-    starterAmount: Math.round(input.feedingRatio.starter * multiplier),
-    flourAmount: Math.round(input.feedingRatio.flour * multiplier),
-    waterAmount: Math.round(input.feedingRatio.water * multiplier),
+    starterAmount: oldStarterAmount,
+    flourAmount,
+    waterAmount,
+    sugarAmount,
+    totalSourdoughAmount,
     blendedProtein: avgProtein,
     blendedFermentationModifier: avgFermentationModifier,
+    flourBreakdown,
   };
 }
 
@@ -212,7 +301,7 @@ export function formatTime(date: Date): string {
   });
 }
 
-export function formatDateTime(date: Date): string {
+export function formatDateTime(date: Date, locale: string = 'en-GB'): string {
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
@@ -222,10 +311,14 @@ export function formatDateTime(date: Date): string {
   
   const timeStr = formatTime(date);
   
-  if (isToday) return `Today at ${timeStr}`;
-  if (isTomorrow) return `Tomorrow at ${timeStr}`;
+  const todayLabel = locale === 'da' ? 'I dag' : 'Today';
+  const tomorrowLabel = locale === 'da' ? 'I morgen' : 'Tomorrow';
+  const atLabel = locale === 'da' ? 'kl.' : 'at';
   
-  return date.toLocaleDateString('en-GB', { 
+  if (isToday) return `${todayLabel} ${atLabel} ${timeStr}`;
+  if (isTomorrow) return `${tomorrowLabel} ${atLabel} ${timeStr}`;
+  
+  return date.toLocaleDateString(locale === 'da' ? 'da-DK' : 'en-GB', { 
     weekday: 'short',
     month: 'short', 
     day: 'numeric',
