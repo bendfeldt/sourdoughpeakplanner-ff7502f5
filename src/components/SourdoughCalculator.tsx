@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,20 +7,41 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Globe, Cookie, Zap, Beaker } from 'lucide-react';
+import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Globe, Cookie, Zap, Beaker, Moon, Sun, Timer } from 'lucide-react';
 import { 
   FlourType, 
   FLOUR_DATA, 
   calculateFeedingSchedule, 
   formatDateTime,
+  formatTime,
   generateId,
   type FeedingRatio,
-  type FlourBlendItem 
+  type FlourBlendItem,
+  type FermentationPhase,
 } from '@/lib/sourdough-calculator';
 import { useI18n, Language } from '@/lib/i18n';
 
 export function SourdoughCalculator() {
   const { t, language, setLanguage } = useI18n();
+  
+  // Dark mode - follows system preference
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+  });
+  
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => setIsDarkMode(e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
+  
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+  }, [isDarkMode]);
   
   const [flourBlend, setFlourBlend] = useState<FlourBlendItem[]>([
     { id: generateId(), flourType: 'bread-flour', percentage: 100, proteinContent: FLOUR_DATA['bread-flour'].baseProtein }
@@ -42,6 +63,7 @@ export function SourdoughCalculator() {
     return d;
   });
   const [oldSourdoughAmount, setOldSourdoughAmount] = useState(50);
+  const [oldSourdoughInput, setOldSourdoughInput] = useState('50');
   const [isSweetMode, setIsSweetMode] = useState(false);
   const [sugarPercentage, setSugarPercentage] = useState(10);
   const [isAlwaysOn, setIsAlwaysOn] = useState(false);
@@ -119,8 +141,16 @@ export function SourdoughCalculator() {
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
-      {/* Language Selector */}
-      <div className="flex justify-end">
+      {/* Language and Theme Selector */}
+      <div className="flex justify-end gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsDarkMode(!isDarkMode)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+        </Button>
         <div className="flex items-center gap-2">
           <Globe className="h-4 w-4 text-muted-foreground" />
           <Select value={language} onValueChange={(v) => setLanguage(v as Language)}>
@@ -273,19 +303,31 @@ export function SourdoughCalculator() {
               </CardTitle>
               <CardDescription>{t('oldSourdoughDesc')}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-sm text-muted-foreground">{t('grams')}</span>
-                <span className="text-sm font-medium text-primary">{oldSourdoughAmount}g</span>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  value={oldSourdoughInput}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setOldSourdoughInput(val);
+                    const num = parseFloat(val);
+                    if (!isNaN(num) && num > 0) {
+                      setOldSourdoughAmount(num);
+                    }
+                  }}
+                  onBlur={() => {
+                    const num = parseFloat(oldSourdoughInput);
+                    if (isNaN(num) || num <= 0) {
+                      setOldSourdoughInput(String(oldSourdoughAmount));
+                    }
+                  }}
+                  className="text-center text-lg font-medium"
+                  placeholder="50"
+                />
+                <span className="text-muted-foreground font-medium">g</span>
               </div>
-              <Slider
-                value={[oldSourdoughAmount]}
-                onValueChange={([v]) => setOldSourdoughAmount(v)}
-                min={10}
-                max={200}
-                step={5}
-                className="py-2"
-              />
             </CardContent>
           </Card>
 
@@ -570,6 +612,75 @@ export function SourdoughCalculator() {
                         <span className="font-medium">{result.blendedProtein.toFixed(1)}%</span>
                       </div>
                     )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Recommended Ratio (if target window is set) */}
+              {result.recommendedRatio && (
+                <Card className="border-primary/30 bg-primary/5 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-lg font-display">
+                      <Scale className="h-5 w-5 text-primary" />
+                      {t('recommendedRatio')}
+                    </CardTitle>
+                    <CardDescription>{t('recommendedRatioDesc')}</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-center gap-2 text-2xl font-bold">
+                      <span className="text-foreground">{result.recommendedRatio.starter}</span>
+                      <span className="text-muted-foreground">:</span>
+                      <span className="text-primary">{result.recommendedRatio.flour}</span>
+                      <span className="text-muted-foreground">:</span>
+                      <span className="text-foreground">{result.recommendedRatio.water}</span>
+                    </div>
+                    <p className="text-xs text-center text-muted-foreground mt-2">
+                      {t('starter')} : {t('flour')} : {t('water')}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Fermentation Timeline */}
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg font-display">
+                    <Timer className="h-5 w-5 text-primary" />
+                    {t('fermentationTimeline')}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="relative">
+                    {/* Timeline bar */}
+                    <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
+                    
+                    <div className="space-y-4">
+                      {result.fermentationPhases.map((phase, i) => {
+                        const phaseColors = [
+                          'bg-muted text-muted-foreground',
+                          'bg-primary/20 text-primary',
+                          'bg-accent/20 text-accent',
+                          'bg-muted text-muted-foreground',
+                        ];
+                        
+                        return (
+                          <div key={i} className="relative pl-10">
+                            {/* Timeline dot */}
+                            <div className={`absolute left-2.5 top-1 w-3 h-3 rounded-full border-2 border-background ${i === 2 ? 'bg-accent' : i === 1 ? 'bg-primary' : 'bg-muted-foreground'}`} />
+                            
+                            <div className={`p-3 rounded-lg ${phaseColors[i]}`}>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-medium text-sm">{t(phase.nameKey as any)}</span>
+                                <span className="text-xs">
+                                  {formatTime(phase.startTime)} — {formatTime(phase.endTime)}
+                                </span>
+                              </div>
+                              <p className="text-xs opacity-80">{t(phase.descriptionKey as any)}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </CardContent>
               </Card>

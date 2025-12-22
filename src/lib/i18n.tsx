@@ -118,6 +118,22 @@ export const translations = {
     coolerSlowerFlavourful: 'Cooler temperatures will result in slower but more flavourful fermentation',
     warmerFasterLessComplex: 'Warmer temperatures may lead to faster but less complex flavour development',
     sweetSlowerFermentation: 'Sugar slows fermentation - expect longer rise times',
+    adjustedRatioRecommendation: 'Ratio adjusted to hit your target window - see recommended ratio below',
+    
+    // Fermentation phases
+    fermentationTimeline: 'Fermentation Timeline',
+    lagPhase: 'Lag Phase',
+    lagPhaseDesc: 'Microbes adapting to fresh food',
+    risePhase: 'Rise Phase',
+    risePhaseDesc: 'Active fermentation and CO2 production',
+    peakPhase: 'Peak Phase',
+    peakPhaseDesc: 'Maximum activity - ideal for baking',
+    declinePhase: 'Decline Phase',
+    declinePhaseDesc: 'Activity decreasing - still usable',
+    
+    // Recommended ratio
+    recommendedRatio: 'Recommended Ratio',
+    recommendedRatioDesc: 'Adjusted ratio to hit your target window',
   },
   da: {
     // Header
@@ -234,6 +250,22 @@ export const translations = {
     coolerSlowerFlavourful: 'Køligere temperaturer giver langsommere men mere smagsfuld gæring',
     warmerFasterLessComplex: 'Varmere temperaturer kan føre til hurtigere men mindre kompleks smagsudvikling',
     sweetSlowerFermentation: 'Sukker bremser gæring - forvent længere hævetider',
+    adjustedRatioRecommendation: 'Forholdet er justeret for at ramme dit målvindue - se anbefalet forhold nedenfor',
+    
+    // Fermentation phases
+    fermentationTimeline: 'Gærings-tidslinje',
+    lagPhase: 'Lag-fase',
+    lagPhaseDesc: 'Mikrober tilpasser sig frisk føde',
+    risePhase: 'Hævefase',
+    risePhaseDesc: 'Aktiv gæring og CO2-produktion',
+    peakPhase: 'Peak-fase',
+    peakPhaseDesc: 'Maksimal aktivitet - ideel til bagning',
+    declinePhase: 'Nedgangsfase',
+    declinePhaseDesc: 'Aktivitet faldende - stadig brugbar',
+    
+    // Recommended ratio
+    recommendedRatio: 'Anbefalet Forhold',
+    recommendedRatioDesc: 'Justeret forhold for at ramme dit målvindue',
   },
 };
 

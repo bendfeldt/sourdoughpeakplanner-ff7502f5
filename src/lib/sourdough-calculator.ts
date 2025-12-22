@@ -106,6 +106,15 @@ export interface CalculationInput {
   isAlwaysOn: boolean;
 }
 
+export interface FermentationPhase {
+  name: string;
+  nameKey: string;
+  startTime: Date;
+  endTime: Date;
+  description: string;
+  descriptionKey: string;
+}
+
 export interface FlourBreakdownItem {
   flourType: FlourType;
   percentage: number;
@@ -129,6 +138,8 @@ export interface CalculationResult {
   blendedProtein: number;
   blendedFermentationModifier: number;
   flourBreakdown: FlourBreakdownItem[];
+  fermentationPhases: FermentationPhase[];
+  recommendedRatio: FeedingRatio | null;
 }
 
 const BASE_FERMENTATION_HOURS = 6;
@@ -167,8 +178,9 @@ function calculateBlendedValues(flourBlend: FlourBlendItem[]): {
   };
 }
 
-function calculateFermentationTime(input: CalculationInput): number {
+function calculateFermentationTime(input: CalculationInput, customRatio?: FeedingRatio): number {
   const { flourBlend, feedingRatio, temperature, isSweetMode, sugarPercentage, isAlwaysOn } = input;
+  const ratio = customRatio || feedingRatio;
   const { avgProtein, avgFermentationModifier, avgBaseProtein } = calculateBlendedValues(flourBlend);
   
   // Always on mode means starter is kept at peak, so very short time to peak
@@ -176,20 +188,26 @@ function calculateFermentationTime(input: CalculationInput): number {
     return 1;
   }
   
-  // Temperature factor (Q10 rule)
+  // Q10 rule for fermentation kinetics
+  // Yeast and LAB double their metabolic rate for every 10°C increase
+  // Reference temperature: 24°C (optimal for sourdough fermentation)
   const tempDiff = temperature - 24;
   const temperatureFactor = Math.pow(0.5, tempDiff / 10);
   
-  // Ratio factor
-  const ratioFactor = (feedingRatio.flour / feedingRatio.starter);
+  // Ratio factor - higher flour ratio means more food, longer fermentation
+  // Based on first-order kinetics where substrate (flour) affects rate
+  const ratioFactor = (ratio.flour / ratio.starter);
   
-  // Protein factor
+  // Protein factor - higher protein slows fermentation slightly
+  // Gluten development competes with microbial activity
   const proteinFactor = 1 + (avgProtein - avgBaseProtein) * 0.03;
   
-  // Sugar slows down fermentation significantly
-  // At 10% sugar: ~20% slower, at 20% sugar: ~50% slower, at 30%: ~90% slower
-  // Sugar inhibits yeast activity through osmotic pressure
-  const sugarFactor = isSweetMode ? 1 + (sugarPercentage * 0.03) + Math.pow(sugarPercentage / 20, 2) * 0.3 : 1;
+  // Sugar inhibition via osmotic pressure (Monod kinetics modified)
+  // Sucrose reduces water activity (aw), inhibiting yeast at high concentrations
+  // Ki (inhibition constant) approximated - 50% inhibition at ~25% sugar
+  const sugarFactor = isSweetMode 
+    ? 1 / (1 - (sugarPercentage / 100) * 0.8) // Osmotic pressure effect
+    : 1;
   
   const fermentationHours = BASE_FERMENTATION_HOURS * 
     avgFermentationModifier * 
@@ -198,7 +216,93 @@ function calculateFermentationTime(input: CalculationInput): number {
     proteinFactor *
     sugarFactor;
   
-  return Math.max(1, Math.min(36, fermentationHours));
+  return Math.max(1, Math.min(48, fermentationHours));
+}
+
+// Calculate required feeding ratio for a target fermentation time
+function calculateRequiredRatio(input: CalculationInput, targetHours: number): FeedingRatio {
+  const { flourBlend, feedingRatio, temperature, isSweetMode, sugarPercentage, isAlwaysOn } = input;
+  const { avgProtein, avgFermentationModifier, avgBaseProtein } = calculateBlendedValues(flourBlend);
+  
+  if (isAlwaysOn) {
+    return { starter: 1, flour: 1, water: 1 };
+  }
+  
+  const tempDiff = temperature - 24;
+  const temperatureFactor = Math.pow(0.5, tempDiff / 10);
+  const proteinFactor = 1 + (avgProtein - avgBaseProtein) * 0.03;
+  const sugarFactor = isSweetMode 
+    ? 1 / (1 - (sugarPercentage / 100) * 0.8)
+    : 1;
+  
+  // Solve for ratio factor
+  const requiredRatioFactor = targetHours / (
+    BASE_FERMENTATION_HOURS * 
+    avgFermentationModifier * 
+    temperatureFactor * 
+    proteinFactor * 
+    sugarFactor
+  );
+  
+  // Clamp to reasonable ratios
+  const clampedRatio = Math.max(0.5, Math.min(10, requiredRatioFactor));
+  
+  // Keep water ratio proportional to flour
+  const waterRatio = clampedRatio * (feedingRatio.water / feedingRatio.flour);
+  
+  return {
+    starter: 1,
+    flour: Math.round(clampedRatio * 10) / 10,
+    water: Math.round(waterRatio * 10) / 10,
+  };
+}
+
+function generateFermentationPhases(feedingTime: Date, peakTime: Date): FermentationPhase[] {
+  const totalHours = (peakTime.getTime() - feedingTime.getTime()) / (1000 * 60 * 60);
+  
+  // Lag phase: ~10-15% of total time
+  const lagEnd = new Date(feedingTime.getTime() + totalHours * 0.12 * 60 * 60 * 1000);
+  
+  // Rise phase: 15% to 70%
+  const riseEnd = new Date(feedingTime.getTime() + totalHours * 0.7 * 60 * 60 * 1000);
+  
+  // Peak phase: 70% to 100%
+  const peakEnd = new Date(peakTime.getTime() + totalHours * 0.15 * 60 * 60 * 1000);
+  
+  return [
+    {
+      name: 'Lag Phase',
+      nameKey: 'lagPhase',
+      startTime: feedingTime,
+      endTime: lagEnd,
+      description: 'Microbes adapting to fresh food',
+      descriptionKey: 'lagPhaseDesc',
+    },
+    {
+      name: 'Rise Phase',
+      nameKey: 'risePhase',
+      startTime: lagEnd,
+      endTime: riseEnd,
+      description: 'Active fermentation and CO2 production',
+      descriptionKey: 'risePhaseDesc',
+    },
+    {
+      name: 'Peak Phase',
+      nameKey: 'peakPhase',
+      startTime: riseEnd,
+      endTime: peakTime,
+      description: 'Maximum activity - ideal for baking',
+      descriptionKey: 'peakPhaseDesc',
+    },
+    {
+      name: 'Decline Phase',
+      nameKey: 'declinePhase',
+      startTime: peakTime,
+      endTime: peakEnd,
+      description: 'Activity decreasing - still usable',
+      descriptionKey: 'declinePhaseDesc',
+    },
+  ];
 }
 
 export function calculateFeedingSchedule(input: CalculationInput): CalculationResult {
@@ -207,14 +311,31 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
   
   let feedingTime: Date;
   let estimatedPeakTime: Date;
+  let recommendedRatio: FeedingRatio | null = null;
   
   if (input.useTargetWindow && input.targetPeakStart && input.targetPeakEnd) {
-    // If using target window, calculate feeding time to hit the window
+    // Calculate the target midpoint
     const targetMidpoint = new Date(
       (input.targetPeakStart.getTime() + input.targetPeakEnd.getTime()) / 2
     );
-    feedingTime = new Date(targetMidpoint.getTime() - fermentationHours * 60 * 60 * 1000);
-    estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
+    
+    // Calculate required fermentation hours to reach target from NOW
+    const now = new Date();
+    const hoursUntilTarget = (targetMidpoint.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    if (hoursUntilTarget > 0) {
+      // Feed now, adjust ratio to hit target
+      feedingTime = now;
+      recommendedRatio = calculateRequiredRatio(input, hoursUntilTarget);
+      
+      // Recalculate with recommended ratio
+      const adjustedHours = calculateFermentationTime(input, recommendedRatio);
+      estimatedPeakTime = new Date(feedingTime.getTime() + adjustedHours * 60 * 60 * 1000);
+    } else {
+      // Target is in the past, use current ratio
+      feedingTime = new Date(targetMidpoint.getTime() - fermentationHours * 60 * 60 * 1000);
+      estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
+    }
   } else {
     // No target window - use current time as feeding time
     feedingTime = new Date();
@@ -237,14 +358,8 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
   // Generate suggestions
   const suggestions: string[] = [];
   
-  if (input.useTargetWindow && !isWithinTargetWindow && input.targetPeakStart) {
-    if (estimatedPeakTime < input.targetPeakStart) {
-      suggestions.push('feedLaterOrHigherRatio');
-      suggestions.push('lowerTempToExtend');
-    } else {
-      suggestions.push('feedEarlierOrLowerRatio');
-      suggestions.push('increaseTempToSpeed');
-    }
+  if (input.useTargetWindow && recommendedRatio) {
+    suggestions.push('adjustedRatioRecommendation');
   }
   
   if (input.temperature < 20) {
@@ -257,14 +372,15 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
     suggestions.push('sweetSlowerFermentation');
   }
   
+  // Determine which ratio to use for amount calculations
+  const effectiveRatio = recommendedRatio || input.feedingRatio;
+  
   // Calculate amounts based on old sourdough amount
   const oldStarterAmount = input.oldSourdoughAmount;
-  const totalParts = input.feedingRatio.starter + input.feedingRatio.flour + input.feedingRatio.water;
-  const starterPart = input.feedingRatio.starter / totalParts;
   
   // If old sourdough = 50g and ratio is 1:1:1, then we add 50g flour and 50g water
-  const flourAmount = Math.round((oldStarterAmount / input.feedingRatio.starter) * input.feedingRatio.flour);
-  const waterAmount = Math.round((oldStarterAmount / input.feedingRatio.starter) * input.feedingRatio.water);
+  const flourAmount = Math.round((oldStarterAmount / effectiveRatio.starter) * effectiveRatio.flour);
+  const waterAmount = Math.round((oldStarterAmount / effectiveRatio.starter) * effectiveRatio.water);
   const sugarAmount = input.isSweetMode ? Math.round(flourAmount * (input.sugarPercentage / 100)) : 0;
   const totalSourdoughAmount = oldStarterAmount + flourAmount + waterAmount + sugarAmount;
   
@@ -276,12 +392,15 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
     proteinContent: item.proteinContent,
   }));
   
+  // Generate fermentation timeline
+  const fermentationPhases = generateFermentationPhases(feedingTime, estimatedPeakTime);
+  
   return {
     feedingTime,
     estimatedPeakTime,
     peakWindowStart,
     peakWindowEnd,
-    hoursToReachPeak: fermentationHours,
+    hoursToReachPeak: (estimatedPeakTime.getTime() - feedingTime.getTime()) / (1000 * 60 * 60),
     isWithinTargetWindow,
     suggestions,
     starterAmount: oldStarterAmount,
@@ -292,6 +411,8 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
     blendedProtein: avgProtein,
     blendedFermentationModifier: avgFermentationModifier,
     flourBreakdown,
+    fermentationPhases,
+    recommendedRatio,
   };
 }
 
