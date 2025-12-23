@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 export type Language = 'en' | 'da';
 
@@ -58,6 +58,8 @@ export const translations = {
     targetWindowDesc: 'When do you need your starter to be at peak?',
     from: 'From',
     to: 'To',
+    startTime: 'Start Time',
+    startTimeDesc: 'When do you want to start feeding?',
     useWindow: 'Use target window',
     
     // Old sourdough
@@ -67,15 +69,27 @@ export const translations = {
     
     // Sweet sourdough
     sweetSourdough: 'Sweet Sourdough',
-    sweetSourdoughDesc: 'Add powdered sugar for sweet bread',
+    sweetSourdoughDesc: 'Add sugar for sweet bread',
     enableSweetMode: 'Enable sweet mode',
-    powderedSugar: 'Powdered sugar',
+    powderedSugar: 'Sugar',
     sugarAmount: 'Sugar amount',
+    sweetFlour: 'Flour for sweet',
     
-    // Always on
-    alwaysOn: 'Always On Mode',
-    alwaysOnDesc: 'Starter is kept at peak activity continuously',
-    enableAlwaysOn: 'Enable always on',
+    // Keep screen on
+    keepScreenOn: 'Keep Screen On',
+    keepScreenOnDesc: 'Prevents screen from sleeping during feeding work',
+    screenOnActive: 'Screen will stay on',
+    screenOnNotSupported: 'Not supported on this device',
+    
+    // Dough method
+    doughMethod: 'Dough Method',
+    doughMethodDesc: 'Method for mixing dough',
+    direct: 'Direct',
+    directDesc: 'Mix all ingredients at once',
+    autolyse: 'Autolyse',
+    autolyseDesc: 'Rest flour and water before adding starter (+30 min)',
+    fermentolyse: 'Fermentolyse',
+    fermentolyseDesc: 'Rest flour, water, and starter before adding salt (+60 min)',
     
     // Calculate button
     calculateSchedule: 'Calculate Feeding Schedule',
@@ -119,6 +133,8 @@ export const translations = {
     warmerFasterLessComplex: 'Warmer temperatures may lead to faster but less complex flavour development',
     sweetSlowerFermentation: 'Sugar slows fermentation - expect longer rise times',
     adjustedRatioRecommendation: 'Ratio adjusted to hit your target window - see recommended ratio below',
+    autolyseGlutenDevelopment: 'Autolyse improves gluten development and extensibility',
+    fermentolyseEnhancedFlavour: 'Fermentolyse adds extra flavour complexity from early fermentation',
     
     // Fermentation phases
     fermentationTimeline: 'Fermentation Timeline',
@@ -134,6 +150,9 @@ export const translations = {
     // Recommended ratio
     recommendedRatio: 'Recommended Ratio',
     recommendedRatioDesc: 'Adjusted ratio to hit your target window',
+    
+    // Reset
+    resetSettings: 'Reset to defaults',
   },
   da: {
     // Header
@@ -190,6 +209,8 @@ export const translations = {
     targetWindowDesc: 'Hvornår har du brug for at din surdej topper?',
     from: 'Fra',
     to: 'Til',
+    startTime: 'Starttidspunkt',
+    startTimeDesc: 'Hvornår vil du starte fodringen?',
     useWindow: 'Brug målvindue',
     
     // Old sourdough
@@ -199,15 +220,27 @@ export const translations = {
     
     // Sweet sourdough
     sweetSourdough: 'Sød Surdej',
-    sweetSourdoughDesc: 'Tilføj flormelis til sødt brød',
+    sweetSourdoughDesc: 'Tilføj sukker til sødt brød',
     enableSweetMode: 'Aktiver sød tilstand',
-    powderedSugar: 'Flormelis',
+    powderedSugar: 'Sukker',
     sugarAmount: 'Sukkermængde',
+    sweetFlour: 'Mel til sødt',
     
-    // Always on
-    alwaysOn: 'Altid Aktiv Tilstand',
-    alwaysOnDesc: 'Surdej holdes på peak aktivitet konstant',
-    enableAlwaysOn: 'Aktiver altid aktiv',
+    // Keep screen on
+    keepScreenOn: 'Hold Skærm Tændt',
+    keepScreenOnDesc: 'Forhindrer skærmen i at slukke under fodringsarbejde',
+    screenOnActive: 'Skærmen forbliver tændt',
+    screenOnNotSupported: 'Ikke understøttet på denne enhed',
+    
+    // Dough method
+    doughMethod: 'Dejmetode',
+    doughMethodDesc: 'Metode til blanding af dej',
+    direct: 'Direkte',
+    directDesc: 'Bland alle ingredienser på én gang',
+    autolyse: 'Autolyse',
+    autolyseDesc: 'Hvil mel og vand før tilsætning af surdej (+30 min)',
+    fermentolyse: 'Fermentolyse',
+    fermentolyseDesc: 'Hvil mel, vand og surdej før tilsætning af salt (+60 min)',
     
     // Calculate button
     calculateSchedule: 'Beregn Fodringsplan',
@@ -251,6 +284,8 @@ export const translations = {
     warmerFasterLessComplex: 'Varmere temperaturer kan føre til hurtigere men mindre kompleks smagsudvikling',
     sweetSlowerFermentation: 'Sukker bremser gæring - forvent længere hævetider',
     adjustedRatioRecommendation: 'Forholdet er justeret for at ramme dit målvindue - se anbefalet forhold nedenfor',
+    autolyseGlutenDevelopment: 'Autolyse forbedrer glutenudvikling og smidighed',
+    fermentolyseEnhancedFlavour: 'Fermentolyse tilføjer ekstra smagskompleksitet fra tidlig gæring',
     
     // Fermentation phases
     fermentationTimeline: 'Gærings-tidslinje',
@@ -266,6 +301,9 @@ export const translations = {
     // Recommended ratio
     recommendedRatio: 'Anbefalet Forhold',
     recommendedRatioDesc: 'Justeret forhold for at ramme dit målvindue',
+    
+    // Reset
+    resetSettings: 'Nulstil til standarder',
   },
 };
 
@@ -279,8 +317,8 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+export function I18nProvider({ children, initialLanguage = 'en' }: { children: ReactNode; initialLanguage?: Language }) {
+  const [language, setLanguage] = useState<Language>(initialLanguage);
 
   const t = (key: TranslationKey): string => {
     return translations[language][key] || translations.en[key] || key;
