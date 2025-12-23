@@ -158,7 +158,19 @@ export function SourdoughCalculator() {
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs text-muted-foreground">{t('protein')} (%)</Label>
-                      <Input type="number" step="0.1" value={flour.proteinContent} onChange={(e) => updateFlour(flour.id, { proteinContent: parseFloat(e.target.value) || 0 })} className="text-center" />
+                      <Input 
+                        type="text" 
+                        inputMode="decimal"
+                        value={flour.proteinContent === 0 ? '' : flour.proteinContent} 
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                            updateFlour(flour.id, { proteinContent: value === '' ? 0 : parseFloat(value) || 0 });
+                          }
+                        }} 
+                        className="text-center" 
+                        placeholder="e.g. 11.5"
+                      />
                     </div>
                   </div>
                 </div>
@@ -200,20 +212,6 @@ export function SourdoughCalculator() {
             </CardContent>
           </Card>
 
-          {/* Dough Method */}
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Timer className="h-5 w-5 text-primary" />{t('doughMethod')}</CardTitle><CardDescription>{t('doughMethodDesc')}</CardDescription></CardHeader>
-            <CardContent>
-              <Select value={doughMethod} onValueChange={(v) => setDoughMethod(v as DoughMethod)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="direct">{t('direct')} - {t('directDesc')}</SelectItem>
-                  <SelectItem value="autolyse">{t('autolyse')} - {t('autolyseDesc')}</SelectItem>
-                  <SelectItem value="fermentolyse">{t('fermentolyse')} - {t('fermentolyseDesc')}</SelectItem>
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
 
           {/* Target Window */}
           <Card className="border-border/50 shadow-sm">
@@ -240,15 +238,9 @@ export function SourdoughCalculator() {
             </CardHeader>
             {isSweetMode && (
               <CardContent className="space-y-4">
-                <div className="space-y-2"><Label className="text-xs text-muted-foreground">{t('sweetFlour')}</Label>
-                  <Select value={sweetFlourType} onValueChange={(v) => setSweetFlourType(v as FlourType)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>{Object.keys(FLOUR_DATA).map((key) => (<SelectItem key={key} value={key}>{getFlourName(key as FlourType)}</SelectItem>))}</SelectContent>
-                  </Select>
-                </div>
                 <div className="space-y-2">
                   <div className="flex justify-between"><span className="text-sm text-muted-foreground">{t('sugarAmount')}</span><span className="text-sm font-medium text-primary">{sugarPercentage}%</span></div>
-                  <Slider value={[sugarPercentage]} onValueChange={([v]) => setSugarPercentage(v)} min={5} max={30} step={1} />
+                  <Slider value={[sugarPercentage]} onValueChange={([v]) => setSugarPercentage(v)} min={1} max={10} step={1} />
                 </div>
               </CardContent>
             )}
