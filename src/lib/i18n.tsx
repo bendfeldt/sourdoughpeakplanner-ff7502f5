@@ -61,6 +61,7 @@ export const translations = {
     startTime: 'Start Time',
     startTimeDesc: 'When do you want to start feeding?',
     useWindow: 'Use target window',
+    invalidTimeWindow: 'End time must be after start time, and peak window must be after feeding time',
     
     // Old sourdough
     oldSourdough: 'Old Sourdough Amount',
@@ -212,6 +213,7 @@ export const translations = {
     startTime: 'Starttidspunkt',
     startTimeDesc: 'Hvornår vil du starte fodringen?',
     useWindow: 'Brug målvindue',
+    invalidTimeWindow: 'Sluttidspunkt skal være efter starttidspunkt, og peak-vindue skal være efter fodringstidspunkt',
     
     // Old sourdough
     oldSourdough: 'Gammel Surdejsmængde',
