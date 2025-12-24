@@ -105,21 +105,15 @@ export function usePersonas() {
     updatePersona(id, { name });
   }, [updatePersona]);
 
-  const saveCurrentAsPreset = useCallback((
+  // Auto-save function that updates the active persona with current values
+  const autoSavePersona = useCallback((
     id: string,
-    data: {
-      flourBlend: FlourBlendItem[];
-      feedingRatio: FeedingRatio;
-      ratioInputs: { starter: string; flour: string; water: string };
-      temperature: number;
-      oldSourdoughAmount: number;
-      oldSourdoughInput: string;
-      isSweetMode: boolean;
-      sugarPercentage: number;
-    }
+    data: Partial<SourdoughPersona>
   ) => {
-    updatePersona(id, data);
-  }, [updatePersona]);
+    setPersonas(prev => prev.map(p => 
+      p.id === id ? { ...p, ...data, updatedAt: Date.now() } : p
+    ));
+  }, []);
 
   const duplicatePersona = useCallback((id: string, newName: string) => {
     const source = personas.find(p => p.id === id);
@@ -149,7 +143,7 @@ export function usePersonas() {
     deletePersona,
     updatePersona,
     renamePersona,
-    saveCurrentAsPreset,
+    autoSavePersona,
     duplicatePersona,
   };
 }

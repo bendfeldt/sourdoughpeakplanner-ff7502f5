@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Globe, Cookie, Moon, Sun, Timer, Smartphone, RotateCcw, Save, Copy, Edit2 } from 'lucide-react';
+import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, Copy, Edit2, Check, X } from 'lucide-react';
 import { 
   FLOUR_DATA, 
   calculateFeedingSchedule, 
@@ -15,7 +15,6 @@ import {
   formatTime,
   generateId,
   parseDecimalInput,
-  isValidDecimalInput,
 } from '@/lib/sourdough-calculator';
 import type { FlourType, FlourBlendItem, FeedingRatio } from '@/types/sourdough';
 import { useI18n, Language } from '@/lib/i18n';
@@ -25,8 +24,8 @@ import { useWakeLock } from '@/hooks/use-wake-lock';
 
 export function SourdoughCalculator() {
   const { t, language, setLanguage } = useI18n();
-  const { settings, updateSettings, resetSettings } = useCalculatorSettings();
-  const { personas, activePersona, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, saveCurrentAsPreset, duplicatePersona } = usePersonas();
+  const { settings, updateSettings } = useCalculatorSettings();
+  const { personas, activePersona, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, autoSavePersona, duplicatePersona } = usePersonas();
   const { isActive: wakeLockActive, isSupported: wakeLockSupported, toggleWakeLock } = useWakeLock();
   
   // Local state from active persona
@@ -39,8 +38,19 @@ export function SourdoughCalculator() {
   const [isSweetMode, setIsSweetMode] = useState(activePersona.isSweetMode);
   const [sugarPercentage, setSugarPercentage] = useState(activePersona.sugarPercentage);
   const [showResults, setShowResults] = useState(false);
+  
+  // Raw protein input strings (for comma support)
+  const [proteinInputs, setProteinInputs] = useState<Record<string, string>>(() => {
+    const inputs: Record<string, string> = {};
+    activePersona.flourBlend.forEach(f => {
+      inputs[f.id] = f.proteinContent.toString().replace('.', ',');
+    });
+    return inputs;
+  });
+  
+  // Rename state
   const [editingName, setEditingName] = useState(false);
-  const [newPersonaName, setNewPersonaName] = useState('');
+  const [editNameValue, setEditNameValue] = useState('');
 
   // Sync from active persona when switching
   useEffect(() => {
@@ -53,7 +63,33 @@ export function SourdoughCalculator() {
     setIsSweetMode(activePersona.isSweetMode);
     setSugarPercentage(activePersona.sugarPercentage);
     setShowResults(false);
+    // Reset protein inputs
+    const inputs: Record<string, string> = {};
+    activePersona.flourBlend.forEach(f => {
+      inputs[f.id] = f.proteinContent.toString().replace('.', ',');
+    });
+    setProteinInputs(inputs);
   }, [activePersonaId, activePersona]);
+
+  // Auto-save persona data when it changes
+  const saveCurrentState = useCallback(() => {
+    autoSavePersona(activePersonaId, {
+      flourBlend,
+      feedingRatio,
+      ratioInputs,
+      temperature,
+      oldSourdoughAmount,
+      oldSourdoughInput,
+      isSweetMode,
+      sugarPercentage,
+    });
+  }, [autoSavePersona, activePersonaId, flourBlend, feedingRatio, ratioInputs, temperature, oldSourdoughAmount, oldSourdoughInput, isSweetMode, sugarPercentage]);
+
+  // Debounced auto-save
+  useEffect(() => {
+    const timeout = setTimeout(saveCurrentState, 500);
+    return () => clearTimeout(timeout);
+  }, [saveCurrentState]);
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', settings.isDarkMode);
@@ -64,6 +100,21 @@ export function SourdoughCalculator() {
     const date = new Date(`${dateStr}T${timeStr}`);
     return isNaN(date.getTime()) ? null : date;
   };
+
+  // Validation: check if end time is after start time
+  const isValidTimeWindow = useMemo(() => {
+    if (!settings.useTargetWindow) return true;
+    
+    const peakStart = parseDateTimeToDate(settings.targetPeakStartDate, settings.targetPeakStartTime);
+    const peakEnd = parseDateTimeToDate(settings.targetPeakEndDate, settings.targetPeakEndTime);
+    const startTime = parseDateTimeToDate(settings.targetStartDate, settings.targetStartTime);
+    
+    if (!peakStart || !peakEnd) return false;
+    if (peakEnd <= peakStart) return false;
+    if (startTime && peakStart <= startTime) return false;
+    
+    return true;
+  }, [settings]);
 
   const totalPercentage = useMemo(() => flourBlend.reduce((sum, item) => sum + item.percentage, 0), [flourBlend]);
 
@@ -82,26 +133,64 @@ export function SourdoughCalculator() {
     });
   }, [flourBlend, feedingRatio, temperature, settings, oldSourdoughAmount, isSweetMode, sugarPercentage]);
 
-  const addFlour = () => setFlourBlend([...flourBlend, { id: generateId(), flourType: 'all-purpose', percentage: 0, proteinContent: FLOUR_DATA['all-purpose'].baseProtein }]);
-  const removeFlour = (id: string) => { if (flourBlend.length > 1) setFlourBlend(flourBlend.filter(f => f.id !== id)); };
+  const addFlour = () => {
+    const newId = generateId();
+    const newFlour = { id: newId, flourType: 'all-purpose' as FlourType, percentage: 0, proteinContent: FLOUR_DATA['all-purpose'].baseProtein };
+    setFlourBlend([...flourBlend, newFlour]);
+    setProteinInputs(prev => ({ ...prev, [newId]: FLOUR_DATA['all-purpose'].baseProtein.toString().replace('.', ',') }));
+  };
+  
+  const removeFlour = (id: string) => { 
+    if (flourBlend.length > 1) {
+      setFlourBlend(flourBlend.filter(f => f.id !== id));
+      setProteinInputs(prev => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
+  };
+  
   const updateFlour = (id: string, updates: Partial<FlourBlendItem>) => {
     setFlourBlend(flourBlend.map(f => {
       if (f.id !== id) return f;
       const updated = { ...f, ...updates };
-      if (updates.flourType && !updates.proteinContent) updated.proteinContent = FLOUR_DATA[updates.flourType].baseProtein;
+      if (updates.flourType && updates.proteinContent === undefined) {
+        updated.proteinContent = FLOUR_DATA[updates.flourType].baseProtein;
+        setProteinInputs(prev => ({ ...prev, [id]: FLOUR_DATA[updates.flourType!].baseProtein.toString().replace('.', ',') }));
+      }
       return updated;
     }));
   };
 
-  const handleSavePreset = () => {
-    saveCurrentAsPreset(activePersonaId, {
-      flourBlend, feedingRatio, ratioInputs, temperature, oldSourdoughAmount, oldSourdoughInput, isSweetMode, sugarPercentage,
-    });
+  const handleProteinInput = (id: string, value: string) => {
+    // Allow empty, digits, and one comma or dot
+    if (value === '' || /^-?\d*[.,]?\d*$/.test(value)) {
+      setProteinInputs(prev => ({ ...prev, [id]: value }));
+      const parsed = parseDecimalInput(value);
+      updateFlour(id, { proteinContent: parsed });
+    }
   };
 
   const handleAddPersona = () => {
     const name = `Starter ${personas.length + 1}`;
     addPersona(name);
+  };
+
+  const handleStartRename = () => {
+    setEditNameValue(activePersona.name);
+    setEditingName(true);
+  };
+
+  const handleConfirmRename = () => {
+    if (editNameValue.trim()) {
+      renamePersona(activePersonaId, editNameValue.trim());
+    }
+    setEditingName(false);
+  };
+
+  const handleCancelRename = () => {
+    setEditingName(false);
   };
 
   const getFlourName = (flourType: FlourType): string => t(flourType as any) || FLOUR_DATA[flourType].name;
@@ -114,12 +203,32 @@ export function SourdoughCalculator() {
       {/* Header controls */}
       <div className="flex flex-wrap justify-between gap-4">
         <div className="flex items-center gap-2 flex-wrap">
-          <Select value={activePersonaId} onValueChange={setActivePersonaId}>
-            <SelectTrigger className="w-48"><SelectValue placeholder="Select starter" /></SelectTrigger>
-            <SelectContent>
-              {personas.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          {editingName ? (
+            <div className="flex items-center gap-1">
+              <Input 
+                value={editNameValue} 
+                onChange={(e) => setEditNameValue(e.target.value)}
+                className="w-40 h-9"
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleConfirmRename();
+                  if (e.key === 'Escape') handleCancelRename();
+                }}
+              />
+              <Button variant="ghost" size="icon" onClick={handleConfirmRename}><Check className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" onClick={handleCancelRename}><X className="h-4 w-4" /></Button>
+            </div>
+          ) : (
+            <>
+              <Select value={activePersonaId} onValueChange={setActivePersonaId}>
+                <SelectTrigger className="w-48"><SelectValue placeholder="Select starter" /></SelectTrigger>
+                <SelectContent>
+                  {personas.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Button variant="ghost" size="icon" onClick={handleStartRename} title="Rename"><Edit2 className="h-4 w-4" /></Button>
+            </>
+          )}
           <Button variant="ghost" size="icon" onClick={handleAddPersona} title="Add new starter"><Plus className="h-4 w-4" /></Button>
           <Button variant="ghost" size="icon" onClick={() => duplicatePersona(activePersonaId, `${activePersona.name} (copy)`)} title="Duplicate"><Copy className="h-4 w-4" /></Button>
           {personas.length > 1 && <Button variant="ghost" size="icon" onClick={() => deletePersona(activePersonaId)} title="Delete"><Trash2 className="h-4 w-4" /></Button>}
@@ -175,13 +284,8 @@ export function SourdoughCalculator() {
                       <Input 
                         type="text" 
                         inputMode="decimal"
-                        value={flour.proteinContent === 0 ? '' : flour.proteinContent.toString().replace('.', ',')} 
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (isValidDecimalInput(value)) {
-                            updateFlour(flour.id, { proteinContent: parseDecimalInput(value) });
-                          }
-                        }} 
+                        value={proteinInputs[flour.id] ?? ''} 
+                        onChange={(e) => handleProteinInput(flour.id, e.target.value)} 
                         className="text-center" 
                         placeholder="e.g. 11,5"
                       />
@@ -244,17 +348,23 @@ export function SourdoughCalculator() {
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">{t('from')}</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="date" value={settings.targetPeakStartDate} min={getTodayString()} onChange={(e) => updateSettings({ targetPeakStartDate: e.target.value })} />
+                    <Input type="date" value={settings.targetPeakStartDate} min={settings.targetStartDate || getTodayString()} onChange={(e) => updateSettings({ targetPeakStartDate: e.target.value })} />
                     <Input type="time" value={settings.targetPeakStartTime} onChange={(e) => updateSettings({ targetPeakStartTime: e.target.value })} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">{t('to')}</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="date" value={settings.targetPeakEndDate} min={getTodayString()} onChange={(e) => updateSettings({ targetPeakEndDate: e.target.value })} />
+                    <Input type="date" value={settings.targetPeakEndDate} min={settings.targetPeakStartDate || getTodayString()} onChange={(e) => updateSettings({ targetPeakEndDate: e.target.value })} />
                     <Input type="time" value={settings.targetPeakEndTime} onChange={(e) => updateSettings({ targetPeakEndTime: e.target.value })} />
                   </div>
                 </div>
+                {!isValidTimeWindow && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {t('invalidTimeWindow')}
+                  </p>
+                )}
               </CardContent>
             )}
           </Card>
@@ -282,10 +392,7 @@ export function SourdoughCalculator() {
             </CardHeader>
           </Card>
 
-          <div className="flex gap-2">
-            <Button onClick={handleSavePreset} variant="outline" className="flex-1"><Save className="h-4 w-4 mr-2" />{t('resetSettings')}</Button>
-            <Button onClick={() => setShowResults(true)} className="flex-1 h-12 text-lg font-medium" size="lg" disabled={totalPercentage !== 100}>{t('calculateSchedule')}</Button>
-          </div>
+          <Button onClick={() => setShowResults(true)} className="w-full h-12 text-lg font-medium" size="lg" disabled={totalPercentage !== 100 || (settings.useTargetWindow && !isValidTimeWindow)}>{t('calculateSchedule')}</Button>
         </div>
 
         {/* Results */}
@@ -307,7 +414,7 @@ export function SourdoughCalculator() {
                     <p className="text-sm font-medium text-muted-foreground">{t('flourBreakdown')}</p>
                     {result.flourBreakdown.map((item, i) => (
                       <div key={i} className="flex justify-between items-center py-1">
-                        <span className="text-sm">{getFlourName(item.flourType)} <span className="text-xs text-muted-foreground">({item.proteinContent}%)</span></span>
+                        <span className="text-sm">{getFlourName(item.flourType)} <span className="text-xs text-muted-foreground">({item.proteinContent.toString().replace('.', ',')}%)</span></span>
                         <span className="font-bold text-primary">{item.amountGrams}g</span>
                       </div>
                     ))}
