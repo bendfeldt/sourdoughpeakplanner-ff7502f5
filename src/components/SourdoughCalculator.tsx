@@ -7,87 +7,80 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Globe, Cookie, Beaker, Moon, Sun, Timer, Smartphone, RotateCcw } from 'lucide-react';
+import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Globe, Cookie, Moon, Sun, Timer, Smartphone, RotateCcw, Save, Copy, Edit2 } from 'lucide-react';
 import { 
-  FlourType, 
   FLOUR_DATA, 
   calculateFeedingSchedule, 
   formatDateTime,
   formatTime,
   generateId,
-  type FeedingRatio,
-  type FlourBlendItem,
-  type DoughMethod,
+  parseDecimalInput,
+  isValidDecimalInput,
 } from '@/lib/sourdough-calculator';
+import type { FlourType, FlourBlendItem, FeedingRatio } from '@/types/sourdough';
 import { useI18n, Language } from '@/lib/i18n';
-import { useCalculatorCache } from '@/hooks/use-calculator-cache';
+import { useCalculatorSettings } from '@/hooks/use-calculator-cache';
+import { usePersonas } from '@/hooks/use-personas';
 import { useWakeLock } from '@/hooks/use-wake-lock';
 
 export function SourdoughCalculator() {
   const { t, language, setLanguage } = useI18n();
-  const { cache, updateCache, resetCache } = useCalculatorCache();
+  const { settings, updateSettings, resetSettings } = useCalculatorSettings();
+  const { personas, activePersona, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, saveCurrentAsPreset, duplicatePersona } = usePersonas();
   const { isActive: wakeLockActive, isSupported: wakeLockSupported, toggleWakeLock } = useWakeLock();
   
-  // Use cached values
-  const [flourBlend, setFlourBlend] = useState<FlourBlendItem[]>(cache.flourBlend);
-  const [feedingRatio, setFeedingRatio] = useState<FeedingRatio>(cache.feedingRatio);
-  const [ratioInputs, setRatioInputs] = useState(cache.ratioInputs);
-  const [temperature, setTemperature] = useState(cache.temperature);
-  const [useTargetWindow, setUseTargetWindow] = useState(cache.useTargetWindow);
-  const [targetStartTime, setTargetStartTime] = useState(cache.targetStartTime);
-  const [targetPeakStartTime, setTargetPeakStartTime] = useState(cache.targetPeakStartTime);
-  const [targetPeakEndTime, setTargetPeakEndTime] = useState(cache.targetPeakEndTime);
-  const [oldSourdoughAmount, setOldSourdoughAmount] = useState(cache.oldSourdoughAmount);
-  const [oldSourdoughInput, setOldSourdoughInput] = useState(cache.oldSourdoughInput);
-  const [isSweetMode, setIsSweetMode] = useState(cache.isSweetMode);
-  const [sugarPercentage, setSugarPercentage] = useState(cache.sugarPercentage);
-  const [sweetFlourType, setSweetFlourType] = useState<FlourType>(cache.sweetFlourType);
-  const [doughMethod, setDoughMethod] = useState<DoughMethod>(cache.doughMethod);
-  const [isDarkMode, setIsDarkMode] = useState(cache.isDarkMode);
+  // Local state from active persona
+  const [flourBlend, setFlourBlend] = useState<FlourBlendItem[]>(activePersona.flourBlend);
+  const [feedingRatio, setFeedingRatio] = useState<FeedingRatio>(activePersona.feedingRatio);
+  const [ratioInputs, setRatioInputs] = useState(activePersona.ratioInputs);
+  const [temperature, setTemperature] = useState(activePersona.temperature);
+  const [oldSourdoughAmount, setOldSourdoughAmount] = useState(activePersona.oldSourdoughAmount);
+  const [oldSourdoughInput, setOldSourdoughInput] = useState(activePersona.oldSourdoughInput);
+  const [isSweetMode, setIsSweetMode] = useState(activePersona.isSweetMode);
+  const [sugarPercentage, setSugarPercentage] = useState(activePersona.sugarPercentage);
   const [showResults, setShowResults] = useState(false);
+  const [editingName, setEditingName] = useState(false);
+  const [newPersonaName, setNewPersonaName] = useState('');
 
-  // Sync state to cache
+  // Sync from active persona when switching
   useEffect(() => {
-    updateCache({
-      flourBlend, feedingRatio, ratioInputs, temperature, oldSourdoughAmount, oldSourdoughInput,
-      isSweetMode, sugarPercentage, sweetFlourType, useTargetWindow, targetStartTime,
-      targetPeakStartTime, targetPeakEndTime, doughMethod, language, isDarkMode,
-    });
-  }, [flourBlend, feedingRatio, ratioInputs, temperature, oldSourdoughAmount, oldSourdoughInput,
-      isSweetMode, sugarPercentage, sweetFlourType, useTargetWindow, targetStartTime,
-      targetPeakStartTime, targetPeakEndTime, doughMethod, language, isDarkMode, updateCache]);
+    setFlourBlend(activePersona.flourBlend);
+    setFeedingRatio(activePersona.feedingRatio);
+    setRatioInputs(activePersona.ratioInputs);
+    setTemperature(activePersona.temperature);
+    setOldSourdoughAmount(activePersona.oldSourdoughAmount);
+    setOldSourdoughInput(activePersona.oldSourdoughInput);
+    setIsSweetMode(activePersona.isSweetMode);
+    setSugarPercentage(activePersona.sugarPercentage);
+    setShowResults(false);
+  }, [activePersonaId, activePersona]);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDarkMode);
-  }, [isDarkMode]);
+    document.documentElement.classList.toggle('dark', settings.isDarkMode);
+  }, [settings.isDarkMode]);
 
-  const parseTimeToDate = (timeStr: string): Date | null => {
-    if (!timeStr) return null;
-    const [hours, minutes] = timeStr.split(':').map(Number);
-    const date = new Date();
-    date.setHours(hours, minutes, 0, 0);
-    if (date < new Date()) date.setDate(date.getDate() + 1);
-    return date;
+  const parseDateTimeToDate = (dateStr: string, timeStr: string): Date | null => {
+    if (!dateStr || !timeStr) return null;
+    const date = new Date(`${dateStr}T${timeStr}`);
+    return isNaN(date.getTime()) ? null : date;
   };
 
   const totalPercentage = useMemo(() => flourBlend.reduce((sum, item) => sum + item.percentage, 0), [flourBlend]);
 
   const result = useMemo(() => {
     return calculateFeedingSchedule({
-      flourBlend: isSweetMode ? [{ id: 'sweet', flourType: sweetFlourType, percentage: 100, proteinContent: FLOUR_DATA[sweetFlourType].baseProtein }] : flourBlend,
+      flourBlend,
       feedingRatio,
       temperature,
-      targetStartTime: parseTimeToDate(targetStartTime),
-      targetPeakStart: parseTimeToDate(targetPeakStartTime),
-      targetPeakEnd: parseTimeToDate(targetPeakEndTime),
-      useTargetWindow,
+      targetStartTime: parseDateTimeToDate(settings.targetStartDate, settings.targetStartTime),
+      targetPeakStart: parseDateTimeToDate(settings.targetPeakStartDate, settings.targetPeakStartTime),
+      targetPeakEnd: parseDateTimeToDate(settings.targetPeakEndDate, settings.targetPeakEndTime),
+      useTargetWindow: settings.useTargetWindow,
       oldSourdoughAmount,
       isSweetMode,
       sugarPercentage,
-      sweetFlourType,
-      doughMethod,
     });
-  }, [flourBlend, feedingRatio, temperature, targetStartTime, targetPeakStartTime, targetPeakEndTime, useTargetWindow, oldSourdoughAmount, isSweetMode, sugarPercentage, sweetFlourType, doughMethod]);
+  }, [flourBlend, feedingRatio, temperature, settings, oldSourdoughAmount, isSweetMode, sugarPercentage]);
 
   const addFlour = () => setFlourBlend([...flourBlend, { id: generateId(), flourType: 'all-purpose', percentage: 0, proteinContent: FLOUR_DATA['all-purpose'].baseProtein }]);
   const removeFlour = (id: string) => { if (flourBlend.length > 1) setFlourBlend(flourBlend.filter(f => f.id !== id)); };
@@ -100,17 +93,41 @@ export function SourdoughCalculator() {
     }));
   };
 
+  const handleSavePreset = () => {
+    saveCurrentAsPreset(activePersonaId, {
+      flourBlend, feedingRatio, ratioInputs, temperature, oldSourdoughAmount, oldSourdoughInput, isSweetMode, sugarPercentage,
+    });
+  };
+
+  const handleAddPersona = () => {
+    const name = `Starter ${personas.length + 1}`;
+    addPersona(name);
+  };
+
   const getFlourName = (flourType: FlourType): string => t(flourType as any) || FLOUR_DATA[flourType].name;
   const getFlourDescription = (flourType: FlourType): string => t(`${flourType}-desc` as any) || FLOUR_DATA[flourType].description;
 
+  const getTodayString = () => new Date().toISOString().split('T')[0];
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
-      <div className="flex justify-end gap-4">
-        <Button variant="ghost" size="icon" onClick={() => setIsDarkMode(!isDarkMode)} className="text-muted-foreground hover:text-foreground">
-          {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-        </Button>
+      {/* Header controls */}
+      <div className="flex flex-wrap justify-between gap-4">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={activePersonaId} onValueChange={setActivePersonaId}>
+            <SelectTrigger className="w-48"><SelectValue placeholder="Select starter" /></SelectTrigger>
+            <SelectContent>
+              {personas.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button variant="ghost" size="icon" onClick={handleAddPersona} title="Add new starter"><Plus className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon" onClick={() => duplicatePersona(activePersonaId, `${activePersona.name} (copy)`)} title="Duplicate"><Copy className="h-4 w-4" /></Button>
+          {personas.length > 1 && <Button variant="ghost" size="icon" onClick={() => deletePersona(activePersonaId)} title="Delete"><Trash2 className="h-4 w-4" /></Button>}
+        </div>
         <div className="flex items-center gap-2">
-          <Globe className="h-4 w-4 text-muted-foreground" />
+          <Button variant="ghost" size="icon" onClick={() => updateSettings({ isDarkMode: !settings.isDarkMode })}>
+            {settings.isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
           <Select value={language} onValueChange={(v) => setLanguage(v as Language)}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
             <SelectContent>
@@ -119,9 +136,6 @@ export function SourdoughCalculator() {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="ghost" size="sm" onClick={resetCache} className="text-muted-foreground">
-          <RotateCcw className="h-4 w-4 mr-1" />{t('resetSettings')}
-        </Button>
       </div>
 
       <div className="text-center space-y-2">
@@ -148,7 +162,7 @@ export function SourdoughCalculator() {
                       <SelectTrigger className="flex-1"><SelectValue /></SelectTrigger>
                       <SelectContent>{Object.keys(FLOUR_DATA).map((key) => (<SelectItem key={key} value={key}>{getFlourName(key as FlourType)}</SelectItem>))}</SelectContent>
                     </Select>
-                    {flourBlend.length > 1 && (<Button variant="ghost" size="icon" onClick={() => removeFlour(flour.id)} className="shrink-0 text-muted-foreground hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>)}
+                    {flourBlend.length > 1 && (<Button variant="ghost" size="icon" onClick={() => removeFlour(flour.id)} className="shrink-0"><Trash2 className="h-4 w-4" /></Button>)}
                   </div>
                   <p className="text-xs text-muted-foreground">{getFlourDescription(flour.flourType)}</p>
                   <div className="space-y-3">
@@ -161,15 +175,15 @@ export function SourdoughCalculator() {
                       <Input 
                         type="text" 
                         inputMode="decimal"
-                        value={flour.proteinContent === 0 ? '' : flour.proteinContent} 
+                        value={flour.proteinContent === 0 ? '' : flour.proteinContent.toString().replace('.', ',')} 
                         onChange={(e) => {
                           const value = e.target.value;
-                          if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                            updateFlour(flour.id, { proteinContent: value === '' ? 0 : parseFloat(value) || 0 });
+                          if (isValidDecimalInput(value)) {
+                            updateFlour(flour.id, { proteinContent: parseDecimalInput(value) });
                           }
                         }} 
                         className="text-center" 
-                        placeholder="e.g. 11.5"
+                        placeholder="e.g. 11,5"
                       />
                     </div>
                   </div>
@@ -182,22 +196,22 @@ export function SourdoughCalculator() {
 
           {/* Old Sourdough */}
           <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Beaker className="h-5 w-5 text-primary" />{t('oldSourdough')}</CardTitle><CardDescription>{t('oldSourdoughDesc')}</CardDescription></CardHeader>
+            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('oldSourdough')}</CardTitle></CardHeader>
             <CardContent><div className="flex items-center gap-2"><Input type="number" value={oldSourdoughInput} onChange={(e) => { setOldSourdoughInput(e.target.value); const n = parseFloat(e.target.value); if (!isNaN(n) && n > 0) setOldSourdoughAmount(n); }} className="text-center text-lg font-medium" /><span className="text-muted-foreground font-medium">g</span></div></CardContent>
           </Card>
 
           {/* Feeding Ratio */}
           <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('feedingRatio')}</CardTitle><CardDescription>{t('feedingRatioDesc')}</CardDescription></CardHeader>
+            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('feedingRatio')}</CardTitle></CardHeader>
             <CardContent>
               <div className="flex items-center gap-3">
-                {['starter', 'flour', 'water'].map((key, i) => (<>
-                  {i > 0 && <span className="text-2xl text-muted-foreground font-light mt-5">:</span>}
-                  <div className="flex-1" key={key}>
-                    <Label className="text-xs text-muted-foreground">{t(key as any)}</Label>
-                    <Input type="number" step="0.1" value={ratioInputs[key as keyof typeof ratioInputs]} onChange={(e) => { setRatioInputs({ ...ratioInputs, [key]: e.target.value }); const n = parseFloat(e.target.value); if (!isNaN(n) && n > 0) setFeedingRatio({ ...feedingRatio, [key]: n }); }} className="text-center" />
+                {(['starter', 'flour', 'water'] as const).map((key, i) => (<div key={key} className="flex items-center gap-2">
+                  {i > 0 && <span className="text-2xl text-muted-foreground font-light">:</span>}
+                  <div className="flex-1">
+                    <Label className="text-xs text-muted-foreground">{t(key)}</Label>
+                    <Input type="number" step="0.1" value={ratioInputs[key]} onChange={(e) => { setRatioInputs({ ...ratioInputs, [key]: e.target.value }); const n = parseFloat(e.target.value); if (!isNaN(n) && n > 0) setFeedingRatio({ ...feedingRatio, [key]: n }); }} className="text-center" />
                   </div>
-                </>))}
+                </div>))}
               </div>
               <p className="text-xs text-muted-foreground mt-3">{t('commonRatios')}</p>
             </CardContent>
@@ -212,19 +226,34 @@ export function SourdoughCalculator() {
             </CardContent>
           </Card>
 
-
           {/* Target Window */}
           <Card className="border-border/50 shadow-sm">
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between"><CardTitle className="flex items-center gap-2 text-lg font-display"><Clock className="h-5 w-5 text-primary" />{t('targetPeakWindow')}</CardTitle><Switch checked={useTargetWindow} onCheckedChange={setUseTargetWindow} /></div>
+              <div className="flex items-center justify-between"><CardTitle className="flex items-center gap-2 text-lg font-display"><Clock className="h-5 w-5 text-primary" />{t('targetPeakWindow')}</CardTitle><Switch checked={settings.useTargetWindow} onCheckedChange={(v) => updateSettings({ useTargetWindow: v })} /></div>
               <CardDescription>{t('targetWindowDesc')}</CardDescription>
             </CardHeader>
-            {useTargetWindow && (
+            {settings.useTargetWindow && (
               <CardContent className="space-y-4">
-                <div className="space-y-2"><Label className="text-xs text-muted-foreground">{t('startTime')}</Label><Input type="time" value={targetStartTime} onChange={(e) => setTargetStartTime(e.target.value)} /></div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2"><Label className="text-xs text-muted-foreground">{t('from')}</Label><Input type="time" value={targetPeakStartTime} onChange={(e) => setTargetPeakStartTime(e.target.value)} /></div>
-                  <div className="space-y-2"><Label className="text-xs text-muted-foreground">{t('to')}</Label><Input type="time" value={targetPeakEndTime} onChange={(e) => setTargetPeakEndTime(e.target.value)} /></div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t('startTime')}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="date" value={settings.targetStartDate} min={getTodayString()} onChange={(e) => updateSettings({ targetStartDate: e.target.value })} />
+                    <Input type="time" value={settings.targetStartTime} onChange={(e) => updateSettings({ targetStartTime: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t('from')}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="date" value={settings.targetPeakStartDate} min={getTodayString()} onChange={(e) => updateSettings({ targetPeakStartDate: e.target.value })} />
+                    <Input type="time" value={settings.targetPeakStartTime} onChange={(e) => updateSettings({ targetPeakStartTime: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t('to')}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="date" value={settings.targetPeakEndDate} min={getTodayString()} onChange={(e) => updateSettings({ targetPeakEndDate: e.target.value })} />
+                    <Input type="time" value={settings.targetPeakEndTime} onChange={(e) => updateSettings({ targetPeakEndTime: e.target.value })} />
+                  </div>
                 </div>
               </CardContent>
             )}
@@ -234,7 +263,6 @@ export function SourdoughCalculator() {
           <Card className="border-border/50 shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between"><CardTitle className="flex items-center gap-2 text-lg font-display"><Cookie className="h-5 w-5 text-primary" />{t('sweetSourdough')}</CardTitle><Switch checked={isSweetMode} onCheckedChange={setIsSweetMode} /></div>
-              <CardDescription>{t('sweetSourdoughDesc')}</CardDescription>
             </CardHeader>
             {isSweetMode && (
               <CardContent className="space-y-4">
@@ -252,12 +280,12 @@ export function SourdoughCalculator() {
               <div className="flex items-center justify-between"><CardTitle className="flex items-center gap-2 text-lg font-display"><Smartphone className="h-5 w-5 text-primary" />{t('keepScreenOn')}</CardTitle><Switch checked={wakeLockActive} onCheckedChange={toggleWakeLock} disabled={!wakeLockSupported} /></div>
               <CardDescription>{t('keepScreenOnDesc')}</CardDescription>
             </CardHeader>
-            {(wakeLockActive || !wakeLockSupported) && (
-              <CardContent><Badge variant={wakeLockActive ? "default" : "secondary"}>{wakeLockActive ? t('screenOnActive') : t('screenOnNotSupported')}</Badge></CardContent>
-            )}
           </Card>
 
-          <Button onClick={() => setShowResults(true)} className="w-full h-12 text-lg font-medium" size="lg" disabled={!isSweetMode && totalPercentage !== 100}>{t('calculateSchedule')}</Button>
+          <div className="flex gap-2">
+            <Button onClick={handleSavePreset} variant="outline" className="flex-1"><Save className="h-4 w-4 mr-2" />{t('resetSettings')}</Button>
+            <Button onClick={() => setShowResults(true)} className="flex-1 h-12 text-lg font-medium" size="lg" disabled={totalPercentage !== 100}>{t('calculateSchedule')}</Button>
+          </div>
         </div>
 
         {/* Results */}
@@ -274,7 +302,7 @@ export function SourdoughCalculator() {
                     <div className="p-4 rounded-lg bg-muted/50"><p className="text-2xl font-bold text-foreground">{result.flourAmount}g</p><p className="text-xs text-muted-foreground mt-1">{t('flour')}</p></div>
                     <div className="p-4 rounded-lg bg-muted/50"><p className="text-2xl font-bold text-foreground">{result.waterAmount}g</p><p className="text-xs text-muted-foreground mt-1">{t('water')}</p></div>
                   </div>
-                  {/* Flour breakdown integrated */}
+                  {/* Flour breakdown */}
                   <div className="space-y-2 border-t border-border/30 pt-4">
                     <p className="text-sm font-medium text-muted-foreground">{t('flourBreakdown')}</p>
                     {result.flourBreakdown.map((item, i) => (
@@ -305,9 +333,9 @@ export function SourdoughCalculator() {
                 <CardContent><div className="relative"><div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" /><div className="space-y-4">{result.fermentationPhases.map((phase, i) => (<div key={i} className="relative pl-10"><div className={`absolute left-2.5 top-1 w-3 h-3 rounded-full border-2 border-background ${i === 2 ? 'bg-accent' : i === 1 ? 'bg-primary' : 'bg-muted-foreground'}`} /><div className={`p-3 rounded-lg ${i === 2 ? 'bg-accent/20 text-accent' : i === 1 ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}><div className="flex items-center justify-between mb-1"><span className="font-medium text-sm">{t(phase.nameKey as any)}</span><span className="text-xs">{formatTime(phase.startTime)} — {formatTime(phase.endTime)}</span></div><p className="text-xs opacity-80">{t(phase.descriptionKey as any)}</p></div></div>))}</div></div></CardContent>
               </Card>
 
-              {useTargetWindow && (
-                <Card className={`border-2 ${result.isWithinTargetWindow ? 'border-success/30 bg-success/5' : 'border-warning/30 bg-warning/5'}`}>
-                  <CardContent className="pt-6"><div className="flex items-start gap-3">{result.isWithinTargetWindow ? <CheckCircle className="h-6 w-6 text-success shrink-0" /> : <AlertCircle className="h-6 w-6 text-warning shrink-0" />}<div><Badge variant="outline" className={result.isWithinTargetWindow ? 'border-success text-success' : 'border-warning text-warning'}>{result.isWithinTargetWindow ? t('perfectTiming') : t('timingAdjustmentNeeded')}</Badge><p className="text-sm text-muted-foreground mt-2">{result.isWithinTargetWindow ? t('starterWillPeak') : t('peakOutsideWindow')}</p></div></div></CardContent>
+              {settings.useTargetWindow && (
+                <Card className={`border-2 ${result.isWithinTargetWindow ? 'border-green-500/30 bg-green-500/5' : 'border-yellow-500/30 bg-yellow-500/5'}`}>
+                  <CardContent className="pt-6"><div className="flex items-start gap-3">{result.isWithinTargetWindow ? <CheckCircle className="h-6 w-6 text-green-500 shrink-0" /> : <AlertCircle className="h-6 w-6 text-yellow-500 shrink-0" />}<div><Badge variant="outline" className={result.isWithinTargetWindow ? 'border-green-500 text-green-500' : 'border-yellow-500 text-yellow-500'}>{result.isWithinTargetWindow ? t('perfectTiming') : t('timingAdjustmentNeeded')}</Badge><p className="text-sm text-muted-foreground mt-2">{result.isWithinTargetWindow ? t('starterWillPeak') : t('peakOutsideWindow')}</p></div></div></CardContent>
                 </Card>
               )}
 

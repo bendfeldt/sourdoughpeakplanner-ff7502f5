@@ -1,86 +1,65 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FlourBlendItem, FeedingRatio, FlourType, FLOUR_DATA, generateId } from '@/lib/sourdough-calculator';
 
-export type DoughMethod = 'direct' | 'autolyse' | 'fermentolyse';
+const SETTINGS_KEY = 'sourdough-calculator-settings';
 
-export interface CalculatorCache {
-  flourBlend: FlourBlendItem[];
-  feedingRatio: FeedingRatio;
-  ratioInputs: { starter: string; flour: string; water: string };
-  temperature: number;
-  oldSourdoughAmount: number;
-  oldSourdoughInput: string;
-  isSweetMode: boolean;
-  sugarPercentage: number;
-  sweetFlourType: FlourType;
-  useTargetWindow: boolean;
-  targetStartTime: string;
-  targetPeakStartTime: string;
-  targetPeakEndTime: string;
-  doughMethod: DoughMethod;
+export interface CalculatorSettings {
   language: 'en' | 'da';
   isDarkMode: boolean;
+  useTargetWindow: boolean;
+  targetStartDate: string; // ISO date string YYYY-MM-DD
+  targetStartTime: string; // HH:MM
+  targetPeakStartDate: string;
+  targetPeakStartTime: string;
+  targetPeakEndDate: string;
+  targetPeakEndTime: string;
 }
 
-const CACHE_KEY = 'sourdough-calculator-cache';
-
-const getDefaultCache = (): CalculatorCache => ({
-  flourBlend: [
-    { id: generateId(), flourType: 'bread-flour', percentage: 100, proteinContent: FLOUR_DATA['bread-flour'].baseProtein }
-  ],
-  feedingRatio: { starter: 1, flour: 1, water: 1 },
-  ratioInputs: { starter: '1', flour: '1', water: '1' },
-  temperature: 24,
-  oldSourdoughAmount: 50,
-  oldSourdoughInput: '50',
-  isSweetMode: false,
-  sugarPercentage: 10,
-  sweetFlourType: 'bread-flour',
-  useTargetWindow: false,
-  targetStartTime: '',
-  targetPeakStartTime: '',
-  targetPeakEndTime: '',
-  doughMethod: 'direct',
+const getDefaultSettings = (): CalculatorSettings => ({
   language: 'en',
   isDarkMode: typeof window !== 'undefined' 
     ? window.matchMedia('(prefers-color-scheme: dark)').matches 
     : false,
+  useTargetWindow: false,
+  targetStartDate: '',
+  targetStartTime: '',
+  targetPeakStartDate: '',
+  targetPeakStartTime: '',
+  targetPeakEndDate: '',
+  targetPeakEndTime: '',
 });
 
-export function useCalculatorCache() {
-  const [cache, setCache] = useState<CalculatorCache>(() => {
-    if (typeof window === 'undefined') return getDefaultCache();
+export function useCalculatorSettings() {
+  const [settings, setSettings] = useState<CalculatorSettings>(() => {
+    if (typeof window === 'undefined') return getDefaultSettings();
     
     try {
-      const stored = localStorage.getItem(CACHE_KEY);
+      const stored = localStorage.getItem(SETTINGS_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Merge with defaults to handle new fields
-        return { ...getDefaultCache(), ...parsed };
+        return { ...getDefaultSettings(), ...parsed };
       }
     } catch (e) {
-      console.warn('Failed to load calculator cache:', e);
+      console.warn('Failed to load calculator settings:', e);
     }
-    return getDefaultCache();
+    return getDefaultSettings();
   });
 
-  // Save to localStorage whenever cache changes
   useEffect(() => {
     try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify(cache));
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
     } catch (e) {
-      console.warn('Failed to save calculator cache:', e);
+      console.warn('Failed to save calculator settings:', e);
     }
-  }, [cache]);
+  }, [settings]);
 
-  const updateCache = useCallback((updates: Partial<CalculatorCache>) => {
-    setCache(prev => ({ ...prev, ...updates }));
+  const updateSettings = useCallback((updates: Partial<CalculatorSettings>) => {
+    setSettings(prev => ({ ...prev, ...updates }));
   }, []);
 
-  const resetCache = useCallback(() => {
-    setCache(getDefaultCache());
-    localStorage.removeItem(CACHE_KEY);
+  const resetSettings = useCallback(() => {
+    setSettings(getDefaultSettings());
+    localStorage.removeItem(SETTINGS_KEY);
   }, []);
 
-  return { cache, updateCache, resetCache };
+  return { settings, updateSettings, resetSettings };
 }
