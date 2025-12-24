@@ -1,21 +1,24 @@
-export type FlourType = 
-  | 'all-purpose'
-  | 'bread-flour'
-  | 'whole-wheat'
-  | 'rye'
-  | 'spelt'
-  | 'oland-wheat'
-  | 'danish-wheat'
-  | 'oat-flour'
-  | 'fuldkornsmel'
-  | 'manitoba';
+import type { 
+  FlourType, 
+  FlourInfo, 
+  FlourBlendItem, 
+  FeedingRatio, 
+  CalculationInput, 
+  FermentationPhase, 
+  FlourBreakdownItem, 
+  CalculationResult 
+} from '@/types/sourdough';
 
-export interface FlourInfo {
-  name: string;
-  baseProtein: number;
-  fermentationModifier: number;
-  description: string;
-}
+export type { 
+  FlourType, 
+  FlourInfo, 
+  FlourBlendItem, 
+  FeedingRatio, 
+  CalculationInput, 
+  FermentationPhase, 
+  FlourBreakdownItem, 
+  CalculationResult 
+};
 
 export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   'all-purpose': {
@@ -27,127 +30,61 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   'bread-flour': {
     name: 'Bread Flour',
     baseProtein: 12.5,
-    fermentationModifier: 1.1,
+    fermentationModifier: 1.05,
     description: 'High protein, excellent gluten structure',
   },
   'whole-wheat': {
     name: 'Whole Wheat',
     baseProtein: 13.5,
-    fermentationModifier: 0.8,
+    fermentationModifier: 0.75,
     description: 'Faster fermentation due to bran enzymes',
   },
   'rye': {
     name: 'Rye',
     baseProtein: 9,
-    fermentationModifier: 0.7,
+    fermentationModifier: 0.6, // Rye ferments significantly faster
     description: 'Very active fermentation, different gluten',
   },
   'spelt': {
     name: 'Spelt',
     baseProtein: 12,
-    fermentationModifier: 0.85,
+    fermentationModifier: 0.8,
     description: 'Ancient grain, slightly faster fermentation',
   },
   'oland-wheat': {
     name: 'Øland Wheat',
     baseProtein: 11.5,
-    fermentationModifier: 0.95,
+    fermentationModifier: 0.9,
     description: 'Danish heritage wheat, excellent flavour',
   },
   'danish-wheat': {
     name: 'Danish Wheat',
     baseProtein: 11,
-    fermentationModifier: 1.0,
+    fermentationModifier: 0.95,
     description: 'Traditional Danish flour, type XX',
   },
   'oat-flour': {
     name: 'Oat Flour',
     baseProtein: 12,
-    fermentationModifier: 0.9,
+    fermentationModifier: 0.85,
     description: 'Adds moisture and softness',
   },
   'fuldkornsmel': {
     name: 'Fuldkornsmel',
     baseProtein: 12.5,
-    fermentationModifier: 0.75,
+    fermentationModifier: 0.7,
     description: 'Full grain Danish flour, robust flavour',
   },
   'manitoba': {
     name: 'Manitoba',
     baseProtein: 14.5,
-    fermentationModifier: 1.2,
+    fermentationModifier: 1.15,
     description: 'Very high protein Canadian wheat',
   },
 };
 
-export type DoughMethod = 'direct' | 'autolyse' | 'fermentolyse';
-
-export interface FlourBlendItem {
-  id: string;
-  flourType: FlourType;
-  percentage: number;
-  proteinContent: number;
-}
-
-export interface FeedingRatio {
-  starter: number;
-  flour: number;
-  water: number;
-}
-
-export interface CalculationInput {
-  flourBlend: FlourBlendItem[];
-  feedingRatio: FeedingRatio;
-  temperature: number;
-  targetStartTime: Date | null;
-  targetPeakStart: Date | null;
-  targetPeakEnd: Date | null;
-  useTargetWindow: boolean;
-  oldSourdoughAmount: number;
-  isSweetMode: boolean;
-  sugarPercentage: number;
-  sweetFlourType: FlourType;
-  doughMethod: DoughMethod;
-}
-
-export interface FermentationPhase {
-  name: string;
-  nameKey: string;
-  startTime: Date;
-  endTime: Date;
-  description: string;
-  descriptionKey: string;
-}
-
-export interface FlourBreakdownItem {
-  flourType: FlourType;
-  percentage: number;
-  amountGrams: number;
-  proteinContent: number;
-}
-
-export interface CalculationResult {
-  feedingTime: Date;
-  estimatedPeakTime: Date;
-  peakWindowStart: Date;
-  peakWindowEnd: Date;
-  hoursToReachPeak: number;
-  isWithinTargetWindow: boolean;
-  suggestions: string[];
-  starterAmount: number;
-  flourAmount: number;
-  waterAmount: number;
-  sugarAmount: number;
-  totalSourdoughAmount: number;
-  blendedProtein: number;
-  blendedFermentationModifier: number;
-  flourBreakdown: FlourBreakdownItem[];
-  fermentationPhases: FermentationPhase[];
-  recommendedRatio: FeedingRatio | null;
-  doughMethodTime: number; // Extra time for autolyse/fermentolyse in minutes
-}
-
-const BASE_FERMENTATION_HOURS = 6;
+// Base fermentation time at 24°C with 1:1:1 ratio and standard bread flour
+const BASE_FERMENTATION_HOURS = 4;
 
 function calculateBlendedValues(flourBlend: FlourBlendItem[]): { 
   avgProtein: number; 
@@ -183,46 +120,53 @@ function calculateBlendedValues(flourBlend: FlourBlendItem[]): {
   };
 }
 
-function calculateFermentationTime(input: CalculationInput, customRatio?: FeedingRatio): number {
+/**
+ * Calculate fermentation time using improved formula:
+ * - Q10 temperature model (fermentation doubles with every 10°C increase)
+ * - Ratio factor based on food availability
+ * - Flour type modifier for different enzyme activities
+ * - Sugar inhibition for sweet doughs
+ */
+export function calculateFermentationTime(input: CalculationInput, customRatio?: FeedingRatio): number {
   const { flourBlend, feedingRatio, temperature, isSweetMode, sugarPercentage } = input;
   const ratio = customRatio || feedingRatio;
-  const { avgProtein, avgFermentationModifier, avgBaseProtein } = calculateBlendedValues(flourBlend);
+  const { avgFermentationModifier } = calculateBlendedValues(flourBlend);
   
-  // Q10 rule for fermentation kinetics
+  // Q10 temperature coefficient - fermentation rate doubles every 10°C
+  // At 24°C (baseline), factor = 1. At 18°C, factor ≈ 1.5 (slower). At 30°C, factor ≈ 0.7 (faster)
   const tempDiff = temperature - 24;
-  const temperatureFactor = Math.pow(0.5, tempDiff / 10);
+  const temperatureFactor = Math.pow(2, -tempDiff / 10);
   
-  // Ratio factor - higher flour ratio means more food, longer fermentation
-  const ratioFactor = (ratio.flour / ratio.starter);
+  // Ratio factor - more flour means more food, longer fermentation
+  // 1:1:1 ratio = 1.0, 1:2:2 = ~1.6, 1:5:5 = ~2.8
+  const ratioFactor = Math.pow(ratio.flour / ratio.starter, 0.7);
   
-  // Protein factor - higher protein slows fermentation slightly
-  const proteinFactor = 1 + (avgProtein - avgBaseProtein) * 0.03;
-  
-  // Sugar inhibition via osmotic pressure
+  // Sugar inhibition via osmotic pressure (for sweet doughs)
   const sugarFactor = isSweetMode 
-    ? 1 / (1 - (sugarPercentage / 100) * 0.8)
+    ? 1 + (sugarPercentage / 100) * 0.5
     : 1;
   
   const fermentationHours = BASE_FERMENTATION_HOURS * 
     avgFermentationModifier * 
     temperatureFactor * 
-    ratioFactor * 
-    proteinFactor *
+    ratioFactor *
     sugarFactor;
   
-  return Math.max(1, Math.min(48, fermentationHours));
+  return Math.max(1, Math.min(72, fermentationHours));
 }
 
-// Calculate required feeding ratio for a target fermentation time
-function calculateRequiredRatio(input: CalculationInput, targetHours: number): FeedingRatio {
+/**
+ * Calculate required feeding ratio for a target fermentation time
+ */
+export function calculateRequiredRatio(input: CalculationInput, targetHours: number): FeedingRatio {
   const { flourBlend, feedingRatio, temperature, isSweetMode, sugarPercentage } = input;
-  const { avgProtein, avgFermentationModifier, avgBaseProtein } = calculateBlendedValues(flourBlend);
+  const { avgFermentationModifier } = calculateBlendedValues(flourBlend);
   
   const tempDiff = temperature - 24;
-  const temperatureFactor = Math.pow(0.5, tempDiff / 10);
-  const proteinFactor = 1 + (avgProtein - avgBaseProtein) * 0.03;
+  const temperatureFactor = Math.pow(2, -tempDiff / 10);
+  
   const sugarFactor = isSweetMode 
-    ? 1 / (1 - (sugarPercentage / 100) * 0.8)
+    ? 1 + (sugarPercentage / 100) * 0.5
     : 1;
   
   // Solve for ratio factor
@@ -230,15 +174,19 @@ function calculateRequiredRatio(input: CalculationInput, targetHours: number): F
     BASE_FERMENTATION_HOURS * 
     avgFermentationModifier * 
     temperatureFactor * 
-    proteinFactor * 
     sugarFactor
   );
   
-  // Clamp to reasonable ratios
-  const clampedRatio = Math.max(0.5, Math.min(10, requiredRatioFactor));
+  // Convert ratio factor back to flour:starter ratio
+  // ratioFactor = (flour/starter)^0.7, so flour/starter = ratioFactor^(1/0.7)
+  const flourStarterRatio = Math.pow(Math.max(0.5, requiredRatioFactor), 1 / 0.7);
   
-  // Keep water ratio proportional to flour
-  const waterRatio = clampedRatio * (feedingRatio.water / feedingRatio.flour);
+  // Clamp to reasonable ratios
+  const clampedRatio = Math.max(0.5, Math.min(10, flourStarterRatio));
+  
+  // Keep water ratio proportional to flour (from original input)
+  const waterFlourProportion = feedingRatio.water / feedingRatio.flour;
+  const waterRatio = clampedRatio * waterFlourProportion;
   
   return {
     starter: 1,
@@ -247,28 +195,17 @@ function calculateRequiredRatio(input: CalculationInput, targetHours: number): F
   };
 }
 
-function getDoughMethodTime(method: DoughMethod): number {
-  switch (method) {
-    case 'autolyse':
-      return 30; // 30 minutes typical autolyse
-    case 'fermentolyse':
-      return 60; // 60 minutes typical fermentolyse
-    default:
-      return 0;
-  }
-}
-
 function generateFermentationPhases(feedingTime: Date, peakTime: Date): FermentationPhase[] {
-  const totalHours = (peakTime.getTime() - feedingTime.getTime()) / (1000 * 60 * 60);
+  const totalMs = peakTime.getTime() - feedingTime.getTime();
   
   // Lag phase: ~10-15% of total time
-  const lagEnd = new Date(feedingTime.getTime() + totalHours * 0.12 * 60 * 60 * 1000);
+  const lagEnd = new Date(feedingTime.getTime() + totalMs * 0.12);
   
-  // Rise phase: 15% to 70%
-  const riseEnd = new Date(feedingTime.getTime() + totalHours * 0.7 * 60 * 60 * 1000);
+  // Rise phase: 12% to 85%
+  const riseEnd = new Date(feedingTime.getTime() + totalMs * 0.85);
   
-  // Peak phase: 70% to 100%
-  const peakEnd = new Date(peakTime.getTime() + totalHours * 0.15 * 60 * 60 * 1000);
+  // Peak phase ends, decline begins
+  const declineEnd = new Date(peakTime.getTime() + totalMs * 0.2);
   
   return [
     {
@@ -299,7 +236,7 @@ function generateFermentationPhases(feedingTime: Date, peakTime: Date): Fermenta
       name: 'Decline Phase',
       nameKey: 'declinePhase',
       startTime: peakTime,
-      endTime: peakEnd,
+      endTime: declineEnd,
       description: 'Activity decreasing - still usable',
       descriptionKey: 'declinePhaseDesc',
     },
@@ -309,7 +246,6 @@ function generateFermentationPhases(feedingTime: Date, peakTime: Date): Fermenta
 export function calculateFeedingSchedule(input: CalculationInput): CalculationResult {
   const fermentationHours = calculateFermentationTime(input);
   const { avgProtein, avgFermentationModifier } = calculateBlendedValues(input.flourBlend);
-  const doughMethodTime = getDoughMethodTime(input.doughMethod);
   
   let feedingTime: Date;
   let estimatedPeakTime: Date;
@@ -321,9 +257,24 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
       (input.targetPeakStart.getTime() + input.targetPeakEnd.getTime()) / 2
     );
     
-    // Use start time if provided, otherwise calculate from target
+    // Use start time if provided
     if (input.targetStartTime) {
-      feedingTime = input.targetStartTime;
+      feedingTime = new Date(input.targetStartTime);
+      const hoursUntilTarget = (targetMidpoint.getTime() - feedingTime.getTime()) / (1000 * 60 * 60);
+      
+      if (hoursUntilTarget > 0) {
+        // Calculate what ratio would be needed to hit the target
+        recommendedRatio = calculateRequiredRatio(input, hoursUntilTarget);
+        // Recalculate with recommended ratio
+        const adjustedHours = calculateFermentationTime(input, recommendedRatio);
+        estimatedPeakTime = new Date(feedingTime.getTime() + adjustedHours * 60 * 60 * 1000);
+      } else {
+        // Target is in the past, just use current ratio
+        estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
+      }
+    } else {
+      // No start time - use now as feeding time and calculate recommended ratio
+      feedingTime = new Date();
       const hoursUntilTarget = (targetMidpoint.getTime() - feedingTime.getTime()) / (1000 * 60 * 60);
       
       if (hoursUntilTarget > 0) {
@@ -333,24 +284,10 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
       } else {
         estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
       }
-    } else {
-      // No start time - calculate required feeding time to hit target
-      const now = new Date();
-      const hoursUntilTarget = (targetMidpoint.getTime() - now.getTime()) / (1000 * 60 * 60);
-      
-      if (hoursUntilTarget > 0) {
-        feedingTime = now;
-        recommendedRatio = calculateRequiredRatio(input, hoursUntilTarget);
-        const adjustedHours = calculateFermentationTime(input, recommendedRatio);
-        estimatedPeakTime = new Date(feedingTime.getTime() + adjustedHours * 60 * 60 * 1000);
-      } else {
-        feedingTime = new Date(targetMidpoint.getTime() - fermentationHours * 60 * 60 * 1000);
-        estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
-      }
     }
   } else {
-    // No target window - use current time as feeding time
-    feedingTime = new Date();
+    // No target window - use now or provided start time
+    feedingTime = input.targetStartTime ? new Date(input.targetStartTime) : new Date();
     estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
   }
   
@@ -384,19 +321,12 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
     suggestions.push('sweetSlowerFermentation');
   }
   
-  if (input.doughMethod === 'autolyse') {
-    suggestions.push('autolyseGlutenDevelopment');
-  } else if (input.doughMethod === 'fermentolyse') {
-    suggestions.push('fermentolyseEnhancedFlavour');
-  }
-  
   // Determine which ratio to use for amount calculations
   const effectiveRatio = recommendedRatio || input.feedingRatio;
   
   // Calculate amounts based on old sourdough amount
   const oldStarterAmount = input.oldSourdoughAmount;
   
-  // If old sourdough = 50g and ratio is 1:1:1, then we add 50g flour and 50g water
   const flourAmount = Math.round((oldStarterAmount / effectiveRatio.starter) * effectiveRatio.flour);
   const waterAmount = Math.round((oldStarterAmount / effectiveRatio.starter) * effectiveRatio.water);
   const sugarAmount = input.isSweetMode ? Math.round(flourAmount * (input.sugarPercentage / 100)) : 0;
@@ -431,7 +361,6 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
     flourBreakdown,
     fermentationPhases,
     recommendedRatio,
-    doughMethodTime,
   };
 }
 
@@ -472,4 +401,24 @@ export function formatDateTime(date: Date, locale: string = 'en-GB'): string {
 
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 9);
+}
+
+/**
+ * Parse a decimal string that may use comma or dot as decimal separator
+ */
+export function parseDecimalInput(value: string): number {
+  if (!value || value === '') return 0;
+  // Replace comma with dot for parsing
+  const normalized = value.replace(',', '.');
+  const parsed = parseFloat(normalized);
+  return isNaN(parsed) ? 0 : parsed;
+}
+
+/**
+ * Validate decimal input - allows digits, one dot or comma
+ */
+export function isValidDecimalInput(value: string): boolean {
+  if (value === '') return true;
+  // Allow digits, and one decimal separator (dot or comma)
+  return /^-?\d*[.,]?\d*$/.test(value);
 }
