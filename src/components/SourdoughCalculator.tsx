@@ -21,6 +21,9 @@ import { useI18n, Language } from '@/lib/i18n';
 import { useCalculatorSettings } from '@/hooks/use-calculator-cache';
 import { usePersonas } from '@/hooks/use-personas';
 import { useWakeLock } from '@/hooks/use-wake-lock';
+import { PeakTimer } from './PeakTimer';
+import { StarterOverview } from './StarterOverview';
+import { FeedingRatioInput } from './FeedingRatioInput';
 
 export function SourdoughCalculator() {
   const { t, language, setLanguage } = useI18n();
@@ -38,6 +41,7 @@ export function SourdoughCalculator() {
   const [isSweetMode, setIsSweetMode] = useState(activePersona.isSweetMode);
   const [sugarPercentage, setSugarPercentage] = useState(activePersona.sugarPercentage);
   const [showResults, setShowResults] = useState(false);
+  const [showOverview, setShowOverview] = useState(true);
   
   // Raw protein input strings (for comma support)
   const [proteinInputs, setProteinInputs] = useState<Record<string, string>>(() => {
@@ -313,6 +317,16 @@ export function SourdoughCalculator() {
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto">{t('subtitle')}</p>
       </div>
 
+      {/* Multi-starter overview */}
+      <StarterOverview
+        personas={personas}
+        activePersonaId={activePersonaId}
+        onSelectPersona={setActivePersonaId}
+        settings={settings}
+        isVisible={showOverview}
+        onToggleVisibility={() => setShowOverview(!showOverview)}
+      />
+
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-6">
           {/* Flour Blend */}
@@ -370,16 +384,15 @@ export function SourdoughCalculator() {
           <Card className="border-border/50 shadow-sm">
             <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('feedingRatio')}</CardTitle></CardHeader>
             <CardContent>
-              <div className="flex items-center gap-3">
-                {(['starter', 'flour', 'water'] as const).map((key, i) => (<div key={key} className="flex items-center gap-2">
-                  {i > 0 && <span className="text-2xl text-muted-foreground font-light">:</span>}
-                  <div className="flex-1">
-                    <Label className="text-xs text-muted-foreground">{t(key)}</Label>
-                    <Input type="number" step="0.1" value={ratioInputs[key]} onChange={(e) => { setRatioInputs({ ...ratioInputs, [key]: e.target.value }); const n = parseFloat(e.target.value); if (!isNaN(n) && n > 0) setFeedingRatio({ ...feedingRatio, [key]: n }); }} className="text-center" />
-                  </div>
-                </div>))}
-              </div>
-              <p className="text-xs text-muted-foreground mt-3">{t('commonRatios')}</p>
+              <FeedingRatioInput
+                feedingRatio={feedingRatio}
+                ratioInputs={ratioInputs}
+                oldSourdoughAmount={oldSourdoughAmount}
+                onRatioChange={(ratio, inputs) => {
+                  setFeedingRatio(ratio);
+                  setRatioInputs(inputs);
+                }}
+              />
             </CardContent>
           </Card>
 
@@ -470,6 +483,9 @@ export function SourdoughCalculator() {
         <div className="space-y-6">
           {showResults ? (
             <>
+              {/* Peak Timer Card */}
+              <PeakTimer peakTime={result.estimatedPeakTime} starterName={activePersona.name} />
+
               <Card className="border-2 border-primary/20 bg-card shadow-lg overflow-hidden">
                 <div className="bg-primary/5 px-6 py-4 border-b border-border/50"><h3 className="font-display text-xl font-semibold text-foreground">{t('yourFeedingSchedule')}</h3></div>
                 <CardContent className="pt-6 space-y-6">

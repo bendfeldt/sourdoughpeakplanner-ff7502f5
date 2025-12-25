@@ -154,6 +154,18 @@ export const translations = {
     
     // Reset
     resetSettings: 'Reset to defaults',
+    
+    // Multi-starter & timer
+    allStarters: 'All Starters',
+    showingGrams: 'Grams',
+    showingRatio: 'Ratio',
+    ratio: 'Ratio',
+    peakTimer: 'Peak Timer',
+    untilPeak: 'until peak',
+    sincePeak: 'since peak',
+    atPeak: 'At Peak',
+    pastPeak: 'Past Peak',
+    almostReady: 'Almost Ready',
   },
   da: {
     // Header
@@ -306,6 +318,18 @@ export const translations = {
     
     // Reset
     resetSettings: 'Nulstil til standarder',
+    
+    // Multi-starter & timer
+    allStarters: 'Alle Surdejer',
+    showingGrams: 'Gram',
+    showingRatio: 'Forhold',
+    ratio: 'Forhold',
+    peakTimer: 'Peak Timer',
+    untilPeak: 'til peak',
+    sincePeak: 'siden peak',
+    atPeak: 'Ved Peak',
+    pastPeak: 'Forbi Peak',
+    almostReady: 'Næsten Klar',
   },
 };
 
