@@ -101,6 +101,43 @@ export function SourdoughCalculator() {
     return isNaN(date.getTime()) ? null : date;
   };
 
+  const formatDateString = (date: Date): string => date.toISOString().split('T')[0];
+  const formatTimeString = (date: Date): string => date.toTimeString().slice(0, 5);
+
+  const shiftTargetWindowFromStart = useCallback((nextStartDate: string, nextStartTime: string) => {
+    const prevStart = parseDateTimeToDate(settings.targetStartDate, settings.targetStartTime);
+    const nextStart = parseDateTimeToDate(nextStartDate, nextStartTime);
+
+    // If we can't compute a delta, just set start
+    if (!prevStart || !nextStart) {
+      updateSettings({ targetStartDate: nextStartDate, targetStartTime: nextStartTime });
+      return;
+    }
+
+    const deltaMs = nextStart.getTime() - prevStart.getTime();
+
+    const prevPeakStart = parseDateTimeToDate(settings.targetPeakStartDate, settings.targetPeakStartTime);
+    const prevPeakEnd = parseDateTimeToDate(settings.targetPeakEndDate, settings.targetPeakEndTime);
+
+    // If window exists, shift it by the same delta so it stays correlated to start
+    if (prevPeakStart && prevPeakEnd) {
+      const nextPeakStart = new Date(prevPeakStart.getTime() + deltaMs);
+      const nextPeakEnd = new Date(prevPeakEnd.getTime() + deltaMs);
+
+      updateSettings({
+        targetStartDate: nextStartDate,
+        targetStartTime: nextStartTime,
+        targetPeakStartDate: formatDateString(nextPeakStart),
+        targetPeakStartTime: formatTimeString(nextPeakStart),
+        targetPeakEndDate: formatDateString(nextPeakEnd),
+        targetPeakEndTime: formatTimeString(nextPeakEnd),
+      });
+      return;
+    }
+
+    updateSettings({ targetStartDate: nextStartDate, targetStartTime: nextStartTime });
+  }, [settings.targetStartDate, settings.targetStartTime, settings.targetPeakStartDate, settings.targetPeakStartTime, settings.targetPeakEndDate, settings.targetPeakEndTime, updateSettings]);
+
   // Validation: check if end time is after start time
   const isValidTimeWindow = useMemo(() => {
     if (!settings.useTargetWindow) return true;
@@ -164,11 +201,35 @@ export function SourdoughCalculator() {
   };
 
   const handleProteinInput = (id: string, value: string) => {
-    // Allow empty, digits, and one comma or dot
+    // Allow empty, digits, and one comma or dot (Danish keyboard support)
     if (value === '' || /^-?\d*[.,]?\d*$/.test(value)) {
       setProteinInputs(prev => ({ ...prev, [id]: value }));
+
+      // Don't commit to numeric model while user is mid-typing a decimal separator (e.g. "9,")
+      if (value === '' || value.endsWith(',') || value.endsWith('.')) return;
+
       const parsed = parseDecimalInput(value);
+      if (!Number.isNaN(parsed)) {
+        updateFlour(id, { proteinContent: parsed });
+      }
+    }
+  };
+
+  const handleProteinBlur = (id: string) => {
+    const raw = (proteinInputs[id] ?? '').trim();
+    if (!raw) return;
+
+    const cleaned = raw.replace(/[.,]$/, '');
+    if (!cleaned) {
+      setProteinInputs(prev => ({ ...prev, [id]: '' }));
+      return;
+    }
+
+    const parsed = parseDecimalInput(cleaned);
+    if (!Number.isNaN(parsed)) {
       updateFlour(id, { proteinContent: parsed });
+      // Keep comma in UI for da keyboards
+      setProteinInputs(prev => ({ ...prev, [id]: cleaned.replace('.', ',') }));
     }
   };
 
@@ -285,7 +346,8 @@ export function SourdoughCalculator() {
                         type="text" 
                         inputMode="decimal"
                         value={proteinInputs[flour.id] ?? ''} 
-                        onChange={(e) => handleProteinInput(flour.id, e.target.value)} 
+                        onChange={(e) => handleProteinInput(flour.id, e.target.value)}
+                        onBlur={() => handleProteinBlur(flour.id)}
                         className="text-center" 
                         placeholder="e.g. 11,5"
                       />
@@ -341,8 +403,17 @@ export function SourdoughCalculator() {
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">{t('startTime')}</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="date" value={settings.targetStartDate} min={getTodayString()} onChange={(e) => updateSettings({ targetStartDate: e.target.value })} />
-                    <Input type="time" value={settings.targetStartTime} onChange={(e) => updateSettings({ targetStartTime: e.target.value })} />
+                    <Input
+                      type="date"
+                      value={settings.targetStartDate}
+                      min={getTodayString()}
+                      onChange={(e) => shiftTargetWindowFromStart(e.target.value, settings.targetStartTime)}
+                    />
+                    <Input
+                      type="time"
+                      value={settings.targetStartTime}
+                      onChange={(e) => shiftTargetWindowFromStart(settings.targetStartDate, e.target.value)}
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
