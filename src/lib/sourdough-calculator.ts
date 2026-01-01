@@ -42,7 +42,7 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   'rye': {
     name: 'Rye',
     baseProtein: 9,
-    fermentationModifier: 0.6, // Rye ferments significantly faster
+    fermentationModifier: 0.6,
     description: 'Very active fermentation, different gluten',
   },
   'spelt': {
@@ -80,6 +80,77 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
     baseProtein: 14.5,
     fermentationModifier: 1.15,
     description: 'Very high protein Canadian wheat',
+  },
+  'tipo-0': {
+    name: 'Tipo 0',
+    baseProtein: 11.5,
+    fermentationModifier: 1.0,
+    description: 'Italian flour, medium protein, versatile',
+  },
+  'tipo-00': {
+    name: 'Tipo 00',
+    baseProtein: 12.5,
+    fermentationModifier: 1.05,
+    description: 'Italian refined flour, ideal for pizza & pasta',
+  },
+  'durum': {
+    name: 'Durum',
+    baseProtein: 13.5,
+    fermentationModifier: 1.1,
+    description: 'Hard wheat, high protein, golden color',
+  },
+  'semolina': {
+    name: 'Semolina',
+    baseProtein: 12.5,
+    fermentationModifier: 1.05,
+    description: 'Coarse durum wheat, great for bread crust',
+  },
+  'kamut': {
+    name: 'Kamut',
+    baseProtein: 14.5,
+    fermentationModifier: 0.85,
+    description: 'Ancient grain, buttery flavour, high protein',
+  },
+  'einkorn': {
+    name: 'Einkorn',
+    baseProtein: 14,
+    fermentationModifier: 0.75,
+    description: 'Ancient wheat, nutty flavour, weak gluten',
+  },
+};
+
+import type { SugarType, SugarInfo } from '@/types/sourdough';
+
+export const SUGAR_DATA: Record<SugarType, SugarInfo> = {
+  'white-sugar': {
+    name: 'White Sugar',
+    fermentationModifier: 1.0,
+    description: 'Standard granulated sugar',
+  },
+  'powdered-sugar': {
+    name: 'Powdered Sugar',
+    fermentationModifier: 1.05,
+    description: 'Finer texture, dissolves quickly',
+  },
+  'cane-sugar': {
+    name: 'Cane Sugar',
+    fermentationModifier: 0.95,
+    description: 'Less refined, slightly faster fermentation',
+  },
+  'brown-sugar': {
+    name: 'Brown Sugar',
+    fermentationModifier: 0.9,
+    description: 'Contains molasses, feeds yeast faster',
+  },
+  'honey': {
+    name: 'Honey',
+    fermentationModifier: 0.85,
+    description: 'Natural enzymes, promotes fermentation',
+  },
+  'maple-syrup': {
+    name: 'Maple Syrup',
+    fermentationModifier: 0.9,
+    description: 'Natural sugars, adds complexity',
   },
 };
 
@@ -128,22 +199,22 @@ function calculateBlendedValues(flourBlend: FlourBlendItem[]): {
  * - Sugar inhibition for sweet doughs
  */
 export function calculateFermentationTime(input: CalculationInput, customRatio?: FeedingRatio): number {
-  const { flourBlend, feedingRatio, temperature, isSweetMode, sugarPercentage } = input;
+  const { flourBlend, feedingRatio, temperature, isSweetMode, sugarPercentage, sugarType } = input;
   const ratio = customRatio || feedingRatio;
   const { avgFermentationModifier } = calculateBlendedValues(flourBlend);
   
   // Q10 temperature coefficient - fermentation rate doubles every 10°C
-  // At 24°C (baseline), factor = 1. At 18°C, factor ≈ 1.5 (slower). At 30°C, factor ≈ 0.7 (faster)
   const tempDiff = temperature - 24;
   const temperatureFactor = Math.pow(2, -tempDiff / 10);
   
   // Ratio factor - more flour means more food, longer fermentation
-  // 1:1:1 ratio = 1.0, 1:2:2 = ~1.6, 1:5:5 = ~2.8
   const ratioFactor = Math.pow(ratio.flour / ratio.starter, 0.7);
   
   // Sugar inhibition via osmotic pressure (for sweet doughs)
+  // Account for different sugar types
+  const sugarTypeModifier = isSweetMode && sugarType ? (SUGAR_DATA[sugarType]?.fermentationModifier ?? 1) : 1;
   const sugarFactor = isSweetMode 
-    ? 1 + (sugarPercentage / 100) * 0.5
+    ? 1 + (sugarPercentage / 100) * 0.5 * sugarTypeModifier
     : 1;
   
   const fermentationHours = BASE_FERMENTATION_HOURS * 

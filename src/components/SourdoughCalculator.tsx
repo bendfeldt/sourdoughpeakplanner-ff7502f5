@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,16 +7,17 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, Copy, Edit2, Check, X } from 'lucide-react';
+import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, Copy, Edit2, Check, X, RotateCcw } from 'lucide-react';
 import { 
   FLOUR_DATA, 
+  SUGAR_DATA,
   calculateFeedingSchedule, 
   formatDateTime,
   formatTime,
   generateId,
   parseDecimalInput,
 } from '@/lib/sourdough-calculator';
-import type { FlourType, FlourBlendItem, FeedingRatio } from '@/types/sourdough';
+import type { FlourType, FlourBlendItem, FeedingRatio, SugarType, InputMode } from '@/types/sourdough';
 import { useI18n, Language } from '@/lib/i18n';
 import { useCalculatorSettings } from '@/hooks/use-calculator-cache';
 import { usePersonas } from '@/hooks/use-personas';
@@ -40,8 +41,28 @@ export function SourdoughCalculator() {
   const [oldSourdoughInput, setOldSourdoughInput] = useState(activePersona.oldSourdoughInput);
   const [isSweetMode, setIsSweetMode] = useState(activePersona.isSweetMode);
   const [sugarPercentage, setSugarPercentage] = useState(activePersona.sugarPercentage);
+  const [sugarType, setSugarType] = useState<SugarType>('white-sugar');
   const [showResults, setShowResults] = useState(false);
   const [showOverview, setShowOverview] = useState(true);
+  
+  // Input mode state
+  const [inputMode, setInputMode] = useState<InputMode>('basic');
+  const [targetTotalSourdough, setTargetTotalSourdough] = useState(200);
+  const [targetTotalSourdoughInput, setTargetTotalSourdoughInput] = useState('200');
+  
+  // Peak time for total-sourdough mode
+  const [targetPeakDate, setTargetPeakDate] = useState(() => {
+    const d = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    return d.toISOString().split('T')[0];
+  });
+  const [targetPeakTime, setTargetPeakTime] = useState(() => {
+    const d = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    return d.toTimeString().slice(0, 5);
+  });
+  
+  // Timer reset key - increments when start time changes
+  const [timerResetKey, setTimerResetKey] = useState(0);
+  const prevStartTimeRef = useRef({ date: settings.targetStartDate, time: settings.targetStartTime });
   
   // Raw protein input strings (for comma support)
   const [proteinInputs, setProteinInputs] = useState<Record<string, string>>(() => {
@@ -55,6 +76,20 @@ export function SourdoughCalculator() {
   // Rename state
   const [editingName, setEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState('');
+
+  // Sync dark mode with device preference on mount
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e: MediaQueryListEvent) => {
+      updateSettings({ isDarkMode: e.matches });
+    };
+    // Initial sync (only on first mount if no user preference stored)
+    if (localStorage.getItem('sourdough-calculator-settings') === null) {
+      updateSettings({ isDarkMode: mediaQuery.matches });
+    }
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   // Sync from active persona when switching
   useEffect(() => {
@@ -74,6 +109,17 @@ export function SourdoughCalculator() {
     });
     setProteinInputs(inputs);
   }, [activePersonaId, activePersona]);
+
+  // Auto-reset timer when start time changes
+  useEffect(() => {
+    if (
+      prevStartTimeRef.current.date !== settings.targetStartDate ||
+      prevStartTimeRef.current.time !== settings.targetStartTime
+    ) {
+      setTimerResetKey(k => k + 1);
+      prevStartTimeRef.current = { date: settings.targetStartDate, time: settings.targetStartTime };
+    }
+  }, [settings.targetStartDate, settings.targetStartTime]);
 
   // Auto-save persona data when it changes
   const saveCurrentState = useCallback(() => {
@@ -112,7 +158,6 @@ export function SourdoughCalculator() {
     const prevStart = parseDateTimeToDate(settings.targetStartDate, settings.targetStartTime);
     const nextStart = parseDateTimeToDate(nextStartDate, nextStartTime);
 
-    // If we can't compute a delta, just set start
     if (!prevStart || !nextStart) {
       updateSettings({ targetStartDate: nextStartDate, targetStartTime: nextStartTime });
       return;
@@ -123,7 +168,6 @@ export function SourdoughCalculator() {
     const prevPeakStart = parseDateTimeToDate(settings.targetPeakStartDate, settings.targetPeakStartTime);
     const prevPeakEnd = parseDateTimeToDate(settings.targetPeakEndDate, settings.targetPeakEndTime);
 
-    // If window exists, shift it by the same delta so it stays correlated to start
     if (prevPeakStart && prevPeakEnd) {
       const nextPeakStart = new Date(prevPeakStart.getTime() + deltaMs);
       const nextPeakEnd = new Date(prevPeakEnd.getTime() + deltaMs);
@@ -144,7 +188,7 @@ export function SourdoughCalculator() {
 
   // Validation: check if end time is after start time
   const isValidTimeWindow = useMemo(() => {
-    if (!settings.useTargetWindow) return true;
+    if (inputMode !== 'target-window') return true;
     
     const peakStart = parseDateTimeToDate(settings.targetPeakStartDate, settings.targetPeakStartTime);
     const peakEnd = parseDateTimeToDate(settings.targetPeakEndDate, settings.targetPeakEndTime);
@@ -155,7 +199,7 @@ export function SourdoughCalculator() {
     if (startTime && peakStart <= startTime) return false;
     
     return true;
-  }, [settings]);
+  }, [settings, inputMode]);
 
   const totalPercentage = useMemo(() => flourBlend.reduce((sum, item) => sum + item.percentage, 0), [flourBlend]);
 
@@ -167,12 +211,16 @@ export function SourdoughCalculator() {
       targetStartTime: parseDateTimeToDate(settings.targetStartDate, settings.targetStartTime),
       targetPeakStart: parseDateTimeToDate(settings.targetPeakStartDate, settings.targetPeakStartTime),
       targetPeakEnd: parseDateTimeToDate(settings.targetPeakEndDate, settings.targetPeakEndTime),
-      useTargetWindow: settings.useTargetWindow,
+      useTargetWindow: inputMode === 'target-window',
       oldSourdoughAmount,
       isSweetMode,
       sugarPercentage,
+      sugarType,
+      inputMode,
+      targetTotalSourdough,
+      targetPeakTime: parseDateTimeToDate(targetPeakDate, targetPeakTime),
     });
-  }, [flourBlend, feedingRatio, temperature, settings, oldSourdoughAmount, isSweetMode, sugarPercentage]);
+  }, [flourBlend, feedingRatio, temperature, settings, oldSourdoughAmount, isSweetMode, sugarPercentage, sugarType, inputMode, targetTotalSourdough, targetPeakDate, targetPeakTime]);
 
   const addFlour = () => {
     const newId = generateId();
@@ -205,11 +253,9 @@ export function SourdoughCalculator() {
   };
 
   const handleProteinInput = (id: string, value: string) => {
-    // Allow empty, digits, and one comma or dot (Danish keyboard support)
     if (value === '' || /^-?\d*[.,]?\d*$/.test(value)) {
       setProteinInputs(prev => ({ ...prev, [id]: value }));
 
-      // Don't commit to numeric model while user is mid-typing a decimal separator (e.g. "9,")
       if (value === '' || value.endsWith(',') || value.endsWith('.')) return;
 
       const parsed = parseDecimalInput(value);
@@ -232,8 +278,15 @@ export function SourdoughCalculator() {
     const parsed = parseDecimalInput(cleaned);
     if (!Number.isNaN(parsed)) {
       updateFlour(id, { proteinContent: parsed });
-      // Keep comma in UI for da keyboards
       setProteinInputs(prev => ({ ...prev, [id]: cleaned.replace('.', ',') }));
+    }
+  };
+
+  const handleOldSourdoughChange = (value: string) => {
+    setOldSourdoughInput(value);
+    const parsed = parseDecimalInput(value);
+    if (!Number.isNaN(parsed) && parsed > 0) {
+      setOldSourdoughAmount(parsed);
     }
   };
 
@@ -258,10 +311,21 @@ export function SourdoughCalculator() {
     setEditingName(false);
   };
 
+  const handleResetTimer = () => {
+    setTimerResetKey(k => k + 1);
+  };
+
   const getFlourName = (flourType: FlourType): string => t(flourType as any) || FLOUR_DATA[flourType].name;
   const getFlourDescription = (flourType: FlourType): string => t(`${flourType}-desc` as any) || FLOUR_DATA[flourType].description;
+  const getSugarName = (sugar: SugarType): string => t(sugar as any) || SUGAR_DATA[sugar].name;
 
   const getTodayString = () => new Date().toISOString().split('T')[0];
+
+  const inputModeOptions: { value: InputMode; label: string }[] = [
+    { value: 'basic', label: t('basicMode' as any) || 'Basic' },
+    { value: 'target-window', label: t('targetWindowMode' as any) || 'Target Window' },
+    { value: 'total-sourdough', label: t('totalSourdoughMode' as any) || 'Total Sourdough' },
+  ];
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
@@ -374,11 +438,98 @@ export function SourdoughCalculator() {
             </CardContent>
           </Card>
 
-          {/* Old Sourdough */}
+          {/* Input Mode Toggle */}
           <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('oldSourdough')}</CardTitle></CardHeader>
-            <CardContent><div className="flex items-center gap-2"><Input type="number" value={oldSourdoughInput} onChange={(e) => { setOldSourdoughInput(e.target.value); const n = parseFloat(e.target.value); if (!isNaN(n) && n > 0) setOldSourdoughAmount(n); }} className="text-center text-lg font-medium" /><span className="text-muted-foreground font-medium">g</span></div></CardContent>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg font-display">
+                <Clock className="h-5 w-5 text-primary" />
+                {t('calculationMode' as any) || 'Calculation Mode'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {inputModeOptions.map((opt) => (
+                  <Button
+                    key={opt.value}
+                    variant={inputMode === opt.value ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => setInputMode(opt.value)}
+                    className="flex-1"
+                  >
+                    {opt.label}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
           </Card>
+
+          {/* Old Sourdough - only for basic and target-window modes */}
+          {inputMode !== 'total-sourdough' && (
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('oldSourdough')}</CardTitle></CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2">
+                  <Input 
+                    type="text" 
+                    inputMode="decimal"
+                    value={oldSourdoughInput} 
+                    onChange={(e) => handleOldSourdoughChange(e.target.value)}
+                    className="text-center text-lg font-medium" 
+                  />
+                  <span className="text-muted-foreground font-medium">g</span>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Total Sourdough mode inputs */}
+          {inputMode === 'total-sourdough' && (
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg font-display">
+                  <Scale className="h-5 w-5 text-primary" />
+                  {t('targetTotalSourdough' as any) || 'Target Total Sourdough'}
+                </CardTitle>
+                <CardDescription>{t('targetTotalSourdoughDesc' as any) || 'Enter desired total amount and peak time to calculate required ratio'}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Input 
+                    type="text" 
+                    inputMode="decimal"
+                    value={targetTotalSourdoughInput} 
+                    onChange={(e) => {
+                      setTargetTotalSourdoughInput(e.target.value);
+                      const parsed = parseDecimalInput(e.target.value);
+                      if (!Number.isNaN(parsed) && parsed > 0) setTargetTotalSourdough(parsed);
+                    }}
+                    className="text-center text-lg font-medium" 
+                  />
+                  <span className="text-muted-foreground font-medium">g</span>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t('desiredPeakTime' as any) || 'Desired Peak Time'}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="date" value={targetPeakDate} min={getTodayString()} onChange={(e) => setTargetPeakDate(e.target.value)} />
+                    <Input type="time" value={targetPeakTime} onChange={(e) => setTargetPeakTime(e.target.value)} />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t('oldSourdough')}</Label>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      type="text" 
+                      inputMode="decimal"
+                      value={oldSourdoughInput} 
+                      onChange={(e) => handleOldSourdoughChange(e.target.value)}
+                      className="text-center font-medium" 
+                    />
+                    <span className="text-muted-foreground font-medium">g</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Feeding Ratio */}
           <Card className="border-border/50 shadow-sm">
@@ -391,6 +542,10 @@ export function SourdoughCalculator() {
                 onRatioChange={(ratio, inputs) => {
                   setFeedingRatio(ratio);
                   setRatioInputs(inputs);
+                }}
+                onOldSourdoughChange={(amount, input) => {
+                  setOldSourdoughAmount(amount);
+                  setOldSourdoughInput(input);
                 }}
               />
             </CardContent>
@@ -405,13 +560,13 @@ export function SourdoughCalculator() {
             </CardContent>
           </Card>
 
-          {/* Target Window */}
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between"><CardTitle className="flex items-center gap-2 text-lg font-display"><Clock className="h-5 w-5 text-primary" />{t('targetPeakWindow')}</CardTitle><Switch checked={settings.useTargetWindow} onCheckedChange={(v) => updateSettings({ useTargetWindow: v })} /></div>
-              <CardDescription>{t('targetWindowDesc')}</CardDescription>
-            </CardHeader>
-            {settings.useTargetWindow && (
+          {/* Target Window - only for target-window mode */}
+          {inputMode === 'target-window' && (
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg font-display"><Clock className="h-5 w-5 text-primary" />{t('targetPeakWindow')}</CardTitle>
+                <CardDescription>{t('targetWindowDesc')}</CardDescription>
+              </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">{t('startTime')}</Label>
@@ -450,8 +605,8 @@ export function SourdoughCalculator() {
                   </p>
                 )}
               </CardContent>
-            )}
-          </Card>
+            </Card>
+          )}
 
           {/* Sweet Sourdough */}
           <Card className="border-border/50 shadow-sm">
@@ -460,6 +615,18 @@ export function SourdoughCalculator() {
             </CardHeader>
             {isSweetMode && (
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t('sugarType' as any) || 'Sugar Type'}</Label>
+                  <Select value={sugarType} onValueChange={(v) => setSugarType(v as SugarType)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(SUGAR_DATA).map((key) => (
+                        <SelectItem key={key} value={key}>{getSugarName(key as SugarType)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">{SUGAR_DATA[sugarType]?.description}</p>
+                </div>
                 <div className="space-y-2">
                   <div className="flex justify-between"><span className="text-sm text-muted-foreground">{t('sugarAmount')}</span><span className="text-sm font-medium text-primary">{sugarPercentage}%</span></div>
                   <Slider value={[sugarPercentage]} onValueChange={([v]) => setSugarPercentage(v)} min={1} max={10} step={1} />
@@ -476,7 +643,7 @@ export function SourdoughCalculator() {
             </CardHeader>
           </Card>
 
-          <Button onClick={() => setShowResults(true)} className="w-full h-12 text-lg font-medium" size="lg" disabled={totalPercentage !== 100 || (settings.useTargetWindow && !isValidTimeWindow)}>{t('calculateSchedule')}</Button>
+          <Button onClick={() => setShowResults(true)} className="w-full h-12 text-lg font-medium" size="lg" disabled={totalPercentage !== 100 || (inputMode === 'target-window' && !isValidTimeWindow)}>{t('calculateSchedule')}</Button>
         </div>
 
         {/* Results */}
@@ -484,7 +651,18 @@ export function SourdoughCalculator() {
           {showResults ? (
             <>
               {/* Peak Timer Card */}
-              <PeakTimer peakTime={result.estimatedPeakTime} starterName={activePersona.name} />
+              <div className="relative">
+                <PeakTimer key={timerResetKey} peakTime={result.estimatedPeakTime} starterName={activePersona.name} />
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="absolute top-2 right-2 h-8 w-8"
+                  onClick={handleResetTimer}
+                  title={t('resetTimer' as any) || 'Reset Timer'}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </div>
 
               <Card className="border-2 border-primary/20 bg-card shadow-lg overflow-hidden">
                 <div className="bg-primary/5 px-6 py-4 border-b border-border/50"><h3 className="font-display text-xl font-semibold text-foreground">{t('yourFeedingSchedule')}</h3></div>
@@ -506,7 +684,7 @@ export function SourdoughCalculator() {
                       </div>
                     ))}
                   </div>
-                  {isSweetMode && <div className="text-center p-3 rounded-lg bg-muted/50"><p className="text-lg font-bold text-foreground">{result.sugarAmount}g</p><p className="text-xs text-muted-foreground mt-1">{t('powderedSugar')}</p></div>}
+                  {isSweetMode && <div className="text-center p-3 rounded-lg bg-muted/50"><p className="text-lg font-bold text-foreground">{result.sugarAmount}g</p><p className="text-xs text-muted-foreground mt-1">{getSugarName(sugarType)}</p></div>}
                   <div className="space-y-3 pt-2">
                     <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('timeToPeak')}</span><span className="font-medium">{result.hoursToReachPeak.toFixed(1)} {t('hours')}</span></div>
                     <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('totalSourdough')}</span><span className="font-medium text-primary text-lg">{result.totalSourdoughAmount}g</span></div>
@@ -527,7 +705,7 @@ export function SourdoughCalculator() {
                 <CardContent><div className="relative"><div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" /><div className="space-y-4">{result.fermentationPhases.map((phase, i) => (<div key={i} className="relative pl-10"><div className={`absolute left-2.5 top-1 w-3 h-3 rounded-full border-2 border-background ${i === 2 ? 'bg-accent' : i === 1 ? 'bg-primary' : 'bg-muted-foreground'}`} /><div className={`p-3 rounded-lg ${i === 2 ? 'bg-accent/20 text-accent' : i === 1 ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}><div className="flex items-center justify-between mb-1"><span className="font-medium text-sm">{t(phase.nameKey as any)}</span><span className="text-xs">{formatTime(phase.startTime)} — {formatTime(phase.endTime)}</span></div><p className="text-xs opacity-80">{t(phase.descriptionKey as any)}</p></div></div>))}</div></div></CardContent>
               </Card>
 
-              {settings.useTargetWindow && (
+              {inputMode === 'target-window' && (
                 <Card className={`border-2 ${result.isWithinTargetWindow ? 'border-green-500/30 bg-green-500/5' : 'border-yellow-500/30 bg-yellow-500/5'}`}>
                   <CardContent className="pt-6"><div className="flex items-start gap-3">{result.isWithinTargetWindow ? <CheckCircle className="h-6 w-6 text-green-500 shrink-0" /> : <AlertCircle className="h-6 w-6 text-yellow-500 shrink-0" />}<div><Badge variant="outline" className={result.isWithinTargetWindow ? 'border-green-500 text-green-500' : 'border-yellow-500 text-yellow-500'}>{result.isWithinTargetWindow ? t('perfectTiming') : t('timingAdjustmentNeeded')}</Badge><p className="text-sm text-muted-foreground mt-2">{result.isWithinTargetWindow ? t('starterWillPeak') : t('peakOutsideWindow')}</p></div></div></CardContent>
                 </Card>

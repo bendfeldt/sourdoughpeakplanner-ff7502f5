@@ -8,7 +8,29 @@ export type FlourType =
   | 'danish-wheat'
   | 'oat-flour'
   | 'fuldkornsmel'
-  | 'manitoba';
+  | 'manitoba'
+  | 'tipo-0'
+  | 'tipo-00'
+  | 'durum'
+  | 'semolina'
+  | 'kamut'
+  | 'einkorn';
+
+export type SugarType = 
+  | 'white-sugar'
+  | 'powdered-sugar'
+  | 'cane-sugar'
+  | 'brown-sugar'
+  | 'honey'
+  | 'maple-syrup';
+
+export interface SugarInfo {
+  name: string;
+  fermentationModifier: number;
+  description: string;
+}
+
+export type InputMode = 'basic' | 'target-window' | 'total-sourdough';
 
 export interface FlourInfo {
   name: string;
@@ -56,6 +78,10 @@ export interface CalculationInput {
   oldSourdoughAmount: number;
   isSweetMode: boolean;
   sugarPercentage: number;
+  sugarType: SugarType;
+  inputMode: InputMode;
+  targetTotalSourdough: number;
+  targetPeakTime: Date | null;
 }
 
 export interface FermentationPhase {
