@@ -53,6 +53,10 @@ export function StarterOverview({
         oldSourdoughAmount: persona.oldSourdoughAmount,
         isSweetMode: persona.isSweetMode,
         sugarPercentage: persona.sugarPercentage,
+        sugarType: 'white-sugar',
+        inputMode: 'basic',
+        targetTotalSourdough: 0,
+        targetPeakTime: null,
       });
 
       const primaryFlour = persona.flourBlend.reduce((max, curr) => 

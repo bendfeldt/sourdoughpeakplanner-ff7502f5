@@ -154,6 +154,7 @@ export const translations = {
     
     // Reset
     resetSettings: 'Reset to defaults',
+    resetTimer: 'Reset Timer',
     
     // Multi-starter & timer
     allStarters: 'All Starters',
@@ -166,6 +167,38 @@ export const translations = {
     atPeak: 'At Peak',
     pastPeak: 'Past Peak',
     almostReady: 'Almost Ready',
+    
+    // Input modes
+    calculationMode: 'Calculation Mode',
+    basicMode: 'Basic',
+    targetWindowMode: 'Target Window',
+    totalSourdoughMode: 'Total Sourdough',
+    targetTotalSourdough: 'Target Total Sourdough',
+    targetTotalSourdoughDesc: 'Enter desired total amount and peak time to calculate required ratio',
+    desiredPeakTime: 'Desired Peak Time',
+    
+    // Sugar types
+    sugarType: 'Sugar Type',
+    'white-sugar': 'White Sugar',
+    'powdered-sugar': 'Powdered Sugar',
+    'cane-sugar': 'Cane Sugar',
+    'brown-sugar': 'Brown Sugar',
+    'honey': 'Honey',
+    'maple-syrup': 'Maple Syrup',
+    
+    // New flour types
+    'tipo-0': 'Tipo 0',
+    'tipo-00': 'Tipo 00',
+    'durum': 'Durum',
+    'semolina': 'Semolina',
+    'kamut': 'Kamut',
+    'einkorn': 'Einkorn',
+    'tipo-0-desc': 'Italian flour, medium protein, versatile',
+    'tipo-00-desc': 'Italian refined flour, ideal for pizza & pasta',
+    'durum-desc': 'Hard wheat, high protein, golden color',
+    'semolina-desc': 'Coarse durum wheat, great for bread crust',
+    'kamut-desc': 'Ancient grain, buttery flavour, high protein',
+    'einkorn-desc': 'Ancient wheat, nutty flavour, weak gluten',
   },
   da: {
     // Header
@@ -318,6 +351,7 @@ export const translations = {
     
     // Reset
     resetSettings: 'Nulstil til standarder',
+    resetTimer: 'Nulstil Timer',
     
     // Multi-starter & timer
     allStarters: 'Alle Surdejer',
@@ -330,6 +364,38 @@ export const translations = {
     atPeak: 'Ved Peak',
     pastPeak: 'Forbi Peak',
     almostReady: 'Næsten Klar',
+    
+    // Input modes
+    calculationMode: 'Beregningstilstand',
+    basicMode: 'Basis',
+    targetWindowMode: 'Målvindue',
+    totalSourdoughMode: 'Total Surdej',
+    targetTotalSourdough: 'Ønsket Total Surdej',
+    targetTotalSourdoughDesc: 'Indtast ønsket totalmængde og peak-tid for at beregne nødvendigt forhold',
+    desiredPeakTime: 'Ønsket Peak-tid',
+    
+    // Sugar types
+    sugarType: 'Sukkertype',
+    'white-sugar': 'Hvidt Sukker',
+    'powdered-sugar': 'Flormelis',
+    'cane-sugar': 'Rørsukker',
+    'brown-sugar': 'Brunt Sukker',
+    'honey': 'Honning',
+    'maple-syrup': 'Ahornsirup',
+    
+    // New flour types
+    'tipo-0': 'Tipo 0',
+    'tipo-00': 'Tipo 00',
+    'durum': 'Durummel',
+    'semolina': 'Semolina',
+    'kamut': 'Kamut',
+    'einkorn': 'Enkorn',
+    'tipo-0-desc': 'Italiensk mel, medium protein, alsidigt',
+    'tipo-00-desc': 'Italiensk raffineret mel, ideel til pizza & pasta',
+    'durum-desc': 'Hård hvede, høj protein, gylden farve',
+    'semolina-desc': 'Grov durumhvede, god til brødskorpe',
+    'kamut-desc': 'Gammelt korn, smørrig smag, høj protein',
+    'einkorn-desc': 'Gammelt hvede, nøddeagtig smag, svag gluten',
   },
 };
 
