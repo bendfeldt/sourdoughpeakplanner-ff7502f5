@@ -115,6 +115,8 @@ export const translations = {
     
     // Tips
     tips: 'Tips',
+    suggestions: 'Suggestions',
+    sugarPercentage: 'Sugar Percentage',
     
     // Ready state
     readyToCalculate: 'Ready to Calculate',
@@ -312,6 +314,8 @@ export const translations = {
     
     // Tips
     tips: 'Tips',
+    suggestions: 'Forslag',
+    sugarPercentage: 'Sukkerprocent',
     
     // Ready state
     readyToCalculate: 'Klar til Beregning',
