@@ -11,15 +11,6 @@ interface StarterOverviewProps {
   personas: SourdoughPersona[];
   activePersonaId: string;
   onSelectPersona: (id: string) => void;
-  settings: {
-    useTargetWindow: boolean;
-    targetStartDate: string;
-    targetStartTime: string;
-    targetPeakStartDate: string;
-    targetPeakStartTime: string;
-    targetPeakEndDate: string;
-    targetPeakEndTime: string;
-  };
   isVisible: boolean;
   onToggleVisibility: () => void;
 }
@@ -28,11 +19,10 @@ export function StarterOverview({
   personas,
   activePersonaId,
   onSelectPersona,
-  settings,
   isVisible,
   onToggleVisibility,
 }: StarterOverviewProps) {
-  const { t, language } = useI18n();
+  const { t } = useI18n();
 
   const parseDateTimeToDate = (dateStr: string, timeStr: string): Date | null => {
     if (!dateStr || !timeStr) return null;
@@ -42,21 +32,22 @@ export function StarterOverview({
 
   const startersWithPeakTimes = useMemo(() => {
     return personas.map((persona) => {
+      const ts = persona.timeSettings;
       const result = calculateFeedingSchedule({
         flourBlend: persona.flourBlend,
         feedingRatio: persona.feedingRatio,
         temperature: persona.temperature,
-        targetStartTime: parseDateTimeToDate(settings.targetStartDate, settings.targetStartTime),
-        targetPeakStart: parseDateTimeToDate(settings.targetPeakStartDate, settings.targetPeakStartTime),
-        targetPeakEnd: parseDateTimeToDate(settings.targetPeakEndDate, settings.targetPeakEndTime),
-        useTargetWindow: settings.useTargetWindow,
+        targetStartTime: ts ? parseDateTimeToDate(ts.targetStartDate, ts.targetStartTime) : null,
+        targetPeakStart: ts ? parseDateTimeToDate(ts.targetPeakStartDate, ts.targetPeakStartTime) : null,
+        targetPeakEnd: ts ? parseDateTimeToDate(ts.targetPeakEndDate, ts.targetPeakEndTime) : null,
+        useTargetWindow: ts?.inputMode === 'target-window',
         oldSourdoughAmount: persona.oldSourdoughAmount,
         isSweetMode: persona.isSweetMode,
         sugarPercentage: persona.sugarPercentage,
-        sugarType: 'white-sugar',
-        inputMode: 'basic',
-        targetTotalSourdough: 0,
-        targetPeakTime: null,
+        sugarType: persona.sugarType || 'white-sugar',
+        inputMode: ts?.inputMode || 'basic',
+        targetTotalSourdough: ts?.targetTotalSourdough || 0,
+        targetPeakTime: ts ? parseDateTimeToDate(ts.targetPeakDate, ts.targetPeakTime) : null,
       });
 
       const primaryFlour = persona.flourBlend.reduce((max, curr) => 
@@ -70,7 +61,7 @@ export function StarterOverview({
         primaryFlourType: primaryFlour?.flourType || 'bread-flour',
       };
     });
-  }, [personas, settings]);
+  }, [personas]);
 
   if (personas.length <= 1) return null;
 
@@ -80,14 +71,9 @@ export function StarterOverview({
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg font-display">
             <Wheat className="h-5 w-5 text-primary" />
-            {t('allStarters') || 'All Starters'}
+            {t('allStarters')}
           </CardTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onToggleVisibility}
-            className="h-8 px-2"
-          >
+          <Button variant="ghost" size="sm" onClick={onToggleVisibility} className="h-8 px-2">
             {isVisible ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </Button>
         </div>
@@ -111,15 +97,9 @@ export function StarterOverview({
                     {FLOUR_DATA[starter.primaryFlourType]?.name || starter.primaryFlourType}
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {starter.totalSourdoughAmount}g
-                </span>
+                <span className="text-xs text-muted-foreground">{starter.totalSourdoughAmount}g</span>
               </div>
-              <PeakTimer
-                peakTime={starter.estimatedPeakTime}
-                starterName={starter.name}
-                compact
-              />
+              <PeakTimer peakTime={starter.estimatedPeakTime} starterName={starter.name} compact />
             </div>
           ))}
         </CardContent>

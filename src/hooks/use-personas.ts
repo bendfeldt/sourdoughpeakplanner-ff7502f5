@@ -1,9 +1,33 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { SourdoughPersona, FlourBlendItem, FeedingRatio } from '@/types/sourdough';
+import type { SourdoughPersona, FlourBlendItem, FeedingRatio, PersonaTimeSettings } from '@/types/sourdough';
 import { FLOUR_DATA, generateId } from '@/lib/sourdough-calculator';
 
 const PERSONAS_KEY = 'sourdough-personas';
 const ACTIVE_PERSONA_KEY = 'sourdough-active-persona';
+
+const formatDateString = (date: Date): string => date.toISOString().split('T')[0];
+const formatTimeString = (date: Date): string => date.toTimeString().slice(0, 5);
+
+export function createDefaultTimeSettings(): PersonaTimeSettings {
+  const now = new Date();
+  const peakStart = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  const peakEnd = new Date(now.getTime() + 10 * 60 * 60 * 1000);
+  const peakTarget = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  
+  return {
+    inputMode: 'basic',
+    targetStartDate: formatDateString(now),
+    targetStartTime: formatTimeString(now),
+    targetPeakStartDate: formatDateString(peakStart),
+    targetPeakStartTime: formatTimeString(peakStart),
+    targetPeakEndDate: formatDateString(peakEnd),
+    targetPeakEndTime: formatTimeString(peakEnd),
+    targetPeakDate: formatDateString(peakTarget),
+    targetPeakTime: formatTimeString(peakTarget),
+    targetTotalSourdough: 200,
+    targetTotalSourdoughInput: '200',
+  };
+}
 
 export function createDefaultPersona(name: string = 'My Starter'): SourdoughPersona {
   const now = Date.now();
@@ -20,6 +44,8 @@ export function createDefaultPersona(name: string = 'My Starter'): SourdoughPers
     oldSourdoughInput: '50',
     isSweetMode: false,
     sugarPercentage: 5,
+    sugarType: 'white-sugar',
+    timeSettings: createDefaultTimeSettings(),
     createdAt: now,
     updatedAt: now,
   };
@@ -125,6 +151,7 @@ export function usePersonas() {
       id: generateId(),
       name: newName,
       flourBlend: source.flourBlend.map(f => ({ ...f, id: generateId() })),
+      timeSettings: { ...source.timeSettings },
       createdAt: now,
       updatedAt: now,
     };
@@ -133,6 +160,16 @@ export function usePersonas() {
     setActivePersonaId(newPersona.id);
     return newPersona;
   }, [personas]);
+
+  // Migrate old personas that don't have timeSettings
+  useEffect(() => {
+    const needsMigration = personas.some(p => !p.timeSettings);
+    if (needsMigration) {
+      setPersonas(prev => prev.map(p => 
+        p.timeSettings ? p : { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' }
+      ));
+    }
+  }, []);
 
   return {
     personas,

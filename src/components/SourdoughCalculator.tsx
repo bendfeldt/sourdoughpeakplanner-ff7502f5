@@ -17,10 +17,10 @@ import {
   generateId,
   parseDecimalInput,
 } from '@/lib/sourdough-calculator';
-import type { FlourType, FlourBlendItem, FeedingRatio, SugarType, InputMode } from '@/types/sourdough';
+import type { FlourType, FlourBlendItem, FeedingRatio, SugarType, InputMode, PersonaTimeSettings } from '@/types/sourdough';
 import { useI18n, Language } from '@/lib/i18n';
 import { useCalculatorSettings } from '@/hooks/use-calculator-cache';
-import { usePersonas } from '@/hooks/use-personas';
+import { usePersonas, createDefaultTimeSettings } from '@/hooks/use-personas';
 import { useWakeLock } from '@/hooks/use-wake-lock';
 import { PeakTimer } from './PeakTimer';
 import { StarterOverview } from './StarterOverview';
@@ -41,28 +41,18 @@ export function SourdoughCalculator() {
   const [oldSourdoughInput, setOldSourdoughInput] = useState(activePersona.oldSourdoughInput);
   const [isSweetMode, setIsSweetMode] = useState(activePersona.isSweetMode);
   const [sugarPercentage, setSugarPercentage] = useState(activePersona.sugarPercentage);
-  const [sugarType, setSugarType] = useState<SugarType>('white-sugar');
+  const [sugarType, setSugarType] = useState<SugarType>(activePersona.sugarType || 'white-sugar');
   const [showResults, setShowResults] = useState(false);
   const [showOverview, setShowOverview] = useState(true);
   
-  // Input mode state
-  const [inputMode, setInputMode] = useState<InputMode>('basic');
-  const [targetTotalSourdough, setTargetTotalSourdough] = useState(200);
-  const [targetTotalSourdoughInput, setTargetTotalSourdoughInput] = useState('200');
-  
-  // Peak time for total-sourdough mode
-  const [targetPeakDate, setTargetPeakDate] = useState(() => {
-    const d = new Date(Date.now() + 8 * 60 * 60 * 1000);
-    return d.toISOString().split('T')[0];
-  });
-  const [targetPeakTime, setTargetPeakTime] = useState(() => {
-    const d = new Date(Date.now() + 8 * 60 * 60 * 1000);
-    return d.toTimeString().slice(0, 5);
-  });
+  // Per-persona time settings
+  const [timeSettings, setTimeSettings] = useState<PersonaTimeSettings>(
+    activePersona.timeSettings || createDefaultTimeSettings()
+  );
   
   // Timer reset key - increments when start time changes
   const [timerResetKey, setTimerResetKey] = useState(0);
-  const prevStartTimeRef = useRef({ date: settings.targetStartDate, time: settings.targetStartTime });
+  const prevStartTimeRef = useRef({ date: timeSettings.targetStartDate, time: timeSettings.targetStartTime });
   
   // Raw protein input strings (for comma support)
   const [proteinInputs, setProteinInputs] = useState<Record<string, string>>(() => {
@@ -101,6 +91,8 @@ export function SourdoughCalculator() {
     setOldSourdoughInput(activePersona.oldSourdoughInput);
     setIsSweetMode(activePersona.isSweetMode);
     setSugarPercentage(activePersona.sugarPercentage);
+    setSugarType(activePersona.sugarType || 'white-sugar');
+    setTimeSettings(activePersona.timeSettings || createDefaultTimeSettings());
     setShowResults(false);
     // Reset protein inputs
     const inputs: Record<string, string> = {};
@@ -113,13 +105,13 @@ export function SourdoughCalculator() {
   // Auto-reset timer when start time changes
   useEffect(() => {
     if (
-      prevStartTimeRef.current.date !== settings.targetStartDate ||
-      prevStartTimeRef.current.time !== settings.targetStartTime
+      prevStartTimeRef.current.date !== timeSettings.targetStartDate ||
+      prevStartTimeRef.current.time !== timeSettings.targetStartTime
     ) {
       setTimerResetKey(k => k + 1);
-      prevStartTimeRef.current = { date: settings.targetStartDate, time: settings.targetStartTime };
+      prevStartTimeRef.current = { date: timeSettings.targetStartDate, time: timeSettings.targetStartTime };
     }
-  }, [settings.targetStartDate, settings.targetStartTime]);
+  }, [timeSettings.targetStartDate, timeSettings.targetStartTime]);
 
   // Auto-save persona data when it changes
   const saveCurrentState = useCallback(() => {
@@ -132,8 +124,10 @@ export function SourdoughCalculator() {
       oldSourdoughInput,
       isSweetMode,
       sugarPercentage,
+      sugarType,
+      timeSettings,
     });
-  }, [autoSavePersona, activePersonaId, flourBlend, feedingRatio, ratioInputs, temperature, oldSourdoughAmount, oldSourdoughInput, isSweetMode, sugarPercentage]);
+  }, [autoSavePersona, activePersonaId, flourBlend, feedingRatio, ratioInputs, temperature, oldSourdoughAmount, oldSourdoughInput, isSweetMode, sugarPercentage, sugarType, timeSettings]);
 
   // Debounced auto-save
   useEffect(() => {
@@ -152,54 +146,58 @@ export function SourdoughCalculator() {
   };
 
   const formatDateString = (date: Date): string => date.toISOString().split('T')[0];
-  const formatTimeString = (date: Date): string => date.toTimeString().slice(0, 5);
+  const formatTimeStr = (date: Date): string => date.toTimeString().slice(0, 5);
+
+  const updateTimeSettings = useCallback((updates: Partial<PersonaTimeSettings>) => {
+    setTimeSettings(prev => ({ ...prev, ...updates }));
+  }, []);
 
   const shiftTargetWindowFromStart = useCallback((nextStartDate: string, nextStartTime: string) => {
-    const prevStart = parseDateTimeToDate(settings.targetStartDate, settings.targetStartTime);
+    const prevStart = parseDateTimeToDate(timeSettings.targetStartDate, timeSettings.targetStartTime);
     const nextStart = parseDateTimeToDate(nextStartDate, nextStartTime);
 
     if (!prevStart || !nextStart) {
-      updateSettings({ targetStartDate: nextStartDate, targetStartTime: nextStartTime });
+      updateTimeSettings({ targetStartDate: nextStartDate, targetStartTime: nextStartTime });
       return;
     }
 
     const deltaMs = nextStart.getTime() - prevStart.getTime();
 
-    const prevPeakStart = parseDateTimeToDate(settings.targetPeakStartDate, settings.targetPeakStartTime);
-    const prevPeakEnd = parseDateTimeToDate(settings.targetPeakEndDate, settings.targetPeakEndTime);
+    const prevPeakStart = parseDateTimeToDate(timeSettings.targetPeakStartDate, timeSettings.targetPeakStartTime);
+    const prevPeakEnd = parseDateTimeToDate(timeSettings.targetPeakEndDate, timeSettings.targetPeakEndTime);
 
     if (prevPeakStart && prevPeakEnd) {
       const nextPeakStart = new Date(prevPeakStart.getTime() + deltaMs);
       const nextPeakEnd = new Date(prevPeakEnd.getTime() + deltaMs);
 
-      updateSettings({
+      updateTimeSettings({
         targetStartDate: nextStartDate,
         targetStartTime: nextStartTime,
         targetPeakStartDate: formatDateString(nextPeakStart),
-        targetPeakStartTime: formatTimeString(nextPeakStart),
+        targetPeakStartTime: formatTimeStr(nextPeakStart),
         targetPeakEndDate: formatDateString(nextPeakEnd),
-        targetPeakEndTime: formatTimeString(nextPeakEnd),
+        targetPeakEndTime: formatTimeStr(nextPeakEnd),
       });
       return;
     }
 
-    updateSettings({ targetStartDate: nextStartDate, targetStartTime: nextStartTime });
-  }, [settings.targetStartDate, settings.targetStartTime, settings.targetPeakStartDate, settings.targetPeakStartTime, settings.targetPeakEndDate, settings.targetPeakEndTime, updateSettings]);
+    updateTimeSettings({ targetStartDate: nextStartDate, targetStartTime: nextStartTime });
+  }, [timeSettings, updateTimeSettings]);
 
   // Validation: check if end time is after start time
   const isValidTimeWindow = useMemo(() => {
-    if (inputMode !== 'target-window') return true;
+    if (timeSettings.inputMode !== 'target-window') return true;
     
-    const peakStart = parseDateTimeToDate(settings.targetPeakStartDate, settings.targetPeakStartTime);
-    const peakEnd = parseDateTimeToDate(settings.targetPeakEndDate, settings.targetPeakEndTime);
-    const startTime = parseDateTimeToDate(settings.targetStartDate, settings.targetStartTime);
+    const peakStart = parseDateTimeToDate(timeSettings.targetPeakStartDate, timeSettings.targetPeakStartTime);
+    const peakEnd = parseDateTimeToDate(timeSettings.targetPeakEndDate, timeSettings.targetPeakEndTime);
+    const startTime = parseDateTimeToDate(timeSettings.targetStartDate, timeSettings.targetStartTime);
     
     if (!peakStart || !peakEnd) return false;
     if (peakEnd <= peakStart) return false;
     if (startTime && peakStart <= startTime) return false;
     
     return true;
-  }, [settings, inputMode]);
+  }, [timeSettings]);
 
   const totalPercentage = useMemo(() => flourBlend.reduce((sum, item) => sum + item.percentage, 0), [flourBlend]);
 
@@ -208,19 +206,19 @@ export function SourdoughCalculator() {
       flourBlend,
       feedingRatio,
       temperature,
-      targetStartTime: parseDateTimeToDate(settings.targetStartDate, settings.targetStartTime),
-      targetPeakStart: parseDateTimeToDate(settings.targetPeakStartDate, settings.targetPeakStartTime),
-      targetPeakEnd: parseDateTimeToDate(settings.targetPeakEndDate, settings.targetPeakEndTime),
-      useTargetWindow: inputMode === 'target-window',
+      targetStartTime: parseDateTimeToDate(timeSettings.targetStartDate, timeSettings.targetStartTime),
+      targetPeakStart: parseDateTimeToDate(timeSettings.targetPeakStartDate, timeSettings.targetPeakStartTime),
+      targetPeakEnd: parseDateTimeToDate(timeSettings.targetPeakEndDate, timeSettings.targetPeakEndTime),
+      useTargetWindow: timeSettings.inputMode === 'target-window',
       oldSourdoughAmount,
       isSweetMode,
       sugarPercentage,
       sugarType,
-      inputMode,
-      targetTotalSourdough,
-      targetPeakTime: parseDateTimeToDate(targetPeakDate, targetPeakTime),
+      inputMode: timeSettings.inputMode,
+      targetTotalSourdough: timeSettings.targetTotalSourdough,
+      targetPeakTime: parseDateTimeToDate(timeSettings.targetPeakDate, timeSettings.targetPeakTime),
     });
-  }, [flourBlend, feedingRatio, temperature, settings, oldSourdoughAmount, isSweetMode, sugarPercentage, sugarType, inputMode, targetTotalSourdough, targetPeakDate, targetPeakTime]);
+  }, [flourBlend, feedingRatio, temperature, timeSettings, oldSourdoughAmount, isSweetMode, sugarPercentage, sugarType]);
 
   const addFlour = () => {
     const newId = generateId();
@@ -386,7 +384,6 @@ export function SourdoughCalculator() {
         personas={personas}
         activePersonaId={activePersonaId}
         onSelectPersona={setActivePersonaId}
-        settings={settings}
         isVisible={showOverview}
         onToggleVisibility={() => setShowOverview(!showOverview)}
       />
@@ -451,9 +448,9 @@ export function SourdoughCalculator() {
                 {inputModeOptions.map((opt) => (
                   <Button
                     key={opt.value}
-                    variant={inputMode === opt.value ? 'default' : 'outline'}
+                    variant={timeSettings.inputMode === opt.value ? 'default' : 'outline'}
                     size="sm"
-                    onClick={() => setInputMode(opt.value)}
+                    onClick={() => updateTimeSettings({ inputMode: opt.value })}
                     className="flex-1"
                   >
                     {opt.label}
@@ -464,7 +461,7 @@ export function SourdoughCalculator() {
           </Card>
 
           {/* Old Sourdough - only for basic and target-window modes */}
-          {inputMode !== 'total-sourdough' && (
+          {timeSettings.inputMode !== 'total-sourdough' && (
             <Card className="border-border/50 shadow-sm">
               <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('oldSourdough')}</CardTitle></CardHeader>
               <CardContent>
@@ -483,7 +480,7 @@ export function SourdoughCalculator() {
           )}
 
           {/* Total Sourdough mode inputs */}
-          {inputMode === 'total-sourdough' && (
+          {timeSettings.inputMode === 'total-sourdough' && (
             <Card className="border-border/50 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg font-display">
@@ -497,11 +494,14 @@ export function SourdoughCalculator() {
                   <Input 
                     type="text" 
                     inputMode="decimal"
-                    value={targetTotalSourdoughInput} 
+                    value={timeSettings.targetTotalSourdoughInput} 
                     onChange={(e) => {
-                      setTargetTotalSourdoughInput(e.target.value);
-                      const parsed = parseDecimalInput(e.target.value);
-                      if (!Number.isNaN(parsed) && parsed > 0) setTargetTotalSourdough(parsed);
+                      const input = e.target.value;
+                      const parsed = parseDecimalInput(input);
+                      updateTimeSettings({ 
+                        targetTotalSourdoughInput: input,
+                        targetTotalSourdough: !Number.isNaN(parsed) && parsed > 0 ? parsed : timeSettings.targetTotalSourdough
+                      });
                     }}
                     className="text-center text-lg font-medium" 
                   />
@@ -510,8 +510,8 @@ export function SourdoughCalculator() {
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">{t('desiredPeakTime' as any) || 'Desired Peak Time'}</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="date" value={targetPeakDate} min={getTodayString()} onChange={(e) => setTargetPeakDate(e.target.value)} />
-                    <Input type="time" value={targetPeakTime} onChange={(e) => setTargetPeakTime(e.target.value)} />
+                    <Input type="date" value={timeSettings.targetPeakDate} min={getTodayString()} onChange={(e) => updateTimeSettings({ targetPeakDate: e.target.value })} />
+                    <Input type="time" value={timeSettings.targetPeakTime} onChange={(e) => updateTimeSettings({ targetPeakTime: e.target.value })} />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -561,7 +561,7 @@ export function SourdoughCalculator() {
           </Card>
 
           {/* Target Window - only for target-window mode */}
-          {inputMode === 'target-window' && (
+          {timeSettings.inputMode === 'target-window' && (
             <Card className="border-border/50 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg font-display"><Clock className="h-5 w-5 text-primary" />{t('targetPeakWindow')}</CardTitle>
@@ -573,29 +573,29 @@ export function SourdoughCalculator() {
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="date"
-                      value={settings.targetStartDate}
+                      value={timeSettings.targetStartDate}
                       min={getTodayString()}
-                      onChange={(e) => shiftTargetWindowFromStart(e.target.value, settings.targetStartTime)}
+                      onChange={(e) => shiftTargetWindowFromStart(e.target.value, timeSettings.targetStartTime)}
                     />
                     <Input
                       type="time"
-                      value={settings.targetStartTime}
-                      onChange={(e) => shiftTargetWindowFromStart(settings.targetStartDate, e.target.value)}
+                      value={timeSettings.targetStartTime}
+                      onChange={(e) => shiftTargetWindowFromStart(timeSettings.targetStartDate, e.target.value)}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">{t('from')}</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="date" value={settings.targetPeakStartDate} min={settings.targetStartDate || getTodayString()} onChange={(e) => updateSettings({ targetPeakStartDate: e.target.value })} />
-                    <Input type="time" value={settings.targetPeakStartTime} onChange={(e) => updateSettings({ targetPeakStartTime: e.target.value })} />
+                    <Input type="date" value={timeSettings.targetPeakStartDate} min={timeSettings.targetStartDate || getTodayString()} onChange={(e) => updateTimeSettings({ targetPeakStartDate: e.target.value })} />
+                    <Input type="time" value={timeSettings.targetPeakStartTime} onChange={(e) => updateTimeSettings({ targetPeakStartTime: e.target.value })} />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">{t('to')}</Label>
                   <div className="grid grid-cols-2 gap-2">
-                    <Input type="date" value={settings.targetPeakEndDate} min={settings.targetPeakStartDate || getTodayString()} onChange={(e) => updateSettings({ targetPeakEndDate: e.target.value })} />
-                    <Input type="time" value={settings.targetPeakEndTime} onChange={(e) => updateSettings({ targetPeakEndTime: e.target.value })} />
+                    <Input type="date" value={timeSettings.targetPeakEndDate} min={timeSettings.targetPeakStartDate || getTodayString()} onChange={(e) => updateTimeSettings({ targetPeakEndDate: e.target.value })} />
+                    <Input type="time" value={timeSettings.targetPeakEndTime} onChange={(e) => updateTimeSettings({ targetPeakEndTime: e.target.value })} />
                   </div>
                 </div>
                 {!isValidTimeWindow && (
@@ -643,7 +643,7 @@ export function SourdoughCalculator() {
             </CardHeader>
           </Card>
 
-          <Button onClick={() => setShowResults(true)} className="w-full h-12 text-lg font-medium" size="lg" disabled={totalPercentage !== 100 || (inputMode === 'target-window' && !isValidTimeWindow)}>{t('calculateSchedule')}</Button>
+          <Button onClick={() => setShowResults(true)} className="w-full h-12 text-lg font-medium" size="lg" disabled={totalPercentage !== 100 || (timeSettings.inputMode === 'target-window' && !isValidTimeWindow)}>{t('calculateSchedule')}</Button>
         </div>
 
         {/* Results */}
@@ -695,35 +695,52 @@ export function SourdoughCalculator() {
               {result.recommendedRatio && (
                 <Card className="border-primary/30 bg-primary/5 shadow-sm">
                   <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('recommendedRatio')}</CardTitle><CardDescription>{t('recommendedRatioDesc')}</CardDescription></CardHeader>
-                  <CardContent><div className="flex items-center justify-center gap-2 text-2xl font-bold"><span>{result.recommendedRatio.starter}</span><span className="text-muted-foreground">:</span><span className="text-primary">{result.recommendedRatio.flour}</span><span className="text-muted-foreground">:</span><span>{result.recommendedRatio.water}</span></div></CardContent>
+                  <CardContent>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div className="p-3 rounded-lg bg-background/50"><p className="text-xl font-bold text-primary">{result.recommendedRatio.starter}</p><p className="text-xs text-muted-foreground">{t('starter')}</p></div>
+                      <div className="p-3 rounded-lg bg-background/50"><p className="text-xl font-bold text-primary">{result.recommendedRatio.flour}</p><p className="text-xs text-muted-foreground">{t('flour')}</p></div>
+                      <div className="p-3 rounded-lg bg-background/50"><p className="text-xl font-bold text-primary">{result.recommendedRatio.water}</p><p className="text-xs text-muted-foreground">{t('water')}</p></div>
+                    </div>
+                  </CardContent>
                 </Card>
               )}
 
-              {/* Timeline */}
+              {/* Fermentation Timeline */}
               <Card className="border-border/50 shadow-sm">
                 <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Timer className="h-5 w-5 text-primary" />{t('fermentationTimeline')}</CardTitle></CardHeader>
-                <CardContent><div className="relative"><div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" /><div className="space-y-4">{result.fermentationPhases.map((phase, i) => (<div key={i} className="relative pl-10"><div className={`absolute left-2.5 top-1 w-3 h-3 rounded-full border-2 border-background ${i === 2 ? 'bg-accent' : i === 1 ? 'bg-primary' : 'bg-muted-foreground'}`} /><div className={`p-3 rounded-lg ${i === 2 ? 'bg-accent/20 text-accent' : i === 1 ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}><div className="flex items-center justify-between mb-1"><span className="font-medium text-sm">{t(phase.nameKey as any)}</span><span className="text-xs">{formatTime(phase.startTime)} — {formatTime(phase.endTime)}</span></div><p className="text-xs opacity-80">{t(phase.descriptionKey as any)}</p></div></div>))}</div></div></CardContent>
+                <CardContent className="space-y-3">
+                  {result.fermentationPhases.map((phase, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="flex flex-col items-center">
+                        <div className={`w-3 h-3 rounded-full ${i === 2 ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                        {i < result.fermentationPhases.length - 1 && <div className="w-0.5 h-8 bg-muted-foreground/20" />}
+                      </div>
+                      <div className="flex-1 pb-2">
+                        <div className="flex justify-between items-baseline"><span className="font-medium text-sm">{t(phase.nameKey as any) || phase.name}</span><span className="text-xs text-muted-foreground">{formatTime(phase.startTime)} - {formatTime(phase.endTime)}</span></div>
+                        <p className="text-xs text-muted-foreground">{t(phase.descriptionKey as any) || phase.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
               </Card>
 
-              {inputMode === 'target-window' && (
-                <Card className={`border-2 ${result.isWithinTargetWindow ? 'border-green-500/30 bg-green-500/5' : 'border-yellow-500/30 bg-yellow-500/5'}`}>
-                  <CardContent className="pt-6"><div className="flex items-start gap-3">{result.isWithinTargetWindow ? <CheckCircle className="h-6 w-6 text-green-500 shrink-0" /> : <AlertCircle className="h-6 w-6 text-yellow-500 shrink-0" />}<div><Badge variant="outline" className={result.isWithinTargetWindow ? 'border-green-500 text-green-500' : 'border-yellow-500 text-yellow-500'}>{result.isWithinTargetWindow ? t('perfectTiming') : t('timingAdjustmentNeeded')}</Badge><p className="text-sm text-muted-foreground mt-2">{result.isWithinTargetWindow ? t('starterWillPeak') : t('peakOutsideWindow')}</p></div></div></CardContent>
-                </Card>
-              )}
-
+              {/* Suggestions */}
               {result.suggestions.length > 0 && (
                 <Card className="border-border/50 shadow-sm">
-                  <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Lightbulb className="h-5 w-5 text-primary" />{t('tips')}</CardTitle></CardHeader>
-                  <CardContent><ul className="space-y-2">{result.suggestions.map((key, i) => (<li key={i} className="flex gap-2 text-sm text-muted-foreground"><span className="text-primary">•</span>{t(key as any)}</li>))}</ul></CardContent>
+                  <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Lightbulb className="h-5 w-5 text-primary" />{t('suggestions')}</CardTitle></CardHeader>
+                  <CardContent>
+                    <ul className="space-y-2">
+                      {result.suggestions.map((s, i) => (<li key={i} className="flex items-start gap-2 text-sm text-muted-foreground"><CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>{t(s as keyof typeof t) || s}</span></li>))}
+                    </ul>
+                  </CardContent>
                 </Card>
               )}
             </>
           ) : (
-            <Card className="border-dashed border-2 border-border/50 bg-muted/20">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4"><Clock className="h-8 w-8 text-primary/60" /></div>
-                <h3 className="font-display text-lg font-medium text-foreground mb-2">{t('readyToCalculate')}</h3>
-                <p className="text-sm text-muted-foreground max-w-xs">{t('configureSettings')}</p>
+            <Card className="border-border/50 shadow-sm h-full flex items-center justify-center min-h-[300px]">
+              <CardContent className="text-center space-y-4 py-12">
+                <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center"><Wheat className="h-8 w-8 text-primary" /></div>
+                <div><h3 className="font-display text-lg font-semibold text-foreground mb-2">{t('readyToCalculate')}</h3><p className="text-sm text-muted-foreground max-w-xs mx-auto">{t('readyToCalculate')}</p></div>
               </CardContent>
             </Card>
           )}

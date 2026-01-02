@@ -52,6 +52,20 @@ export interface FeedingRatio {
   water: number;
 }
 
+export interface PersonaTimeSettings {
+  inputMode: InputMode;
+  targetStartDate: string;
+  targetStartTime: string;
+  targetPeakStartDate: string;
+  targetPeakStartTime: string;
+  targetPeakEndDate: string;
+  targetPeakEndTime: string;
+  targetPeakDate: string;
+  targetPeakTime: string;
+  targetTotalSourdough: number;
+  targetTotalSourdoughInput: string;
+}
+
 export interface SourdoughPersona {
   id: string;
   name: string;
@@ -63,6 +77,8 @@ export interface SourdoughPersona {
   oldSourdoughInput: string;
   isSweetMode: boolean;
   sugarPercentage: number;
+  sugarType: SugarType;
+  timeSettings: PersonaTimeSettings;
   createdAt: number;
   updatedAt: number;
 }
