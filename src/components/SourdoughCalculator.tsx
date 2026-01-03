@@ -730,7 +730,12 @@ export function SourdoughCalculator() {
                   <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Lightbulb className="h-5 w-5 text-primary" />{t('suggestions')}</CardTitle></CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
-                      {result.suggestions.map((s, i) => (<li key={i} className="flex items-start gap-2 text-sm text-muted-foreground"><CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" /><span>{t(s as keyof typeof t) || s}</span></li>))}
+                      {result.suggestions.map((s, i) => (
+                        <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
+                          <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                          <span>{t(s as any) || s}</span>
+                        </li>
+                      ))}
                     </ul>
                   </CardContent>
                 </Card>
