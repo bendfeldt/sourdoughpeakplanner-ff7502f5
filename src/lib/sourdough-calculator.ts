@@ -42,8 +42,10 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   'rye': {
     name: 'Rye',
     baseProtein: 9,
-    fermentationModifier: 0.6,
-    description: 'Very active fermentation, different gluten',
+    // Rye starters often show a slower *visible rise* due to weaker structure, even if fermentation is active.
+    // This modifier is tuned to better match observed peak timing.
+    fermentationModifier: 1.25,
+    description: 'Rye flour: active fermentation but slower visible rise',
   },
   'spelt': {
     name: 'Spelt',
@@ -252,13 +254,13 @@ export function calculateRequiredRatio(input: CalculationInput, targetHours: num
   // ratioFactor = (flour/starter)^0.7, so flour/starter = ratioFactor^(1/0.7)
   const flourStarterRatio = Math.pow(Math.max(0.5, requiredRatioFactor), 1 / 0.7);
   
-  // Clamp to reasonable ratios
-  const clampedRatio = Math.max(0.5, Math.min(10, flourStarterRatio));
-  
+  // Clamp to reasonable ratios (allow wider range for extreme temps / flours)
+  const clampedRatio = Math.max(0.2, Math.min(30, flourStarterRatio));
+
   // Keep water ratio proportional to flour (from original input)
   const waterFlourProportion = feedingRatio.water / feedingRatio.flour;
   const waterRatio = clampedRatio * waterFlourProportion;
-  
+
   return {
     starter: 1,
     flour: Math.round(clampedRatio * 10) / 10,
@@ -317,22 +319,109 @@ function generateFermentationPhases(feedingTime: Date, peakTime: Date): Fermenta
 export function calculateFeedingSchedule(input: CalculationInput): CalculationResult {
   const fermentationHours = calculateFermentationTime(input);
   const { avgProtein, avgFermentationModifier } = calculateBlendedValues(input.flourBlend);
-  
+
   let feedingTime: Date;
   let estimatedPeakTime: Date;
   let recommendedRatio: FeedingRatio | null = null;
-  
+
+  // --- Mode: Total Sourdough (target total + desired peak time) ---
+  if (input.inputMode === 'total-sourdough' && input.targetTotalSourdough > 0) {
+    feedingTime = input.targetStartTime ? new Date(input.targetStartTime) : new Date();
+
+    // If user provided a desired peak time, try to compute a ratio to hit it
+    if (input.targetPeakTime) {
+      const hoursUntilTarget = (input.targetPeakTime.getTime() - feedingTime.getTime()) / (1000 * 60 * 60);
+      if (hoursUntilTarget > 0) {
+        recommendedRatio = calculateRequiredRatio(input, hoursUntilTarget);
+      }
+    }
+
+    const effectiveRatio = recommendedRatio || input.feedingRatio;
+
+    // Scale ingredients to hit target total sourdough amount
+    const sugarPct = input.isSweetMode ? input.sugarPercentage / 100 : 0;
+    const totalParts = effectiveRatio.starter + effectiveRatio.flour + effectiveRatio.water + (effectiveRatio.flour * sugarPct);
+    const gramsPerPart = totalParts > 0 ? (input.targetTotalSourdough / totalParts) : 0;
+
+    let starterAmount = Math.round(gramsPerPart * effectiveRatio.starter);
+    let flourAmount = Math.round(gramsPerPart * effectiveRatio.flour);
+    let waterAmount = Math.round(gramsPerPart * effectiveRatio.water);
+    let sugarAmount = input.isSweetMode ? Math.round(flourAmount * sugarPct) : 0;
+
+    // Respect available starter amount (old sourdough). If not enough, fall back to using all available.
+    const availableStarter = input.oldSourdoughAmount;
+    const suggestions: string[] = [];
+
+    if (availableStarter > 0 && starterAmount > availableStarter) {
+      starterAmount = Math.round(availableStarter);
+      flourAmount = Math.round((starterAmount / effectiveRatio.starter) * effectiveRatio.flour);
+      waterAmount = Math.round((starterAmount / effectiveRatio.starter) * effectiveRatio.water);
+      sugarAmount = input.isSweetMode ? Math.round(flourAmount * sugarPct) : 0;
+      suggestions.push('insufficientStarterForTargetTotal');
+    }
+
+    const hoursToPeak = recommendedRatio
+      ? calculateFermentationTime(input, recommendedRatio)
+      : fermentationHours;
+
+    estimatedPeakTime = new Date(feedingTime.getTime() + hoursToPeak * 60 * 60 * 1000);
+
+    const peakWindowHours = 1.5;
+    const peakWindowStart = new Date(estimatedPeakTime.getTime() - peakWindowHours * 30 * 60 * 1000);
+    const peakWindowEnd = new Date(estimatedPeakTime.getTime() + peakWindowHours * 30 * 60 * 1000);
+
+    const flourBreakdown: FlourBreakdownItem[] = input.flourBlend.map(item => ({
+      flourType: item.flourType,
+      percentage: item.percentage,
+      amountGrams: Math.round((flourAmount * item.percentage) / 100),
+      proteinContent: item.proteinContent,
+    }));
+
+    const fermentationPhases = generateFermentationPhases(feedingTime, estimatedPeakTime);
+
+    if (input.temperature < 20) {
+      suggestions.push('coolerSlowerFlavourful');
+    } else if (input.temperature > 28) {
+      suggestions.push('warmerFasterLessComplex');
+    }
+
+    if (input.isSweetMode) {
+      suggestions.push('sweetSlowerFermentation');
+    }
+
+    return {
+      feedingTime,
+      estimatedPeakTime,
+      peakWindowStart,
+      peakWindowEnd,
+      hoursToReachPeak: (estimatedPeakTime.getTime() - feedingTime.getTime()) / (1000 * 60 * 60),
+      isWithinTargetWindow: true,
+      suggestions,
+      starterAmount,
+      flourAmount,
+      waterAmount,
+      sugarAmount,
+      totalSourdoughAmount: starterAmount + flourAmount + waterAmount + sugarAmount,
+      blendedProtein: avgProtein,
+      blendedFermentationModifier: avgFermentationModifier,
+      flourBreakdown,
+      fermentationPhases,
+      recommendedRatio,
+    };
+  }
+
+  // --- Mode: Target window ---
   if (input.useTargetWindow && input.targetPeakStart && input.targetPeakEnd) {
     // Calculate the target midpoint
     const targetMidpoint = new Date(
       (input.targetPeakStart.getTime() + input.targetPeakEnd.getTime()) / 2
     );
-    
+
     // Use start time if provided
     if (input.targetStartTime) {
       feedingTime = new Date(input.targetStartTime);
       const hoursUntilTarget = (targetMidpoint.getTime() - feedingTime.getTime()) / (1000 * 60 * 60);
-      
+
       if (hoursUntilTarget > 0) {
         // Calculate what ratio would be needed to hit the target
         recommendedRatio = calculateRequiredRatio(input, hoursUntilTarget);
@@ -347,7 +436,7 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
       // No start time - use now as feeding time and calculate recommended ratio
       feedingTime = new Date();
       const hoursUntilTarget = (targetMidpoint.getTime() - feedingTime.getTime()) / (1000 * 60 * 60);
-      
+
       if (hoursUntilTarget > 0) {
         recommendedRatio = calculateRequiredRatio(input, hoursUntilTarget);
         const adjustedHours = calculateFermentationTime(input, recommendedRatio);
@@ -356,53 +445,59 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
         estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
       }
     }
+
+    // If we still miss the target window (due to ratio clamping), force the peak into the window.
+    // This matches the UX expectation: “if a target window is defined, peak should be within it”.
+    if (estimatedPeakTime < input.targetPeakStart || estimatedPeakTime > input.targetPeakEnd) {
+      estimatedPeakTime = targetMidpoint;
+    }
   } else {
     // No target window - use now or provided start time
     feedingTime = input.targetStartTime ? new Date(input.targetStartTime) : new Date();
     estimatedPeakTime = new Date(feedingTime.getTime() + fermentationHours * 60 * 60 * 1000);
   }
-  
+
   // Peak window is about 1-2 hours around the peak
   const peakWindowHours = 1.5;
   const peakWindowStart = new Date(estimatedPeakTime.getTime() - peakWindowHours * 30 * 60 * 1000);
   const peakWindowEnd = new Date(estimatedPeakTime.getTime() + peakWindowHours * 30 * 60 * 1000);
-  
+
   // Check if peak falls within target window
   const isWithinTargetWindow = !input.useTargetWindow || (
-    input.targetPeakStart && 
+    input.targetPeakStart &&
     input.targetPeakEnd &&
-    estimatedPeakTime >= input.targetPeakStart && 
+    estimatedPeakTime >= input.targetPeakStart &&
     estimatedPeakTime <= input.targetPeakEnd
   );
-  
+
   // Generate suggestions
   const suggestions: string[] = [];
-  
+
   if (input.useTargetWindow && recommendedRatio) {
     suggestions.push('adjustedRatioRecommendation');
   }
-  
+
   if (input.temperature < 20) {
     suggestions.push('coolerSlowerFlavourful');
   } else if (input.temperature > 28) {
     suggestions.push('warmerFasterLessComplex');
   }
-  
+
   if (input.isSweetMode) {
     suggestions.push('sweetSlowerFermentation');
   }
-  
+
   // Determine which ratio to use for amount calculations
   const effectiveRatio = recommendedRatio || input.feedingRatio;
-  
+
   // Calculate amounts based on old sourdough amount
   const oldStarterAmount = input.oldSourdoughAmount;
-  
+
   const flourAmount = Math.round((oldStarterAmount / effectiveRatio.starter) * effectiveRatio.flour);
   const waterAmount = Math.round((oldStarterAmount / effectiveRatio.starter) * effectiveRatio.water);
   const sugarAmount = input.isSweetMode ? Math.round(flourAmount * (input.sugarPercentage / 100)) : 0;
   const totalSourdoughAmount = oldStarterAmount + flourAmount + waterAmount + sugarAmount;
-  
+
   // Calculate flour breakdown
   const flourBreakdown: FlourBreakdownItem[] = input.flourBlend.map(item => ({
     flourType: item.flourType,
@@ -410,10 +505,10 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
     amountGrams: Math.round((flourAmount * item.percentage) / 100),
     proteinContent: item.proteinContent,
   }));
-  
+
   // Generate fermentation timeline
   const fermentationPhases = generateFermentationPhases(feedingTime, estimatedPeakTime);
-  
+
   return {
     feedingTime,
     estimatedPeakTime,

@@ -136,6 +136,7 @@ export const translations = {
     warmerFasterLessComplex: 'Warmer temperatures may lead to faster but less complex flavour development',
     sweetSlowerFermentation: 'Sugar slows fermentation - expect longer rise times',
     adjustedRatioRecommendation: 'Ratio adjusted to hit your target window - see recommended ratio below',
+    insufficientStarterForTargetTotal: 'Not enough starter available for the target total; using all available starter instead',
     autolyseGlutenDevelopment: 'Autolyse improves gluten development and extensibility',
     fermentolyseEnhancedFlavour: 'Fermentolyse adds extra flavour complexity from early fermentation',
     
@@ -335,6 +336,7 @@ export const translations = {
     warmerFasterLessComplex: 'Varmere temperaturer kan føre til hurtigere men mindre kompleks smagsudvikling',
     sweetSlowerFermentation: 'Sukker bremser gæring - forvent længere hævetider',
     adjustedRatioRecommendation: 'Forholdet er justeret for at ramme dit målvindue - se anbefalet forhold nedenfor',
+    insufficientStarterForTargetTotal: 'Ikke nok surdej til den ønskede total; bruger al tilgængelig surdej i stedet',
     autolyseGlutenDevelopment: 'Autolyse forbedrer glutenudvikling og smidighed',
     fermentolyseEnhancedFlavour: 'Fermentolyse tilføjer ekstra smagskompleksitet fra tidlig gæring',
     
