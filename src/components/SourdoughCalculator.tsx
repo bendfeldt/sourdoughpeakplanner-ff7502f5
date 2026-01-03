@@ -7,7 +7,8 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, Copy, Edit2, Check, X, RotateCcw } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, Copy, Edit2, Check, X, RotateCcw, HelpCircle } from 'lucide-react';
 import { 
   FLOUR_DATA, 
   SUGAR_DATA,
@@ -361,6 +362,11 @@ export function SourdoughCalculator() {
           {personas.length > 1 && <Button variant="ghost" size="icon" onClick={() => deletePersona(activePersonaId)} title="Delete"><Trash2 className="h-4 w-4" /></Button>}
         </div>
         <div className="flex items-center gap-2">
+          <Link to="/guidance">
+            <Button variant="ghost" size="icon" title={t('viewGuidance' as any) || 'How to Use'}>
+              <HelpCircle className="h-5 w-5" />
+            </Button>
+          </Link>
           <Button variant="ghost" size="icon" onClick={() => updateSettings({ isDarkMode: !settings.isDarkMode })}>
             {settings.isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
@@ -460,6 +466,31 @@ export function SourdoughCalculator() {
             </CardContent>
           </Card>
 
+          {/* Start Time - for Normal (basic) mode */}
+          {timeSettings.inputMode === 'basic' && (
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-lg font-display"><Clock className="h-5 w-5 text-primary" />{t('startTime')}</CardTitle>
+                <CardDescription>{t('startTimeDesc')}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="date"
+                    value={timeSettings.targetStartDate}
+                    min={getTodayString()}
+                    onChange={(e) => updateTimeSettings({ targetStartDate: e.target.value })}
+                  />
+                  <Input
+                    type="time"
+                    value={timeSettings.targetStartTime}
+                    onChange={(e) => updateTimeSettings({ targetStartTime: e.target.value })}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Old Sourdough - only for basic and target-window modes */}
           {timeSettings.inputMode !== 'total-sourdough' && (
             <Card className="border-border/50 shadow-sm">
@@ -508,6 +539,13 @@ export function SourdoughCalculator() {
                   <span className="text-muted-foreground font-medium">g</span>
                 </div>
                 <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">{t('startTime')}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input type="date" value={timeSettings.targetStartDate} min={getTodayString()} onChange={(e) => updateTimeSettings({ targetStartDate: e.target.value })} />
+                    <Input type="time" value={timeSettings.targetStartTime} onChange={(e) => updateTimeSettings({ targetStartTime: e.target.value })} />
+                  </div>
+                </div>
+                <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">{t('desiredPeakTime' as any) || 'Desired Peak Time'}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Input type="date" value={timeSettings.targetPeakDate} min={getTodayString()} onChange={(e) => updateTimeSettings({ targetPeakDate: e.target.value })} />
@@ -531,25 +569,27 @@ export function SourdoughCalculator() {
             </Card>
           )}
 
-          {/* Feeding Ratio */}
-          <Card className="border-border/50 shadow-sm">
-            <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('feedingRatio')}</CardTitle></CardHeader>
-            <CardContent>
-              <FeedingRatioInput
-                feedingRatio={feedingRatio}
-                ratioInputs={ratioInputs}
-                oldSourdoughAmount={oldSourdoughAmount}
-                onRatioChange={(ratio, inputs) => {
-                  setFeedingRatio(ratio);
-                  setRatioInputs(inputs);
-                }}
-                onOldSourdoughChange={(amount, input) => {
-                  setOldSourdoughAmount(amount);
-                  setOldSourdoughInput(input);
-                }}
-              />
-            </CardContent>
-          </Card>
+          {/* Feeding Ratio - only for Normal (basic) mode */}
+          {timeSettings.inputMode === 'basic' && (
+            <Card className="border-border/50 shadow-sm">
+              <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('feedingRatio')}</CardTitle></CardHeader>
+              <CardContent>
+                <FeedingRatioInput
+                  feedingRatio={feedingRatio}
+                  ratioInputs={ratioInputs}
+                  oldSourdoughAmount={oldSourdoughAmount}
+                  onRatioChange={(ratio, inputs) => {
+                    setFeedingRatio(ratio);
+                    setRatioInputs(inputs);
+                  }}
+                  onOldSourdoughChange={(amount, input) => {
+                    setOldSourdoughAmount(amount);
+                    setOldSourdoughInput(input);
+                  }}
+                />
+              </CardContent>
+            </Card>
+          )}
 
           {/* Temperature */}
           <Card className="border-border/50 shadow-sm">

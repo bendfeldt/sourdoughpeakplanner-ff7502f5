@@ -1,0 +1,257 @@
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Wheat, Clock, Thermometer, Scale, Lightbulb } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { I18nProvider, useI18n } from '@/lib/i18n';
+
+function GuidanceContent() {
+  const { t } = useI18n();
+
+  return (
+    <main className="min-h-screen bg-background">
+      <div className="container py-8 px-4 md:py-12 max-w-4xl mx-auto">
+        <div className="mb-8">
+          <Link to="/">
+            <Button variant="ghost" className="gap-2">
+              <ArrowLeft className="h-4 w-4" />
+              {t('backToCalculator' as any)}
+            </Button>
+          </Link>
+        </div>
+
+        <div className="text-center space-y-3 mb-12">
+          <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground tracking-tight">
+            {t('guidanceTitle' as any)}
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            {t('guidanceSubtitle' as any)}
+          </p>
+        </div>
+
+        <div className="space-y-6">
+          {/* Intro */}
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6">
+              <p className="text-lg text-foreground leading-relaxed">
+                {t('guidanceIntro' as any)}
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Normal Mode */}
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl font-display">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Wheat className="h-5 w-5 text-primary" />
+                </div>
+                {t('normalModeTitle' as any)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground leading-relaxed">
+                {t('normalModeDesc' as any)}
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Set your feeding ratio (e.g., 1:2:2)
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Choose your ambient temperature
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Set when you'll start feeding
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Calculator shows when peak will occur
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Target Window Mode */}
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl font-display">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-primary" />
+                </div>
+                {t('targetWindowModeTitle' as any)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground leading-relaxed">
+                {t('targetWindowModeDesc' as any)}
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Set when you need the starter ready (start and end of window)
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Optionally set when you'll start feeding
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Calculator recommends the optimal ratio
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  No need to manually set feeding ratio
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Total Sourdough Mode */}
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl font-display">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Scale className="h-5 w-5 text-primary" />
+                </div>
+                {t('totalSourdoughModeTitle' as any)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground leading-relaxed">
+                {t('totalSourdoughModeDesc' as any)}
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Enter how much total sourdough you need
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Set when you'll start and when you need it ready
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Calculator determines starter, flour, and water amounts
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">•</span>
+                  Automatically calculates optimal ratio
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Flour Types */}
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl font-display">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Wheat className="h-5 w-5 text-primary" />
+                </div>
+                {t('flourTypesTitle' as any)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground leading-relaxed">
+                {t('flourTypesDesc' as any)}
+              </p>
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="font-medium text-foreground">Fast Fermentation</p>
+                  <p className="text-muted-foreground text-xs mt-1">Whole wheat, Rye, Spelt, Einkorn</p>
+                </div>
+                <div className="p-3 rounded-lg bg-muted/30">
+                  <p className="font-medium text-foreground">Slow Fermentation</p>
+                  <p className="text-muted-foreground text-xs mt-1">Bread flour, Manitoba, Tipo 00</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Temperature */}
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl font-display">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Thermometer className="h-5 w-5 text-primary" />
+                </div>
+                {t('temperatureTitle' as any)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground leading-relaxed">
+                {t('temperatureDesc' as any)}
+              </p>
+              <div className="mt-4 flex gap-3 text-sm">
+                <div className="flex-1 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                  <p className="font-medium text-blue-600 dark:text-blue-400">18-22°C</p>
+                  <p className="text-muted-foreground text-xs mt-1">Slower, more flavour</p>
+                </div>
+                <div className="flex-1 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                  <p className="font-medium text-green-600 dark:text-green-400">23-26°C</p>
+                  <p className="text-muted-foreground text-xs mt-1">Ideal balance</p>
+                </div>
+                <div className="flex-1 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                  <p className="font-medium text-orange-600 dark:text-orange-400">27-32°C</p>
+                  <p className="text-muted-foreground text-xs mt-1">Faster, less complex</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tips */}
+          <Card className="border-primary/30 bg-primary/5">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl font-display">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+                  <Lightbulb className="h-5 w-5 text-primary" />
+                </div>
+                {t('tipsTitle' as any)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3 text-muted-foreground">
+                  <span className="text-primary font-bold text-lg">1</span>
+                  <span>{t('tip1' as any)}</span>
+                </li>
+                <li className="flex items-start gap-3 text-muted-foreground">
+                  <span className="text-primary font-bold text-lg">2</span>
+                  <span>{t('tip2' as any)}</span>
+                </li>
+                <li className="flex items-start gap-3 text-muted-foreground">
+                  <span className="text-primary font-bold text-lg">3</span>
+                  <span>{t('tip3' as any)}</span>
+                </li>
+                <li className="flex items-start gap-3 text-muted-foreground">
+                  <span className="text-primary font-bold text-lg">4</span>
+                  <span>{t('tip4' as any)}</span>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Back button */}
+          <div className="text-center pt-6">
+            <Link to="/">
+              <Button size="lg" className="gap-2">
+                <ArrowLeft className="h-4 w-4" />
+                {t('backToCalculator' as any)}
+              </Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+export default function Guidance() {
+  return (
+    <I18nProvider>
+      <GuidanceContent />
+    </I18nProvider>
+  );
+}

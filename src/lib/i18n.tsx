@@ -173,11 +173,35 @@ export const translations = {
     
     // Input modes
     calculationMode: 'Calculation Mode',
-    basicMode: 'Basic',
+    basicMode: 'Normal',
     targetWindowMode: 'Target Window',
     totalSourdoughMode: 'Total Sourdough',
     targetTotalSourdough: 'Target Total Sourdough',
     targetTotalSourdoughDesc: 'Enter desired total amount and peak time to calculate required ratio',
+    
+    // Guidance page
+    guidanceTitle: 'How to Use the Sourdough Calculator',
+    guidanceSubtitle: 'A complete guide to understanding and using all calculator modes',
+    backToCalculator: 'Back to Calculator',
+    guidanceIntro: 'This calculator helps you plan your sourdough feeding schedule to have your starter peak exactly when you need it.',
+    normalModeTitle: 'Normal Mode',
+    normalModeDesc: 'The simplest mode. Set your feeding ratio, temperature, and start time to see when your starter will peak. Great for regular feeding schedules.',
+    targetWindowModeTitle: 'Target Window Mode',
+    targetWindowModeDesc: 'Set when you need your starter to peak, and the calculator will recommend the optimal feeding ratio. Perfect for planning around your schedule.',
+    totalSourdoughModeTitle: 'Total Sourdough Mode',
+    totalSourdoughModeDesc: 'Specify how much total sourdough you need and when you need it ready. The calculator will work backwards to determine amounts and timing.',
+    flourTypesTitle: 'Flour Types Matter',
+    flourTypesDesc: 'Different flours ferment at different rates. Whole grain and rye flours ferment faster due to higher enzyme activity. Refined flours like bread flour ferment more slowly.',
+    temperatureTitle: 'Temperature Effects',
+    temperatureDesc: 'Warmer temperatures speed up fermentation dramatically. Every 5°C increase roughly halves the fermentation time. Cooler temperatures develop more complex flavours.',
+    ratioTitle: 'Feeding Ratios',
+    ratioDesc: 'Higher ratios (more flour relative to starter) extend fermentation time. A 1:5:5 ratio takes much longer than 1:1:1. The calculator uses this to hit your target times.',
+    tipsTitle: 'Pro Tips',
+    tip1: 'Always use the same flour in your starter that you use in your bread for consistent results.',
+    tip2: 'Your starter should roughly double or triple in size at peak.',
+    tip3: 'A "young" starter (before peak) gives more rise power, while a "mature" starter (at or past peak) gives more flavour.',
+    tip4: 'If your starter is peaking too fast or slow, adjust the temperature or ratio accordingly.',
+    viewGuidance: 'How to Use',
     desiredPeakTime: 'Desired Peak Time',
     
     // Sugar types
@@ -373,11 +397,35 @@ export const translations = {
     
     // Input modes
     calculationMode: 'Beregningstilstand',
-    basicMode: 'Basis',
+    basicMode: 'Normal',
     targetWindowMode: 'Målvindue',
     totalSourdoughMode: 'Total Surdej',
     targetTotalSourdough: 'Ønsket Total Surdej',
     targetTotalSourdoughDesc: 'Indtast ønsket totalmængde og peak-tid for at beregne nødvendigt forhold',
+    
+    // Guidance page
+    guidanceTitle: 'Sådan Bruger Du Surdejs-Beregneren',
+    guidanceSubtitle: 'En komplet guide til at forstå og bruge alle beregningstilstande',
+    backToCalculator: 'Tilbage til Beregner',
+    guidanceIntro: 'Denne beregner hjælper dig med at planlægge din surdejs fodringsplan, så din surdej topper præcis når du har brug for det.',
+    normalModeTitle: 'Normal Tilstand',
+    normalModeDesc: 'Den enkleste tilstand. Sæt dit fodringsforhold, temperatur og starttid for at se hvornår din surdej topper. God til regelmæssige fodringsplaner.',
+    targetWindowModeTitle: 'Målvindue Tilstand',
+    targetWindowModeDesc: 'Sæt hvornår du har brug for din surdej topper, og beregneren anbefaler det optimale fodringsforhold. Perfekt til planlægning omkring din tidsplan.',
+    totalSourdoughModeTitle: 'Total Surdej Tilstand',
+    totalSourdoughModeDesc: 'Angiv hvor meget total surdej du har brug for og hvornår du har brug for den. Beregneren beregner baglæns for at bestemme mængder og timing.',
+    flourTypesTitle: 'Meltyper Betyder Noget',
+    flourTypesDesc: 'Forskellige meltyper gærer med forskellige hastigheder. Fuldkorn og rugmel gærer hurtigere pga. højere enzymaktivitet. Raffinerede meltyper som brødmel gærer langsommere.',
+    temperatureTitle: 'Temperatureffekter',
+    temperatureDesc: 'Varmere temperaturer fremskynder gæring dramatisk. Hver 5°C stigning halverer omtrent gæringstiden. Køligere temperaturer udvikler mere komplekse smage.',
+    ratioTitle: 'Fodringsforhold',
+    ratioDesc: 'Højere forhold (mere mel i forhold til surdej) forlænger gæringstiden. Et 1:5:5 forhold tager meget længere tid end 1:1:1. Beregneren bruger dette til at ramme dine måltider.',
+    tipsTitle: 'Pro Tips',
+    tip1: 'Brug altid det samme mel i din surdej som du bruger i dit brød for konsistente resultater.',
+    tip2: 'Din surdej skal omtrent fordoble eller tredoble i størrelse ved peak.',
+    tip3: 'En "ung" surdej (før peak) giver mere hævekraft, mens en "moden" surdej (ved eller efter peak) giver mere smag.',
+    tip4: 'Hvis din surdej topper for hurtigt eller langsomt, justér temperaturen eller forholdet tilsvarende.',
+    viewGuidance: 'Sådan Bruges',
     desiredPeakTime: 'Ønsket Peak-tid',
     
     // Sugar types
