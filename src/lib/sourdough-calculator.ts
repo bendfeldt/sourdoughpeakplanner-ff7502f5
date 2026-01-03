@@ -30,33 +30,37 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   'bread-flour': {
     name: 'Bread Flour',
     baseProtein: 12.5,
-    fermentationModifier: 1.05,
+    // Higher protein = stronger gluten = more structure = takes longer to show visible peak
+    fermentationModifier: 1.15,
     description: 'High protein, excellent gluten structure',
   },
   'whole-wheat': {
     name: 'Whole Wheat',
     baseProtein: 13.5,
-    fermentationModifier: 0.75,
+    // Bran enzymes speed up fermentation significantly
+    fermentationModifier: 0.7,
     description: 'Faster fermentation due to bran enzymes',
   },
   'rye': {
     name: 'Rye',
     baseProtein: 9,
-    // Rye starters often show a slower *visible rise* due to weaker structure, even if fermentation is active.
-    // This modifier is tuned to better match observed peak timing.
-    fermentationModifier: 1.25,
-    description: 'Rye flour: active fermentation but slower visible rise',
+    // Rye has very active enzymes (amylase) = fast fermentation
+    // But weak gluten means less dramatic rise - "peak" is more subtle
+    // User reported rye should have peaked 7 hours ago but still rising = modifier too high
+    fermentationModifier: 0.65,
+    description: 'Very active fermentation, subtle peak due to weak gluten',
   },
   'spelt': {
     name: 'Spelt',
     baseProtein: 12,
-    fermentationModifier: 0.8,
+    // Ancient grain with good enzyme activity
+    fermentationModifier: 0.75,
     description: 'Ancient grain, slightly faster fermentation',
   },
   'oland-wheat': {
     name: 'Øland Wheat',
     baseProtein: 11.5,
-    fermentationModifier: 0.9,
+    fermentationModifier: 0.85,
     description: 'Danish heritage wheat, excellent flavour',
   },
   'danish-wheat': {
@@ -68,19 +72,21 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   'oat-flour': {
     name: 'Oat Flour',
     baseProtein: 12,
-    fermentationModifier: 0.85,
+    fermentationModifier: 0.8,
     description: 'Adds moisture and softness',
   },
   'fuldkornsmel': {
     name: 'Fuldkornsmel',
     baseProtein: 12.5,
-    fermentationModifier: 0.7,
+    // Full grain = more enzymes = faster
+    fermentationModifier: 0.65,
     description: 'Full grain Danish flour, robust flavour',
   },
   'manitoba': {
     name: 'Manitoba',
     baseProtein: 14.5,
-    fermentationModifier: 1.15,
+    // Very high protein = very strong gluten = takes longer to peak visually
+    fermentationModifier: 1.25,
     description: 'Very high protein Canadian wheat',
   },
   'tipo-0': {
@@ -92,31 +98,35 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   'tipo-00': {
     name: 'Tipo 00',
     baseProtein: 12.5,
-    fermentationModifier: 1.05,
+    // Refined flour, strong structure
+    fermentationModifier: 1.1,
     description: 'Italian refined flour, ideal for pizza & pasta',
   },
   'durum': {
     name: 'Durum',
     baseProtein: 13.5,
-    fermentationModifier: 1.1,
+    // Hard wheat, takes longer
+    fermentationModifier: 1.15,
     description: 'Hard wheat, high protein, golden color',
   },
   'semolina': {
     name: 'Semolina',
     baseProtein: 12.5,
-    fermentationModifier: 1.05,
+    fermentationModifier: 1.1,
     description: 'Coarse durum wheat, great for bread crust',
   },
   'kamut': {
     name: 'Kamut',
     baseProtein: 14.5,
-    fermentationModifier: 0.85,
+    // Ancient grain but high protein
+    fermentationModifier: 0.9,
     description: 'Ancient grain, buttery flavour, high protein',
   },
   'einkorn': {
     name: 'Einkorn',
     baseProtein: 14,
-    fermentationModifier: 0.75,
+    // Ancient wheat with weak gluten, ferments quickly
+    fermentationModifier: 0.7,
     description: 'Ancient wheat, nutty flavour, weak gluten',
   },
 };
