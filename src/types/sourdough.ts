@@ -134,4 +134,8 @@ export interface CalculationResult {
   flourBreakdown: FlourBreakdownItem[];
   fermentationPhases: FermentationPhase[];
   recommendedRatio: FeedingRatio | null;
+  // Warning if target time is not achievable
+  achievabilityWarning: string | null;
+  minAchievableHours: number;
+  maxAchievableHours: number;
 }
