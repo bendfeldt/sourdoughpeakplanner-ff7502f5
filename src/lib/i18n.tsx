@@ -204,6 +204,22 @@ export const translations = {
     viewGuidance: 'How to Use',
     desiredPeakTime: 'Desired Peak Time',
     
+    // History & Warnings
+    feedingHistory: 'Feeding History',
+    recorded: 'recorded',
+    avgTendency: 'Avg tendency',
+    predictedPeak: 'Predicted',
+    actualPeak: 'Actual',
+    recordActualPeak: 'Record actual peak',
+    save: 'Save',
+    cancel: 'Cancel',
+    targetPeakTooSoon: 'Target peak time is too soon - minimum achievable is',
+    targetPeakTooLate: 'Target peak time is too late - maximum achievable is',
+    hoursFromStart: 'hours from start',
+    peakNotAchievable: 'Target time not achievable',
+    logFeeding: 'Log Feeding',
+    feedingLogged: 'Feeding logged to history',
+    
     // Sugar types
     sugarType: 'Sugar Type',
     'white-sugar': 'White Sugar',
@@ -427,6 +443,22 @@ export const translations = {
     tip4: 'Hvis din surdej topper for hurtigt eller langsomt, justér temperaturen eller forholdet tilsvarende.',
     viewGuidance: 'Sådan Bruges',
     desiredPeakTime: 'Ønsket Peak-tid',
+    
+    // History & Warnings
+    feedingHistory: 'Fodringshistorik',
+    recorded: 'registreret',
+    avgTendency: 'Gns. tendens',
+    predictedPeak: 'Forudsagt',
+    actualPeak: 'Faktisk',
+    recordActualPeak: 'Registrer faktisk peak',
+    save: 'Gem',
+    cancel: 'Annuller',
+    targetPeakTooSoon: 'Ønsket peak-tid er for tidligt - minimum opnåelig er',
+    targetPeakTooLate: 'Ønsket peak-tid er for sent - maksimum opnåelig er',
+    hoursFromStart: 'timer fra start',
+    peakNotAchievable: 'Ønsket tid ikke opnåelig',
+    logFeeding: 'Log Fodring',
+    feedingLogged: 'Fodring logget til historik',
     
     // Sugar types
     sugarType: 'Sukkertype',

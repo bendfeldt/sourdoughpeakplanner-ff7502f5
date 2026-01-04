@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
-import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, Copy, Edit2, Check, X, RotateCcw, HelpCircle } from 'lucide-react';
+import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, Copy, Edit2, Check, X, RotateCcw, HelpCircle, History, AlertTriangle } from 'lucide-react';
+import { toast } from 'sonner';
 import { 
   FLOUR_DATA, 
   SUGAR_DATA,
@@ -23,15 +24,18 @@ import { useI18n, Language } from '@/lib/i18n';
 import { useCalculatorSettings } from '@/hooks/use-calculator-cache';
 import { usePersonas, createDefaultTimeSettings } from '@/hooks/use-personas';
 import { useWakeLock } from '@/hooks/use-wake-lock';
+import { useFeedingHistory } from '@/hooks/use-feeding-history';
 import { PeakTimer } from './PeakTimer';
 import { StarterOverview } from './StarterOverview';
 import { FeedingRatioInput } from './FeedingRatioInput';
+import { FeedingHistory } from './FeedingHistory';
 
 export function SourdoughCalculator() {
   const { t, language, setLanguage } = useI18n();
   const { settings, updateSettings } = useCalculatorSettings();
   const { personas, activePersona, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, autoSavePersona, duplicatePersona } = usePersonas();
   const { isActive: wakeLockActive, isSupported: wakeLockSupported, toggleWakeLock } = useWakeLock();
+  const { addEntry: addHistoryEntry, history } = useFeedingHistory();
   
   // Local state from active persona
   const [flourBlend, setFlourBlend] = useState<FlourBlendItem[]>(activePersona.flourBlend);
@@ -565,6 +569,22 @@ export function SourdoughCalculator() {
                     <span className="text-muted-foreground font-medium">g</span>
                   </div>
                 </div>
+                {/* Achievability warning */}
+                {result.achievabilityWarning && (
+                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+                    <div className="text-sm">
+                      <p className="font-medium text-destructive">{t('peakNotAchievable' as any) || 'Target time not achievable'}</p>
+                      <p className="text-muted-foreground text-xs mt-1">
+                        {t(result.achievabilityWarning as any) || result.achievabilityWarning}{' '}
+                        {result.achievabilityWarning === 'targetPeakTooSoon' 
+                          ? `${result.minAchievableHours.toFixed(1)} ${t('hoursFromStart' as any) || 'hours from start'}`
+                          : `${result.maxAchievableHours.toFixed(1)} ${t('hoursFromStart' as any) || 'hours from start'}`
+                        }
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -729,6 +749,32 @@ export function SourdoughCalculator() {
                     <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('timeToPeak')}</span><span className="font-medium">{result.hoursToReachPeak.toFixed(1)} {t('hours')}</span></div>
                     <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('totalSourdough')}</span><span className="font-medium text-primary text-lg">{result.totalSourdoughAmount}g</span></div>
                   </div>
+                  {/* Log feeding button */}
+                  <Button 
+                    variant="outline" 
+                    className="w-full"
+                    onClick={() => {
+                      addHistoryEntry({
+                        personaId: activePersonaId,
+                        personaName: activePersona.name,
+                        feedingTime: result.feedingTime.toISOString(),
+                        predictedPeakTime: result.estimatedPeakTime.toISOString(),
+                        actualPeakTime: null,
+                        temperature,
+                        feedingRatio: result.recommendedRatio || feedingRatio,
+                        flourBlend,
+                        starterAmount: result.starterAmount,
+                        flourAmount: result.flourAmount,
+                        waterAmount: result.waterAmount,
+                        sugarAmount: result.sugarAmount,
+                        notes: '',
+                      });
+                      toast.success(t('feedingLogged' as any) || 'Feeding logged to history');
+                    }}
+                  >
+                    <History className="h-4 w-4 mr-2" />
+                    {t('logFeeding' as any) || 'Log Feeding'}
+                  </Button>
                 </CardContent>
               </Card>
 
@@ -780,6 +826,11 @@ export function SourdoughCalculator() {
                   </CardContent>
                 </Card>
               )}
+              {/* Feeding History */}
+              <FeedingHistory 
+                personaId={activePersonaId}
+                personaName={activePersona.name}
+              />
             </>
           ) : (
             <Card className="border-border/50 shadow-sm h-full flex items-center justify-center min-h-[300px]">
