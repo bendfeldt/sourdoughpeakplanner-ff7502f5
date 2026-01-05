@@ -219,6 +219,9 @@ export const translations = {
     peakNotAchievable: 'Target time not achievable',
     logFeeding: 'Log Feeding',
     feedingLogged: 'Feeding logged to history',
+    useCurrentTime: 'Use Current Time',
+    historyTitle: 'Feeding History',
+    historyDesc: 'Track your feedings and compare predicted vs actual peak times. After calculating, click "Log Feeding" to save. Then record the actual peak time when your starter peaks to improve future predictions.',
     
     // Sugar types
     sugarType: 'Sugar Type',
@@ -459,6 +462,9 @@ export const translations = {
     peakNotAchievable: 'Ønsket tid ikke opnåelig',
     logFeeding: 'Log Fodring',
     feedingLogged: 'Fodring logget til historik',
+    useCurrentTime: 'Brug Nuværende Tid',
+    historyTitle: 'Fodringshistorik',
+    historyDesc: 'Spor dine fodringer og sammenlign forudsagt vs faktisk peak-tid. Klik "Log Fodring" efter beregning for at gemme. Registrer derefter den faktiske peak-tid for at forbedre fremtidige forudsigelser.',
     
     // Sugar types
     sugarType: 'Sukkertype',

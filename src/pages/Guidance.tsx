@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Wheat, Clock, Thermometer, Scale, Lightbulb } from 'lucide-react';
+import { ArrowLeft, Wheat, Clock, Thermometer, Scale, Lightbulb, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { I18nProvider, useI18n } from '@/lib/i18n';
 
@@ -63,7 +63,7 @@ function GuidanceContent() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary font-bold">•</span>
-                  Set when you'll start feeding
+                  Set when you'll start feeding (use "Use Current Time" for now)
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-primary font-bold">•</span>
@@ -138,6 +138,41 @@ function GuidanceContent() {
                 <li className="flex items-start gap-2">
                   <span className="text-primary font-bold">•</span>
                   Automatically calculates optimal ratio
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          {/* Feeding History */}
+          <Card className="border-border/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-3 text-xl font-display">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                  <History className="h-5 w-5 text-primary" />
+                </div>
+                {t('historyTitle' as any)}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground leading-relaxed">
+                {t('historyDesc' as any)}
+              </p>
+              <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">1.</span>
+                  After calculating, click "Log Feeding" to save the prediction
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">2.</span>
+                  When your starter actually peaks, click "Record actual peak"
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">3.</span>
+                  View your history at the bottom of the results section
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary font-bold">4.</span>
+                  Track prediction accuracy to improve future estimates
                 </li>
               </ul>
             </CardContent>
