@@ -72,16 +72,14 @@ export function SourdoughCalculator() {
   const [editingName, setEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState('');
 
-  // Sync dark mode with device preference on mount
+  // Sync dark mode with device preference
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e: MediaQueryListEvent) => {
       updateSettings({ isDarkMode: e.matches });
     };
-    // Initial sync (only on first mount if no user preference stored)
-    if (localStorage.getItem('sourdough-calculator-settings') === null) {
-      updateSettings({ isDarkMode: mediaQuery.matches });
-    }
+    // Always sync with device preference on mount
+    updateSettings({ isDarkMode: mediaQuery.matches });
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
@@ -477,7 +475,7 @@ export function SourdoughCalculator() {
                 <CardTitle className="flex items-center gap-2 text-lg font-display"><Clock className="h-5 w-5 text-primary" />{t('startTime')}</CardTitle>
                 <CardDescription>{t('startTimeDesc')}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <Input
                     type="date"
@@ -491,6 +489,21 @@ export function SourdoughCalculator() {
                     onChange={(e) => updateTimeSettings({ targetStartTime: e.target.value })}
                   />
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => {
+                    const now = new Date();
+                    updateTimeSettings({
+                      targetStartDate: now.toISOString().split('T')[0],
+                      targetStartTime: now.toTimeString().slice(0, 5)
+                    });
+                  }}
+                >
+                  <Clock className="h-3 w-3 mr-1" />
+                  {t('useCurrentTime' as any) || 'Use Current Time'}
+                </Button>
               </CardContent>
             </Card>
           )}
@@ -548,6 +561,21 @@ export function SourdoughCalculator() {
                     <Input type="date" value={timeSettings.targetStartDate} min={getTodayString()} onChange={(e) => updateTimeSettings({ targetStartDate: e.target.value })} />
                     <Input type="time" value={timeSettings.targetStartTime} onChange={(e) => updateTimeSettings({ targetStartTime: e.target.value })} />
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      const now = new Date();
+                      updateTimeSettings({
+                        targetStartDate: now.toISOString().split('T')[0],
+                        targetStartTime: now.toTimeString().slice(0, 5)
+                      });
+                    }}
+                  >
+                    <Clock className="h-3 w-3 mr-1" />
+                    {t('useCurrentTime' as any) || 'Use Current Time'}
+                  </Button>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">{t('desiredPeakTime' as any) || 'Desired Peak Time'}</Label>
@@ -643,6 +671,18 @@ export function SourdoughCalculator() {
                       onChange={(e) => shiftTargetWindowFromStart(timeSettings.targetStartDate, e.target.value)}
                     />
                   </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => {
+                      const now = new Date();
+                      shiftTargetWindowFromStart(now.toISOString().split('T')[0], now.toTimeString().slice(0, 5));
+                    }}
+                  >
+                    <Clock className="h-3 w-3 mr-1" />
+                    {t('useCurrentTime' as any) || 'Use Current Time'}
+                  </Button>
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs text-muted-foreground">{t('from')}</Label>
