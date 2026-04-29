@@ -59,8 +59,8 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   'bread-flour': {
     name: 'Bread Flour',
     baseProtein: 12.5,
-    // Refined white flour, lower enzyme activity = slower peak
-    fermentationModifier: 1.1,
+    // Refined white flour, similar enzyme activity to AP, slightly slower from higher protein
+    fermentationModifier: 1.0,
     description: 'High protein, excellent gluten structure',
   },
   'whole-wheat': {
