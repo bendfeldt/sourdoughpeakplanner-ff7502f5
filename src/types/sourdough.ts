@@ -98,6 +98,10 @@ export interface CalculationInput {
   inputMode: InputMode;
   targetTotalSourdough: number;
   targetPeakTime: Date | null;
+  // Learned calibration from feeding history.
+  // Positive = predictions historically ran late (actual peaked earlier),
+  // so we subtract this from estimated peak.
+  calibrationOffsetMinutes?: number;
 }
 
 export interface FermentationPhase {
