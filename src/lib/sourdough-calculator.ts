@@ -59,8 +59,8 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   'bread-flour': {
     name: 'Bread Flour',
     baseProtein: 12.5,
-    // Refined white flour, lower enzyme activity = slower peak
-    fermentationModifier: 1.1,
+    // Refined white flour, similar enzyme activity to AP, slightly slower from higher protein
+    fermentationModifier: 1.0,
     description: 'High protein, excellent gluten structure',
   },
   'whole-wheat': {
@@ -201,7 +201,8 @@ export const SUGAR_DATA: Record<SugarType, SugarInfo> = {
 
 // Base fermentation time at 24°C with 1:1:1 ratio and all-purpose flour
 // This represents time to MIDPOINT of peak (not start or end)
-const BASE_FERMENTATION_HOURS = 4;
+// Calibrated from real-world observations: 1:1:1 white flour at 24°C peaks ~3.5h
+const BASE_FERMENTATION_HOURS = 3.5;
 
 // Minimum and maximum achievable fermentation times (hours)
 const MIN_FERMENTATION_HOURS = 1.5;
@@ -274,11 +275,22 @@ export function calculateFermentationTime(input: CalculationInput, customRatio?:
     ? 1 + (sugarPercentage / 100) * 0.3 * sugarTypeModifier
     : 1;
   
-  const fermentationHours = BASE_FERMENTATION_HOURS * 
+  let fermentationHours = BASE_FERMENTATION_HOURS * 
     avgFermentationModifier * 
     temperatureFactor * 
     ratioFactor *
     sugarFactor;
+  
+  // Apply learned calibration from feeding history.
+  // If predictions historically ran N minutes late, shorten future predictions by N min,
+  // but cap the adjustment at ±40% of the raw prediction to avoid runaway drift.
+  const offsetMin = input.calibrationOffsetMinutes ?? 0;
+  if (offsetMin !== 0) {
+    const offsetHours = offsetMin / 60;
+    const maxAdjust = fermentationHours * 0.4;
+    const clampedOffset = Math.max(-maxAdjust, Math.min(maxAdjust, offsetHours));
+    fermentationHours = fermentationHours - clampedOffset;
+  }
   
   return Math.max(MIN_FERMENTATION_HOURS, Math.min(MAX_FERMENTATION_HOURS, fermentationHours));
 }

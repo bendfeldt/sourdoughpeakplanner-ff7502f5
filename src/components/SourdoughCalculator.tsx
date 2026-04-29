@@ -35,7 +35,7 @@ export function SourdoughCalculator() {
   const { settings, updateSettings } = useCalculatorSettings();
   const { personas, activePersona, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, autoSavePersona, duplicatePersona } = usePersonas();
   const { isActive: wakeLockActive, isSupported: wakeLockSupported, toggleWakeLock } = useWakeLock();
-  const { addEntry: addHistoryEntry, history } = useFeedingHistory();
+  const { addEntry: addHistoryEntry, history, getAccuracyStats } = useFeedingHistory();
   
   // Local state from active persona
   const [flourBlend, setFlourBlend] = useState<FlourBlendItem[]>(activePersona.flourBlend);
@@ -204,6 +204,13 @@ export function SourdoughCalculator() {
 
   const totalPercentage = useMemo(() => flourBlend.reduce((sum, item) => sum + item.percentage, 0), [flourBlend]);
 
+  const calibrationOffsetMinutes = useMemo(() => {
+    const stats = getAccuracyStats(activePersonaId);
+    // Negative tendency = actual peaked earlier than predicted (predictions ran late).
+    // We pass the negated tendency so the calculator subtracts it from future predictions.
+    return stats ? -stats.tendencyMinutes : 0;
+  }, [getAccuracyStats, activePersonaId, history]);
+
   const result = useMemo(() => {
     return calculateFeedingSchedule({
       flourBlend,
@@ -220,8 +227,9 @@ export function SourdoughCalculator() {
       inputMode: timeSettings.inputMode,
       targetTotalSourdough: timeSettings.targetTotalSourdough,
       targetPeakTime: parseDateTimeToDate(timeSettings.targetPeakDate, timeSettings.targetPeakTime),
+      calibrationOffsetMinutes,
     });
-  }, [flourBlend, feedingRatio, temperature, timeSettings, oldSourdoughAmount, isSweetMode, sugarPercentage, sugarType]);
+  }, [flourBlend, feedingRatio, temperature, timeSettings, oldSourdoughAmount, isSweetMode, sugarPercentage, sugarType, calibrationOffsetMinutes]);
 
   const addFlour = () => {
     const newId = generateId();
