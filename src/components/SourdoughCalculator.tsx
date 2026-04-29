@@ -35,7 +35,7 @@ export function SourdoughCalculator() {
   const { settings, updateSettings } = useCalculatorSettings();
   const { personas, activePersona, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, autoSavePersona, duplicatePersona } = usePersonas();
   const { isActive: wakeLockActive, isSupported: wakeLockSupported, toggleWakeLock } = useWakeLock();
-  const { addEntry: addHistoryEntry, history } = useFeedingHistory();
+  const { addEntry: addHistoryEntry, history, getAccuracyStats } = useFeedingHistory();
   
   // Local state from active persona
   const [flourBlend, setFlourBlend] = useState<FlourBlendItem[]>(activePersona.flourBlend);
