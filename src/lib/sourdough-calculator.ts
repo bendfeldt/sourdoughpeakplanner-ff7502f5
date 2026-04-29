@@ -275,11 +275,22 @@ export function calculateFermentationTime(input: CalculationInput, customRatio?:
     ? 1 + (sugarPercentage / 100) * 0.3 * sugarTypeModifier
     : 1;
   
-  const fermentationHours = BASE_FERMENTATION_HOURS * 
+  let fermentationHours = BASE_FERMENTATION_HOURS * 
     avgFermentationModifier * 
     temperatureFactor * 
     ratioFactor *
     sugarFactor;
+  
+  // Apply learned calibration from feeding history.
+  // If predictions historically ran N minutes late, shorten future predictions by N min,
+  // but cap the adjustment at ±40% of the raw prediction to avoid runaway drift.
+  const offsetMin = input.calibrationOffsetMinutes ?? 0;
+  if (offsetMin !== 0) {
+    const offsetHours = offsetMin / 60;
+    const maxAdjust = fermentationHours * 0.4;
+    const clampedOffset = Math.max(-maxAdjust, Math.min(maxAdjust, offsetHours));
+    fermentationHours = fermentationHours - clampedOffset;
+  }
   
   return Math.max(MIN_FERMENTATION_HOURS, Math.min(MAX_FERMENTATION_HOURS, fermentationHours));
 }
