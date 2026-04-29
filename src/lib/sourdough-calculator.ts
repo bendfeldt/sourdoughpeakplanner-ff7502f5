@@ -201,7 +201,8 @@ export const SUGAR_DATA: Record<SugarType, SugarInfo> = {
 
 // Base fermentation time at 24°C with 1:1:1 ratio and all-purpose flour
 // This represents time to MIDPOINT of peak (not start or end)
-const BASE_FERMENTATION_HOURS = 4;
+// Calibrated from real-world observations: 1:1:1 white flour at 24°C peaks ~3.5h
+const BASE_FERMENTATION_HOURS = 3.5;
 
 // Minimum and maximum achievable fermentation times (hours)
 const MIN_FERMENTATION_HOURS = 1.5;
