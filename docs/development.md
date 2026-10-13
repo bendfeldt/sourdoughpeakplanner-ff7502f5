@@ -140,8 +140,7 @@ Read [Fermentation model → Rules for changing the model](fermentation-model.md
 - Sweet sourdough with honey → water is a little lower, and "+… min from sugar" appears.
 - Target Window 1 h away → red "Target time not achievable" box.
 - Log a feed, record a later actual peak, and calculate again → the peak moves later.
-
-Remember to press **Calculate Feeding Schedule** again after each change; results hide when an input changes.
+- Switch to Dansk and reload → still Danish, also on the guidance page.
 
 ## Updating the docs
 
@@ -163,8 +162,6 @@ Diagrams are Mermaid code blocks. GitHub draws them; to preview locally, paste a
 
 | Issue | Where |
 |---|---|
-| Results hide after every input change, until Calculate is pressed again | `SourdoughCalculator.tsx`, persona sync effect calls `setShowResults(false)` |
-| Language resets to English on reload and when opening the guidance page | Each page has its own `I18nProvider`; the language is not saved |
 | `npm run lint` reports existing `no-explicit-any` errors | `t('key' as any)` calls |
 | `src/integrations/supabase` and most of `src/components/ui` are unused | Template leftovers from Lovable |
 | Settings hook still stores unused fields | `use-calculator-cache.ts` |

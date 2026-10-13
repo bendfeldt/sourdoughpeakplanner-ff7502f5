@@ -114,6 +114,7 @@ test('an unreachable target window warns instead of faking the peak time', () =>
   const peakEnd = new Date(START.getTime() + 60 * 60 * 1000);
   const result = calculateFeedingSchedule(input({ inputMode: 'target-window', useTargetWindow: true, targetPeakStart: peakStart, targetPeakEnd: peakEnd }));
   assert.equal(result.achievabilityWarning, 'targetPeakTooSoon');
+  assert.ok(!result.suggestions.includes('targetPeakTooSoon'), 'shown in its own box, not as a cut-off tip');
   assert.ok(result.estimatedPeakTime > peakEnd, 'peak shows what the starter will really do');
 });
 

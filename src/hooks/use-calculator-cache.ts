@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
 
 const SETTINGS_KEY = 'sourdough-calculator-settings';
 
@@ -14,9 +15,8 @@ export interface CalculatorSettings {
   targetPeakEndTime: string;
 }
 
-const formatDateString = (date: Date): string => {
-  return date.toISOString().split('T')[0];
-};
+// Local date, not UTC (toISOString)
+const formatDateString = (date: Date): string => format(date, 'yyyy-MM-dd');
 
 const formatTimeString = (date: Date): string => {
   return date.toTimeString().slice(0, 5);

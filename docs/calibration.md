@@ -103,7 +103,7 @@ sequenceDiagram
     SC->>H: Log Feeding (stores the factor used)
 ```
 
-`StarterOverview` gets the history as a prop from `SourdoughCalculator` rather than loading it itself, so both always show the same peak times.
+All components share one history through `FeedingHistoryProvider` (in `App.tsx`), so a recorded peak changes the next prediction immediately. `StarterOverview` gets the history as a prop from `SourdoughCalculator`.
 
 ## Things to know
 

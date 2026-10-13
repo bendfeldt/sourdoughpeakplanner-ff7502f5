@@ -7,6 +7,7 @@ import { History, Clock, CheckCircle, Trash2, ChevronDown, ChevronUp, AlertCircl
 import { useFeedingHistory, FeedingHistoryEntry } from '@/hooks/use-feeding-history';
 import { useI18n } from '@/lib/i18n';
 import { formatDateTime } from '@/lib/sourdough-calculator';
+import { format } from 'date-fns';
 
 interface FeedingHistoryProps {
   personaId: string;
@@ -165,7 +166,7 @@ export function FeedingHistory({ personaId, personaName }: FeedingHistoryProps) 
                       onClick={() => {
                         setRecordingPeakFor(entry.id);
                         const now = new Date();
-                        setPeakDateInput(now.toISOString().split('T')[0]);
+                        setPeakDateInput(format(now, 'yyyy-MM-dd'));
                         setPeakTimeInput(now.toTimeString().slice(0, 5));
                       }}
                     >

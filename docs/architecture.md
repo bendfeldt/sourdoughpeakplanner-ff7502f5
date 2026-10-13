@@ -89,11 +89,10 @@ The app uses `HashRouter`, so the route is the part of the URL after `#`. This l
 
 ```mermaid
 flowchart TB
-    App --> Index
+    App["App (I18nProvider, FeedingHistoryProvider, HashRouter)"] --> Index
     App --> Guidance
     App --> NotFound
-    Index --> I18nProvider
-    I18nProvider --> SC["SourdoughCalculator"]
+    Index --> SC["SourdoughCalculator"]
     SC --> SO["StarterOverview<br/>(only with 2+ starters)"]
     SC --> FRI["FeedingRatioInput<br/>(Normal mode)"]
     SC --> PT["PeakTimer"]
@@ -134,8 +133,8 @@ sequenceDiagram
 
 Two details that surprise new developers:
 
-- **The result is calculated on every change**, inside a `useMemo`. The Calculate button only makes the results column visible (`showResults`).
-- **Changing an input hides the results again.** Auto-save updates the active starter, and an effect that syncs the form from the active starter also calls `setShowResults(false)`. The baker presses Calculate again. This is existing behaviour, not a bug introduced by a change.
+- **The result is calculated on every change**, inside a `useMemo`. The Calculate button only makes the results column visible (`showResults`), and they then update live as the baker changes inputs.
+- **The form is copied from the saved starter only when switching starters.** The effect that does this depends on `activePersonaId` alone. If it also ran after every auto-save, it would hide the results and overwrite half-typed values like `11,`; that was a bug, fixed by narrowing the dependency.
 
 ## Where state lives
 
@@ -143,17 +142,19 @@ Two details that surprise new developers:
 |---|---|---|
 | Starters (flour blend, ratio, temperature, sugar, time settings) | `usePersonas` | Yes, `sourdough-personas` |
 | Which starter is selected | `usePersonas` | Yes, `sourdough-active-persona` |
-| Logged feeds and recorded peaks | `useFeedingHistory` | Yes, `sourdough-feeding-history` (latest 50) |
+| Logged feeds and recorded peaks | `FeedingHistoryProvider` in `App.tsx`, read with `useFeedingHistory` | Yes, `sourdough-feeding-history` (latest 50) |
 | Dark mode | `useCalculatorSettings` | Yes, `sourdough-calculator-settings` |
 | Form values while editing | `useState` in `SourdoughCalculator`, copied from the active starter | Through auto-save |
-| Language | `I18nProvider` | **No.** Resets to English on reload and when switching pages |
+| Language | `I18nProvider` in `App.tsx` (one for the whole app) | Yes, `sourdough-language` |
 | Results visible, timer reset key | `useState` in `SourdoughCalculator` | No |
 
 Details of every saved field are in [Data and storage](data-storage.md).
 
+**State that several components need must have one owner.** The feeding history is used by `SourdoughCalculator` (log feeds, calibration) and `FeedingHistory` (show feeds, record peaks). Each used to call the hook and get its **own copy**: a logged feed did not appear in the history card until a reload, and recording a peak saved the card's old copy over the newer one, deleting the feed just logged. Now `FeedingHistoryProvider` holds the one copy and `useFeedingHistory()` reads it. Do the same for any new state shared between components.
+
 ## Translations
 
-All text shown to the baker is in [`src/lib/i18n.tsx`](../src/lib/i18n.tsx), in two objects: `translations.en` and `translations.da`. Components call `t('key')`. If a key is missing in Danish, the English text is used; if it is missing in both, the key itself is shown.
+All text shown to the baker is in [`src/lib/i18n.tsx`](../src/lib/i18n.tsx). One `I18nProvider` in `App.tsx` wraps every page and remembers the chosen language in `localStorage`. The texts are in two objects: `translations.en` and `translations.da`. Components call `t('key')`. If a key is missing in Danish, the English text is used; if it is missing in both, the key itself is shown.
 
 Flour and sugar names are looked up by their type key (for example `t('spelt-whole')`), and flour descriptions by `'<key>-desc'`. When you add a flour or sugar type, add these keys in **both** languages.
 

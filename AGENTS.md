@@ -54,11 +54,14 @@ Read `docs/fermentation-model.md` before changing it.
 
 ### Saved data
 
+- State used by more than one component needs one owner. Feeding history lives in `FeedingHistoryProvider`; read it with `useFeedingHistory()`, never keep a second copy.
+
 - Data from older versions lives in users' browsers. New fields must be optional with a default where read (`x ?? default`).
 - Never rename or remove keys of `FLOUR_DATA`, `SUGAR_DATA`, `FlourType`, `SugarType`, or the `localStorage` keys. Add new ones.
 
 ### Text and UI
 
+- Make date strings with `format(date, 'yyyy-MM-dd')` from `date-fns`, never `toISOString()` (UTC: wrong day after midnight in Denmark).
 - Every visible string goes in `src/lib/i18n.tsx`, in **both** `en` and `da`. Flours and sugars need `'<key>'` and flours also `'<key>-desc'`.
 - Use React Router `<Link>` for internal links, never `<a href="/">` (breaks on GitHub Pages).
 - Keep `HashRouter` and `base: "./"` in `vite.config.ts`. The deploy workflow refuses branches without `HashRouter`.
@@ -70,6 +73,4 @@ Read `docs/fermentation-model.md` before changing it.
 
 ## Known quirks (not bugs to fix unless asked)
 
-- Results hide after any input change until **Calculate Feeding Schedule** is pressed again.
-- Language resets to English on reload.
 - `src/integrations/supabase` and most of `src/components/ui` are unused template files from Lovable.

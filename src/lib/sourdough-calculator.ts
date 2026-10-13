@@ -459,7 +459,6 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
   }));
 
   const achievability = checkTargetAchievability(input, feedingTime, targetTime);
-  if (achievability.warningKey) suggestions.push(achievability.warningKey);
   if (isWindowMode && recommendedRatio) suggestions.push('adjustedRatioRecommendation');
 
   const exceedsMaxHours = rawHours > MAX_FERMENTATION_HOURS;

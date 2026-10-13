@@ -521,8 +521,27 @@ interface I18nContextType {
 
 const I18nContext = createContext<I18nContextType | undefined>(undefined);
 
-export function I18nProvider({ children, initialLanguage = 'en' }: { children: ReactNode; initialLanguage?: Language }) {
-  const [language, setLanguage] = useState<Language>(initialLanguage);
+const LANGUAGE_KEY = 'sourdough-language';
+
+function loadLanguage(): Language {
+  try {
+    return localStorage.getItem(LANGUAGE_KEY) === 'da' ? 'da' : 'en';
+  } catch {
+    return 'en';
+  }
+}
+
+export function I18nProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguageState] = useState<Language>(loadLanguage);
+
+  const setLanguage = (lang: Language) => {
+    setLanguageState(lang);
+    try {
+      localStorage.setItem(LANGUAGE_KEY, lang);
+    } catch {
+      // Storage blocked: the choice lasts until reload
+    }
+  };
 
   const t = (key: TranslationKey): string => {
     return translations[language][key] || translations.en[key] || key;
