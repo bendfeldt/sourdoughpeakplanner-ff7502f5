@@ -37,8 +37,10 @@ export type {
  * - Ratio: (flour / starter)^0.6, an empirical fit to what bakers see from 1:1 to 1:10.
  * - Hydration: stiff starters are slower. The exponent is an estimate; no study measures it.
  * - Sugar: what stresses the microbes is sugar dissolved in the starter's water. Below 5%
- *   the yeast simply eats it; above that, osmotic stress slows the starter linearly.
- *   Threshold and slope are estimates; calibration from logged feeds corrects them.
+ *   the yeast simply eats it. Above that, growth falls in a straight line as sugar rises
+ *   (Narendranath & Power 2005), so the time to peak stretches more and more and growth
+ *   stops near 55% sugar in the water (syrup strength). Threshold and limit are estimates;
+ *   calibration from logged feeds corrects them.
  * - Calibration: a per-starter multiplier learned from logged feeds.
  *
  * Peak is the MIDPOINT of the plateau.
@@ -223,7 +225,8 @@ const HYDRATION_EXPONENT = 0.25;
 
 // Sugar dissolved in the starter's water below this causes no slowdown.
 export const SUGAR_THRESHOLD = 0.05;
-const SUGAR_SLOPE = 5;
+// Sugar in the water at which the starter stops growing.
+const SUGAR_LIMIT = 0.55;
 
 const CALIBRATION_MIN = 0.6;
 const CALIBRATION_MAX = 1.6;
@@ -255,8 +258,10 @@ export function sugarConcentration(input: Pick<CalculationInput, 'isSweetMode' |
   return sugar / (Math.max(0.4, hydration) + sugar);
 }
 
+/** Peak-time multiplier for sugar; Infinity at or above the limit. */
 export function sugarFactor(concentration: number): number {
-  return 1 + SUGAR_SLOPE * Math.max(0, concentration - SUGAR_THRESHOLD);
+  const slowdown = Math.max(0, concentration - SUGAR_THRESHOLD) / (SUGAR_LIMIT - SUGAR_THRESHOLD);
+  return slowdown >= 1 ? Infinity : 1 / (1 - slowdown);
 }
 
 function blendedFermentationModifier(flourBlend: FlourBlendItem[]): number {

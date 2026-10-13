@@ -327,6 +327,9 @@ export function SourdoughCalculator() {
   const getFlourDescription = (flourType: FlourType): string => t(`${flourType}-desc` as any) || FLOUR_DATA[flourType].description;
   const getSugarName = (sugar: SugarType): string => t(sugar as any) || SUGAR_DATA[sugar].name;
 
+  const formatDuration = (minutes: number) =>
+    minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`;
+
   const getTodayString = () => new Date().toISOString().split('T')[0];
 
   const inputModeOptions: { value: InputMode; label: string }[] = [
@@ -740,7 +743,7 @@ export function SourdoughCalculator() {
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between"><span className="text-sm text-muted-foreground">{t('sugarAmount')}</span><span className="text-sm font-medium text-primary">{sugarPercentage}%</span></div>
-                  <Slider value={[sugarPercentage]} onValueChange={([v]) => setSugarPercentage(v)} min={1} max={10} step={1} />
+                  <Slider value={[sugarPercentage]} onValueChange={([v]) => setSugarPercentage(v)} min={1} max={100} step={1} />
                 </div>
               </CardContent>
             )}
@@ -804,7 +807,7 @@ export function SourdoughCalculator() {
                     <div className="text-center p-3 rounded-lg bg-muted/50">
                       <p className="text-lg font-bold text-foreground">{result.sugarAmount}g</p>
                       <p className="text-xs text-muted-foreground mt-1">{getSugarName(sugarType)}</p>
-                      {!result.exceedsMaxHours && <p className="text-xs text-muted-foreground mt-1">{result.sugarDelayMinutes > 0 ? `+${result.sugarDelayMinutes} min ${t('fromSugar')}` : t('sugarBelowThreshold')}</p>}
+                      {!result.exceedsMaxHours && <p className="text-xs text-muted-foreground mt-1">{result.sugarDelayMinutes > 0 ? `+${formatDuration(result.sugarDelayMinutes)} ${t('fromSugar')}` : t('sugarBelowThreshold')}</p>}
                     </div>
                   )}
                   <div className="space-y-3 pt-2">

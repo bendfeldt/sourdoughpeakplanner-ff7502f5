@@ -67,7 +67,22 @@ test('sugar below the threshold does not slow the starter', () => {
   const sweet = { isSweetMode: true, sugarType: 'white-sugar' as const };
   assert.equal(sugarFactor(sugarConcentration({ ...sweet, sugarPercentage: 2 }, 1)), 1);
   close(sugarConcentration({ ...sweet, sugarPercentage: 5.263 }, 1), 0.05, 0.0001);
-  close(sugarFactor(sugarConcentration({ ...sweet, sugarPercentage: 10 }, 1)), 1.2, 0.01);
+  close(sugarFactor(sugarConcentration({ ...sweet, sugarPercentage: 10 }, 1)), 1.09, 0.01);
+});
+
+test('sugar up to the same weight as flour: slows more and more, stops at syrup strength', () => {
+  const sweet = { isSweetMode: true, sugarType: 'white-sugar' as const };
+  const factors = [10, 25, 50, 100].map(sugarPercentage => sugarFactor(sugarConcentration({ ...sweet, sugarPercentage }, 1)));
+  for (let i = 1; i < factors.length; i++) assert.ok(factors[i] > factors[i - 1]);
+  close(factors[3], 10, 0.01); // 1:1:1:1 starter, flour, water, sugar
+
+  const equalParts = calculateFeedingSchedule(input({ ...sweet, sugarPercentage: 100 }));
+  assert.equal(equalParts.sugarAmount, 100);
+  close(equalParts.hoursToReachPeak, 35, 0.1);
+
+  // Stiff starter with as much sugar as flour: more sugar than the water can carry for growth
+  const syrup = calculateFeedingSchedule(input({ ...sweet, sugarPercentage: 100, feedingRatio: { starter: 1, flour: 1, water: 0.5 } }));
+  assert.equal(syrup.exceedsMaxHours, true);
 });
 
 test('the same sugar slows a stiff starter more than a liquid one', () => {

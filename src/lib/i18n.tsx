@@ -75,7 +75,7 @@ export const translations = {
     sweetSourdoughDesc: 'Add sugar for sweet bread',
     enableSweetMode: 'Enable sweet mode',
     powderedSugar: 'Sugar',
-    sugarAmount: 'Sugar amount',
+    sugarAmount: 'Sugar amount (% of flour)',
     sweetFlour: 'Flour for sweet',
     
     // Keep screen on
@@ -328,7 +328,7 @@ export const translations = {
     sweetSourdoughDesc: 'Tilføj sukker til sødt brød',
     enableSweetMode: 'Aktiver sød tilstand',
     powderedSugar: 'Sukker',
-    sugarAmount: 'Sukkermængde',
+    sugarAmount: 'Sukkermængde (% af mel)',
     sweetFlour: 'Mel til sødt',
     
     // Keep screen on
