@@ -89,7 +89,7 @@ The app uses `HashRouter`, so the route is the part of the URL after `#`. This l
 
 ```mermaid
 flowchart TB
-    App["App (I18nProvider + HashRouter)"] --> Index
+    App["App (I18nProvider, FeedingHistoryProvider, HashRouter)"] --> Index
     App --> Guidance
     App --> NotFound
     Index --> SC["SourdoughCalculator"]
@@ -142,13 +142,15 @@ Two details that surprise new developers:
 |---|---|---|
 | Starters (flour blend, ratio, temperature, sugar, time settings) | `usePersonas` | Yes, `sourdough-personas` |
 | Which starter is selected | `usePersonas` | Yes, `sourdough-active-persona` |
-| Logged feeds and recorded peaks | `useFeedingHistory` | Yes, `sourdough-feeding-history` (latest 50) |
+| Logged feeds and recorded peaks | `FeedingHistoryProvider` in `App.tsx`, read with `useFeedingHistory` | Yes, `sourdough-feeding-history` (latest 50) |
 | Dark mode | `useCalculatorSettings` | Yes, `sourdough-calculator-settings` |
 | Form values while editing | `useState` in `SourdoughCalculator`, copied from the active starter | Through auto-save |
 | Language | `I18nProvider` in `App.tsx` (one for the whole app) | Yes, `sourdough-language` |
 | Results visible, timer reset key | `useState` in `SourdoughCalculator` | No |
 
 Details of every saved field are in [Data and storage](data-storage.md).
+
+**State that several components need must have one owner.** The feeding history is used by `SourdoughCalculator` (log feeds, calibration) and `FeedingHistory` (show feeds, record peaks). Each used to call the hook and get its **own copy**: a logged feed did not appear in the history card until a reload, and recording a peak saved the card's old copy over the newer one, deleting the feed just logged. Now `FeedingHistoryProvider` holds the one copy and `useFeedingHistory()` reads it. Do the same for any new state shared between components.
 
 ## Translations
 

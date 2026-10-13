@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, createElement, useContext, type ReactNode } from 'react';
 import { generateId } from '@/lib/sourdough-calculator';
 import type { FlourBlendItem, FeedingRatio } from '@/types/sourdough';
 
@@ -27,7 +27,7 @@ export interface FeedingHistoryEntry {
   peakTimeDifferenceMinutes: number | null; // positive = peaked later than predicted
 }
 
-export function useFeedingHistory() {
+function useFeedingHistoryState() {
   const [history, setHistory] = useState<FeedingHistoryEntry[]>(() => {
     if (typeof window === 'undefined') return [];
     
@@ -133,4 +133,22 @@ export function useFeedingHistory() {
     getEntriesForPersona,
     getAccuracyStats,
   };
+}
+
+type FeedingHistoryContextValue = ReturnType<typeof useFeedingHistoryState>;
+
+const FeedingHistoryContext = createContext<FeedingHistoryContextValue | null>(null);
+
+/**
+ * One shared history for the whole app. Each component used to keep its own copy, so a
+ * feed logged in one did not show in the other, and saving the stale copy deleted it.
+ */
+export function FeedingHistoryProvider({ children }: { children: ReactNode }) {
+  return createElement(FeedingHistoryContext.Provider, { value: useFeedingHistoryState() }, children);
+}
+
+export function useFeedingHistory(): FeedingHistoryContextValue {
+  const value = useContext(FeedingHistoryContext);
+  if (!value) throw new Error('useFeedingHistory must be used inside <FeedingHistoryProvider>');
+  return value;
 }

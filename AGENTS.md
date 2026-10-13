@@ -54,6 +54,8 @@ Read `docs/fermentation-model.md` before changing it.
 
 ### Saved data
 
+- State used by more than one component needs one owner. Feeding history lives in `FeedingHistoryProvider`; read it with `useFeedingHistory()`, never keep a second copy.
+
 - Data from older versions lives in users' browsers. New fields must be optional with a default where read (`x ?? default`).
 - Never rename or remove keys of `FLOUR_DATA`, `SUGAR_DATA`, `FlourType`, `SugarType`, or the `localStorage` keys. Add new ones.
 
