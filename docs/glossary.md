@@ -49,5 +49,4 @@
 | **SPA** | Single-page application: one HTML page updated by JavaScript |
 | **`HashRouter`** | React Router mode that keeps the route after `#` in the URL, so it works on static hosting |
 | **shadcn/ui** | A collection of React components copied into `src/components/ui` |
-| **Lovable** | The AI app builder the project was started with |
 | **Mermaid** | Text format for diagrams, drawn by GitHub; used in these docs |

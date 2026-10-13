@@ -9,41 +9,22 @@ interface PeakTimerProps {
 }
 
 export function PeakTimer({ peakTime, starterName, compact = false }: PeakTimerProps) {
-  const [timeRemaining, setTimeRemaining] = useState<{
-    hours: number;
-    minutes: number;
-    seconds: number;
-    isPast: boolean;
-    totalMs: number;
-  }>({ hours: 0, minutes: 0, seconds: 0, isPast: false, totalMs: 0 });
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
-    const calculateRemaining = () => {
-      const now = new Date().getTime();
-      const peak = peakTime.getTime();
-      const diff = peak - now;
-      
-      if (diff <= 0) {
-        const pastDiff = Math.abs(diff);
-        const hours = Math.floor(pastDiff / (1000 * 60 * 60));
-        const minutes = Math.floor((pastDiff % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((pastDiff % (1000 * 60)) / 1000);
-        return { hours, minutes, seconds, isPast: true, totalMs: pastDiff };
-      }
-      
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      return { hours, minutes, seconds, isPast: false, totalMs: diff };
-    };
-
-    setTimeRemaining(calculateRemaining());
-    const interval = setInterval(() => {
-      setTimeRemaining(calculateRemaining());
-    }, 1000);
-
+    const interval = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(interval);
-  }, [peakTime]);
+  }, []);
+
+  const diff = peakTime.getTime() - now;
+  const totalMs = Math.abs(diff);
+  const timeRemaining = {
+    hours: Math.floor(totalMs / (1000 * 60 * 60)),
+    minutes: Math.floor((totalMs % (1000 * 60 * 60)) / (1000 * 60)),
+    seconds: Math.floor((totalMs % (1000 * 60)) / 1000),
+    isPast: diff <= 0,
+    totalMs,
+  };
 
   const formatUnit = (val: number, unit: string) => (
     <div className="flex flex-col items-center">

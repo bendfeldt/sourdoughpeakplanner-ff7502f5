@@ -29,7 +29,7 @@ flowchart TD
     subgraph build["Job: build"]
         co["Check out the chosen branch"]
         guard{"src/App.tsx uses<br/>HashRouter?"}
-        node["Set up Node 22"]
+        node["Set up Node 24 (LTS)"]
         ci["npm ci"]
         test["npm test<br/>(if the branch has tests)"]
         vite["npm run build -- --base=./"]

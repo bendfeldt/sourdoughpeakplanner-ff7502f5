@@ -62,7 +62,10 @@ function usePersonasState() {
       if (stored) {
         const parsed = JSON.parse(stored);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed;
+          // Starters saved before time settings existed get the defaults
+          return parsed.map((p: SourdoughPersona) =>
+            p.timeSettings ? p : { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' }
+          );
         }
       }
     } catch (e) {
@@ -163,15 +166,6 @@ function usePersonasState() {
     return newPersona;
   }, [personas]);
 
-  // Migrate old personas that don't have timeSettings
-  useEffect(() => {
-    const needsMigration = personas.some(p => !p.timeSettings);
-    if (needsMigration) {
-      setPersonas(prev => prev.map(p => 
-        p.timeSettings ? p : { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' }
-      ));
-    }
-  }, []);
 
   return {
     personas,

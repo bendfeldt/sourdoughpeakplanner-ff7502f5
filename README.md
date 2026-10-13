@@ -34,4 +34,4 @@ npm run dev     # http://localhost:8080
 npm test
 ```
 
-Requires Node.js 22.18 or newer. Built with Vite, React, TypeScript, Tailwind CSS and shadcn/ui. The project was started in [Lovable](https://lovable.dev).
+Requires Node.js 24 (the current LTS) or newer. Built with Vite 8, React 19, TypeScript, Tailwind CSS 4 and shadcn/ui.

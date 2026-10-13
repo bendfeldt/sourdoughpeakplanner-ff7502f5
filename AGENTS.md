@@ -6,7 +6,7 @@ Instructions for AI coding agents working in this repository. Humans are welcome
 
 A browser-only React app that predicts when a sourdough starter peaks after feeding and how to feed it to peak at a chosen time. No backend: all data is in `localStorage`. Published to GitHub Pages.
 
-Stack: Vite 5, React 18, TypeScript, Tailwind CSS, shadcn/ui, React Router 6 (`HashRouter`). Node 22.18+.
+Stack: Vite 8, React 19, TypeScript 6, Tailwind CSS 4 (CSS-first config in `src/index.css`, no `tailwind.config`), shadcn/ui, React Router 8 (package `react-router`, `HashRouter`). Node 24 LTS.
 
 ## Commands
 
@@ -15,7 +15,7 @@ npm ci                                   # install
 npm test                                 # calculator tests (node:test, no framework)
 npx tsc -p tsconfig.app.json --noEmit    # type check
 npm run build                            # production build to dist/
-npm run lint                             # ESLint; ~58 errors already exist on main, add none
+npm run lint                             # ESLint; 55 `no-explicit-any` errors already exist on main, add none
 npm run dev                              # dev server :8080 (use `npx vite --host 127.0.0.1` without IPv6)
 ```
 
@@ -38,6 +38,10 @@ Run `npm test`, the type check and `npm run build` before every commit. All thre
 | GitHub Pages deploy | `.github/workflows/deploy-pages.yml` |
 
 ## Rules
+
+### Dependencies
+
+- Stay on TypeScript 6.0. TypeScript 7.0 has no JavaScript API, so typescript-eslint can't support it; move to 7 only once typescript-eslint supports TypeScript 7.1.
 
 ### Git
 
@@ -66,6 +70,7 @@ Read `docs/fermentation-model.md` before changing it.
 - Make date strings with `format(date, 'yyyy-MM-dd')` from `date-fns`, never `toISOString()` (UTC: wrong day after midnight in Denmark).
 - Every visible string goes in `src/lib/i18n.tsx`, in **both** `en` and `da`. Flours and sugars need `'<key>'` and flours also `'<key>-desc'`.
 - Use React Router `<Link>` for internal links, never `<a href="/">` (breaks on GitHub Pages).
+- Import routing from `react-router` (not `react-router-dom`).
 - Keep `HashRouter` and `base: "./"` in `vite.config.ts`. The deploy workflow refuses branches without `HashRouter`.
 
 ### Docs
@@ -73,7 +78,3 @@ Read `docs/fermentation-model.md` before changing it.
 - Update `docs/` in the same pull request as the code it describes. Numbers in the tables come from running the calculator; regenerate them (see `docs/development.md#updating-the-docs`) instead of estimating.
 - Diagrams are Mermaid code blocks. Every diagram must also be explained in text. Prefer `flowchart TB` for long chains so they stay readable on phones.
 - New docs files must be added to `DOC_PAGES` in `src/lib/docs.ts`; `npm test` checks this and every docs link.
-
-## Known quirks (not bugs to fix unless asked)
-
-- `src/integrations/supabase` and most of `src/components/ui` are unused template files from Lovable.
