@@ -14,8 +14,8 @@ What that means in practice:
 |---|---|---|
 | `sourdough-personas` | [`use-personas.ts`](../src/hooks/use-personas.ts) | JSON array of starters (`SourdoughPersona[]`) |
 | `sourdough-active-persona` | [`use-personas.ts`](../src/hooks/use-personas.ts) | The `id` of the selected starter (plain string) |
-| `sourdough-feeding-history` | [`use-feeding-history.ts`](../src/hooks/use-feeding-history.ts) | JSON array of logged feeds, newest first, at most 50 |
-| `sourdough-calculator-settings` | [`use-calculator-cache.ts`](../src/hooks/use-calculator-cache.ts) | JSON object with app settings |
+| `sourdough-feeding-history` | [`use-feeding-history.ts`](../src/hooks/use-feeding-history.ts) | JSON array of logged feeds, newest first, at most 50 per starter |
+| `sourdough-calculator-settings` | [`use-theme.ts`](../src/hooks/use-theme.ts) | `{ "theme": "light" \| "dark" }` once the user presses the moon/sun button |
 | `sourdough-language` | [`i18n.tsx`](../src/lib/i18n.tsx) | `"en"` or `"da"` (plain string) |
 
 Each hook follows the same pattern:
@@ -129,15 +129,18 @@ Type in [`src/hooks/use-feeding-history.ts`](../src/hooks/use-feeding-history.ts
 | `peakTimeDifferenceMinutes` | number or `null` | Actual − predicted, positive = later than predicted |
 | `temperature`, `feedingRatio`, `flourBlend` | | Inputs at the time |
 | `starterAmount`, `flourAmount`, `waterAmount`, `sugarAmount` | number (g) | Amounts at the time. `sugarAmount > 0` marks a sweet feed |
-| `notes` | string | Free text |
 | `createdAt` | number | Timestamp |
 | `calibrationFactor` | number, optional | Calibration the prediction used. Missing on older entries (treated as 1) |
 
-Only the newest 50 entries are kept (`MAX_HISTORY_ENTRIES`). See [Calibration](calibration.md) for how they are used.
+The newest 50 entries per starter are kept (`MAX_ENTRIES_PER_STARTER`), and deleting a starter deletes its entries. Older entries may also contain a `notes` field (always empty); it is ignored. See [Calibration](calibration.md) for how they are used.
 
-### Settings (`CalculatorSettings`)
+### Theme
 
-Only `isDarkMode` is used today; it follows the device's dark-mode setting when the app opens. The other fields (`language`, `useTargetWindow` and target times) are left over from before starters had their own time settings. The language is saved under its own key, `sourdough-language`.
+Only `theme` is read, and only once the user has pressed the moon/sun button; until then the app follows the device's dark mode, also when it changes. Older versions saved `isDarkMode` and other fields under this key on every visit, so they never meant a choice and are ignored. The language is saved under its own key, `sourdough-language`.
+
+### Two tabs
+
+Each store reloads when another tab of the app saves it (the browser's `storage` event), so two open tabs don't overwrite each other's starters or feeds.
 
 ### Dates and times
 

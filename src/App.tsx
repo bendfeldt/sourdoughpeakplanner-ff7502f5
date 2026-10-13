@@ -1,6 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import { lazy, Suspense } from "react";
 import { HashRouter, Routes, Route } from "react-router";
 import Index from "./pages/Index";
@@ -9,14 +7,14 @@ import NotFound from "./pages/NotFound";
 import { I18nProvider } from "@/lib/i18n";
 import { FeedingHistoryProvider } from "@/hooks/use-feeding-history";
 import { PersonasProvider } from "@/hooks/use-personas";
+import { ThemeProvider } from "@/hooks/use-theme";
 
 // Loaded on first visit to the docs, so the calculator stays small
 const Docs = lazy(() => import("./pages/Docs"));
 
 const App = () => (
-  <TooltipProvider>
+  <ThemeProvider>
     <Toaster />
-    <Sonner />
     <I18nProvider>
       <FeedingHistoryProvider>
         <PersonasProvider>
@@ -36,7 +34,7 @@ const App = () => (
         </PersonasProvider>
       </FeedingHistoryProvider>
     </I18nProvider>
-  </TooltipProvider>
+  </ThemeProvider>
 );
 
 export default App;

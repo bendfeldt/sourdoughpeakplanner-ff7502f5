@@ -16,17 +16,17 @@ function GuidanceContent() {
           <Link to="/">
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              {t('backToCalculator' as any)}
+              {t('backToCalculator')}
             </Button>
           </Link>
         </div>
 
         <div className="text-center space-y-3 mb-12">
           <h1 className="text-4xl md:text-5xl font-display font-bold text-foreground tracking-tight">
-            {t('guidanceTitle' as any)}
+            {t('guidanceTitle')}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            {t('guidanceSubtitle' as any)}
+            {t('guidanceSubtitle')}
           </p>
         </div>
 
@@ -35,7 +35,7 @@ function GuidanceContent() {
           <Card className="border-primary/20 bg-primary/5">
             <CardContent className="pt-6">
               <p className="text-lg text-foreground leading-relaxed">
-                {t('guidanceIntro' as any)}
+                {t('guidanceIntro')}
               </p>
             </CardContent>
           </Card>
@@ -47,12 +47,12 @@ function GuidanceContent() {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Wheat className="h-5 w-5 text-primary" />
                 </div>
-                {t('normalModeTitle' as any)}
+                {t('normalModeTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
-                {t('normalModeDesc' as any)}
+                {t('normalModeDesc')}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -82,12 +82,12 @@ function GuidanceContent() {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Clock className="h-5 w-5 text-primary" />
                 </div>
-                {t('targetWindowModeTitle' as any)}
+                {t('targetWindowModeTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
-                {t('targetWindowModeDesc' as any)}
+                {t('targetWindowModeDesc')}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -117,12 +117,12 @@ function GuidanceContent() {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Scale className="h-5 w-5 text-primary" />
                 </div>
-                {t('totalSourdoughModeTitle' as any)}
+                {t('totalSourdoughModeTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
-                {t('totalSourdoughModeDesc' as any)}
+                {t('totalSourdoughModeDesc')}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -152,12 +152,12 @@ function GuidanceContent() {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <History className="h-5 w-5 text-primary" />
                 </div>
-                {t('historyTitle' as any)}
+                {t('historyTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
-                {t('historyDesc' as any)}
+                {t('historyDesc')}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
                 <li className="flex items-start gap-2">
@@ -187,21 +187,21 @@ function GuidanceContent() {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Wheat className="h-5 w-5 text-primary" />
                 </div>
-                {t('flourTypesTitle' as any)}
+                {t('flourTypesTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
-                {t('flourTypesDesc' as any)}
+                {t('flourTypesDesc')}
               </p>
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="font-medium text-foreground">Fast Fermentation</p>
-                  <p className="text-muted-foreground text-xs mt-1">Whole wheat, Rye, Whole spelt, Whole einkorn</p>
+                  <p className="font-medium text-foreground">{t('fastFermentation')}</p>
+                  <p className="text-muted-foreground text-xs mt-1">{t('fastFermentationFlours')}</p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
-                  <p className="font-medium text-foreground">Slow Fermentation</p>
-                  <p className="text-muted-foreground text-xs mt-1">White wheat, Manitoba, Tipo 00</p>
+                  <p className="font-medium text-foreground">{t('slowFermentation')}</p>
+                  <p className="text-muted-foreground text-xs mt-1">{t('slowFermentationFlours')}</p>
                 </div>
               </div>
             </CardContent>
@@ -214,25 +214,25 @@ function GuidanceContent() {
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
                   <Thermometer className="h-5 w-5 text-primary" />
                 </div>
-                {t('temperatureTitle' as any)}
+                {t('temperatureTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
-                {t('temperatureDesc' as any)}
+                {t('temperatureDesc')}
               </p>
               <div className="mt-4 flex gap-3 text-sm">
                 <div className="flex-1 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
                   <p className="font-medium text-blue-600 dark:text-blue-400">18-22°C</p>
-                  <p className="text-muted-foreground text-xs mt-1">Slower, more flavour</p>
+                  <p className="text-muted-foreground text-xs mt-1">{t('tempCoolNote')}</p>
                 </div>
                 <div className="flex-1 p-3 rounded-lg bg-green-500/10 border border-green-500/20">
                   <p className="font-medium text-green-600 dark:text-green-400">23-26°C</p>
-                  <p className="text-muted-foreground text-xs mt-1">Ideal balance</p>
+                  <p className="text-muted-foreground text-xs mt-1">{t('tempIdealNote')}</p>
                 </div>
                 <div className="flex-1 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
                   <p className="font-medium text-orange-600 dark:text-orange-400">27-31°C</p>
-                  <p className="text-muted-foreground text-xs mt-1">Faster, less complex</p>
+                  <p className="text-muted-foreground text-xs mt-1">{t('tempWarmNote')}</p>
                 </div>
               </div>
             </CardContent>
@@ -245,26 +245,26 @@ function GuidanceContent() {
                 <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                   <Lightbulb className="h-5 w-5 text-primary" />
                 </div>
-                {t('tipsTitle' as any)}
+                {t('tipsTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3 text-muted-foreground">
                   <span className="text-primary font-bold text-lg">1</span>
-                  <span>{t('tip1' as any)}</span>
+                  <span>{t('tip1')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-muted-foreground">
                   <span className="text-primary font-bold text-lg">2</span>
-                  <span>{t('tip2' as any)}</span>
+                  <span>{t('tip2')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-muted-foreground">
                   <span className="text-primary font-bold text-lg">3</span>
-                  <span>{t('tip3' as any)}</span>
+                  <span>{t('tip3')}</span>
                 </li>
                 <li className="flex items-start gap-3 text-muted-foreground">
                   <span className="text-primary font-bold text-lg">4</span>
-                  <span>{t('tip4' as any)}</span>
+                  <span>{t('tip4')}</span>
                 </li>
               </ul>
             </CardContent>
@@ -275,7 +275,7 @@ function GuidanceContent() {
             <Link to="/">
               <Button size="lg" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                {t('backToCalculator' as any)}
+                {t('backToCalculator')}
               </Button>
             </Link>
           </div>

@@ -3,7 +3,8 @@ import { generateId } from '@/lib/sourdough-calculator';
 import type { FlourBlendItem, FeedingRatio } from '@/types/sourdough';
 
 const HISTORY_KEY = 'sourdough-feeding-history';
-const MAX_HISTORY_ENTRIES = 50;
+// Per starter, so a starter fed daily can't push out another's calibration data
+const MAX_ENTRIES_PER_STARTER = 50;
 
 export interface FeedingHistoryEntry {
   id: string;
@@ -19,7 +20,6 @@ export interface FeedingHistoryEntry {
   flourAmount: number;
   waterAmount: number;
   sugarAmount: number;
-  notes: string;
   createdAt: number;
   // Calibration multiplier the prediction used; absent on entries logged before it existed
   calibrationFactor?: number;
@@ -42,6 +42,20 @@ function useFeedingHistoryState() {
     return [];
   });
 
+  // Another tab saved the history: take it, so this tab's next save doesn't overwrite it
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== HISTORY_KEY || !e.newValue) return;
+      try {
+        setHistory(JSON.parse(e.newValue));
+      } catch (err) {
+        console.warn('Failed to load feeding history:', err);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   // Persist history
   useEffect(() => {
     try {
@@ -60,9 +74,8 @@ function useFeedingHistoryState() {
     };
     
     setHistory(prev => {
-      const updated = [newEntry, ...prev];
-      // Keep only the most recent entries
-      return updated.slice(0, MAX_HISTORY_ENTRIES);
+      const perStarter: Record<string, number> = {};
+      return [newEntry, ...prev].filter(e => (perStarter[e.personaId] = (perStarter[e.personaId] ?? 0) + 1) <= MAX_ENTRIES_PER_STARTER);
     });
     
     return newEntry;
@@ -84,23 +97,13 @@ function useFeedingHistoryState() {
     }));
   }, []);
 
-  const updateNotes = useCallback((entryId: string, notes: string) => {
-    setHistory(prev => prev.map(entry => 
-      entry.id === entryId ? { ...entry, notes } : entry
-    ));
-  }, []);
-
   const deleteEntry = useCallback((entryId: string) => {
     setHistory(prev => prev.filter(entry => entry.id !== entryId));
   }, []);
 
-  const clearHistory = useCallback(() => {
-    setHistory([]);
+  const deleteEntriesForPersona = useCallback((personaId: string) => {
+    setHistory(prev => prev.filter(entry => entry.personaId !== personaId));
   }, []);
-
-  const getEntriesForPersona = useCallback((personaId: string) => {
-    return history.filter(entry => entry.personaId === personaId);
-  }, [history]);
 
   // Calculate average prediction accuracy for a persona
   const getAccuracyStats = useCallback((personaId: string) => {
@@ -127,10 +130,8 @@ function useFeedingHistoryState() {
     history,
     addEntry,
     recordActualPeak,
-    updateNotes,
     deleteEntry,
-    clearHistory,
-    getEntriesForPersona,
+    deleteEntriesForPersona,
     getAccuracyStats,
   };
 }

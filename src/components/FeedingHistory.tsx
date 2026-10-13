@@ -17,7 +17,7 @@ interface FeedingHistoryProps {
 
 export function FeedingHistory({ personaId, personaName }: FeedingHistoryProps) {
   const { t, language } = useI18n();
-  const { history, recordActualPeak, updateNotes, deleteEntry, getAccuracyStats } = useFeedingHistory();
+  const { history, recordActualPeak, deleteEntry, getAccuracyStats } = useFeedingHistory();
   const [expanded, setExpanded] = useState(false);
   const [recordingPeakFor, setRecordingPeakFor] = useState<string | null>(null);
   const [peakTimeInput, setPeakTimeInput] = useState('');
@@ -57,7 +57,7 @@ export function FeedingHistory({ personaId, personaName }: FeedingHistoryProps) 
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg font-display">
             <History className="h-5 w-5 text-primary" />
-            {t('feedingHistory' as any) || 'Feeding History'}
+            {t('feedingHistory')}
           </CardTitle>
           <Button
             variant="ghost"
@@ -70,11 +70,11 @@ export function FeedingHistory({ personaId, personaName }: FeedingHistoryProps) 
         {stats && (
           <CardDescription className="flex items-center gap-2">
             <Badge variant={Math.abs(stats.tendencyMinutes) < 30 ? 'default' : 'secondary'}>
-              {stats.count} {t('recorded' as any) || 'recorded'}
+              {stats.count} {t('recorded')}
             </Badge>
             {stats.tendencyMinutes !== 0 && (
               <span className="text-xs">
-                {t('avgTendency' as any) || 'Avg:'} {formatDifference(stats.tendencyMinutes)}
+                {t('avgTendency')} {formatDifference(stats.tendencyMinutes)}
               </span>
             )}
           </CardDescription>
@@ -108,14 +108,14 @@ export function FeedingHistory({ personaId, personaName }: FeedingHistoryProps) 
               </div>
 
               <div className="flex items-center gap-2 text-xs">
-                <span className="text-muted-foreground">{t('predictedPeak' as any) || 'Predicted'}:</span>
+                <span className="text-muted-foreground">{t('predictedPeak')}:</span>
                 <span>{formatDateTime(new Date(entry.predictedPeakTime), language)}</span>
               </div>
 
               {entry.actualPeakTime ? (
                 <div className="flex items-center gap-2 text-xs">
                   <CheckCircle className="h-3 w-3 text-green-500" />
-                  <span className="text-muted-foreground">{t('actualPeak' as any) || 'Actual'}:</span>
+                  <span className="text-muted-foreground">{t('actualPeak')}:</span>
                   <span>{formatDateTime(new Date(entry.actualPeakTime), language)}</span>
                   {entry.peakTimeDifferenceMinutes !== null && (
                     <Badge 
@@ -147,7 +147,7 @@ export function FeedingHistory({ personaId, personaName }: FeedingHistoryProps) 
                         className="h-7 text-xs"
                         onClick={() => handleRecordPeak(entry.id)}
                       >
-                        {t('save' as any) || 'Save'}
+                        {t('save')}
                       </Button>
                       <Button
                         variant="ghost"
@@ -155,7 +155,7 @@ export function FeedingHistory({ personaId, personaName }: FeedingHistoryProps) 
                         className="h-7 text-xs"
                         onClick={() => setRecordingPeakFor(null)}
                       >
-                        {t('cancel' as any) || 'Cancel'}
+                        {t('cancel')}
                       </Button>
                     </div>
                   ) : (
@@ -171,7 +171,7 @@ export function FeedingHistory({ personaId, personaName }: FeedingHistoryProps) 
                       }}
                     >
                       <CheckCircle className="h-3 w-3 mr-1" />
-                      {t('recordActualPeak' as any) || 'Record actual peak'}
+                      {t('recordActualPeak')}
                     </Button>
                   )}
                 </>

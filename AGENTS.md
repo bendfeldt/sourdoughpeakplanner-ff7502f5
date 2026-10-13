@@ -15,11 +15,11 @@ npm ci                                   # install
 npm test                                 # calculator tests (node:test, no framework)
 npx tsc -p tsconfig.app.json --noEmit    # type check
 npm run build                            # production build to dist/
-npm run lint                             # ESLint; 55 `no-explicit-any` errors already exist on main, add none
+npm run lint                             # ESLint; must report 0 errors
 npm run dev                              # dev server :8080 (use `npx vite --host 127.0.0.1` without IPv6)
 ```
 
-Run `npm test`, the type check and `npm run build` before every commit. All three must pass.
+Run `npm test`, the type check, `npm run lint` and `npm run build` before every commit. All must pass; `.github/workflows/checks.yml` runs them on every pull request.
 
 ## Where things are
 
@@ -35,7 +35,8 @@ Run `npm test`, the type check and `npm run build` before every commit. All thre
 | Routes, providers | `src/App.tsx` |
 | Fold-out menu (starters, docs) | `src/components/AppMenu.tsx` |
 | Docs inside the app | `src/pages/Docs.tsx`, `src/lib/docs.ts` (`DOC_PAGES`) |
-| GitHub Pages deploy | `.github/workflows/deploy-pages.yml` |
+| Light/dark mode | `src/hooks/use-theme.ts` |
+| GitHub Pages deploy, pull request checks | `.github/workflows/deploy-pages.yml`, `.github/workflows/checks.yml` |
 
 ## Rules
 
@@ -68,7 +69,7 @@ Read `docs/fermentation-model.md` before changing it.
 ### Text and UI
 
 - Make date strings with `format(date, 'yyyy-MM-dd')` from `date-fns`, never `toISOString()` (UTC: wrong day after midnight in Denmark).
-- Every visible string goes in `src/lib/i18n.tsx`, in **both** `en` and `da`. Flours and sugars need `'<key>'` and flours also `'<key>-desc'`.
+- Every visible string goes in `src/lib/i18n.tsx`, in **both** `en` and `da`, and is read with `t('key')`. Never cast keys with `as any`; `t()` is typed so typos fail the type check. Flours and sugars need `'<key>'` and flours also `'<key>-desc'`.
 - Use React Router `<Link>` for internal links, never `<a href="/">` (breaks on GitHub Pages).
 - Import routing from `react-router` (not `react-router-dom`).
 - Keep `HashRouter` and `base: "./"` in `vite.config.ts`. The deploy workflow refuses branches without `HashRouter`.

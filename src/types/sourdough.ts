@@ -1,3 +1,5 @@
+import type { TranslationKey } from '@/lib/i18n';
+
 export type FlourType = 
   | 'all-purpose'
   | 'bread-flour'
@@ -109,11 +111,11 @@ export interface CalculationInput {
 
 export interface FermentationPhase {
   name: string;
-  nameKey: string;
+  nameKey: TranslationKey;
   startTime: Date;
   endTime: Date;
   description: string;
-  descriptionKey: string;
+  descriptionKey: TranslationKey;
 }
 
 export interface FlourBreakdownItem {
@@ -129,7 +131,7 @@ export interface CalculationResult {
   hoursToReachPeak: number;
   // The model says these conditions won't produce a normal peak within 48 h
   exceedsMaxHours: boolean;
-  suggestions: string[];
+  suggestions: TranslationKey[];
   starterAmount: number;
   flourAmount: number;
   waterAmount: number;
@@ -141,7 +143,7 @@ export interface CalculationResult {
   fermentationPhases: FermentationPhase[];
   recommendedRatio: FeedingRatio | null;
   // Warning if target time is not achievable
-  achievabilityWarning: string | null;
+  achievabilityWarning: TranslationKey | null;
   minAchievableHours: number;
   maxAchievableHours: number;
 }

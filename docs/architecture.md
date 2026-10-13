@@ -41,6 +41,7 @@ The calculator has **no React and no browser code**. It takes plain values in an
 ├── AGENTS.md                      Instructions for AI coding agents
 ├── docs/                          This documentation
 ├── .github/workflows/
+│   ├── checks.yml                 Tests, type check, lint and build on every pull request
 │   └── deploy-pages.yml           Deploys a chosen branch to GitHub Pages
 ├── index.html                     The single HTML page
 ├── vite.config.ts                 Build config (base path "./", "@" alias → src)
@@ -65,8 +66,8 @@ The calculator has **no React and no browser code**. It takes plain values in an
     ├── hooks/
     │   ├── use-personas.ts           Starters ("personas"): create, edit, save
     │   ├── use-feeding-history.ts    Logged feeds and accuracy stats
-    │   ├── use-calculator-cache.ts   App settings (dark mode)
-    │   └── use-wake-lock.ts          "Keep screen on"
+    │   ├── use-theme.ts              Light/dark mode (ThemeProvider)
+    │   └── use-wake-lock.ts          "Keep screen on", kept on when you come back to the app
     ├── lib/
     │   ├── sourdough-calculator.ts       ★ The fermentation model and schedule
     │   ├── sourdough-calculator.test.ts  Tests for the model (npm test)
@@ -94,7 +95,7 @@ The app uses `HashRouter`, so the route is the part of the URL after `#`. This l
 
 ```mermaid
 flowchart TB
-    App["App (I18nProvider, FeedingHistoryProvider, PersonasProvider, HashRouter)"] --> Index
+    App["App (ThemeProvider, I18nProvider, FeedingHistoryProvider, PersonasProvider, HashRouter)"] --> Index
     App --> Guidance
     App --> Docs["Docs (loaded on demand)"]
     App --> NotFound
@@ -154,15 +155,15 @@ Two details that surprise new developers:
 |---|---|---|
 | Starters (flour blend, ratio, temperature, sugar, time settings) | `PersonasProvider` in `App.tsx`, read with `usePersonas` | Yes, `sourdough-personas` |
 | Which starter is selected | `PersonasProvider` | Yes, `sourdough-active-persona` |
-| Logged feeds and recorded peaks | `FeedingHistoryProvider` in `App.tsx`, read with `useFeedingHistory` | Yes, `sourdough-feeding-history` (latest 50) |
-| Dark mode | `useCalculatorSettings` | Yes, `sourdough-calculator-settings` |
+| Logged feeds and recorded peaks | `FeedingHistoryProvider` in `App.tsx`, read with `useFeedingHistory` | Yes, `sourdough-feeding-history` (latest 50 per starter) |
+| Light/dark mode | `ThemeProvider` in `App.tsx`, read with `useTheme` | The user's choice, in `sourdough-calculator-settings`; without one it follows the device |
 | Form values while editing | `useState` in `SourdoughCalculator`, copied from the active starter | Through auto-save |
 | Language | `I18nProvider` in `App.tsx` (one for the whole app) | Yes, `sourdough-language` |
-| Results visible, timer reset key | `useState` in `SourdoughCalculator` | No |
+| Results visible | `useState` in `SourdoughCalculator` | No |
 
 Details of every saved field are in [Data and storage](data-storage.md).
 
-**State that several components need must have one owner.** The feeding history is used by `SourdoughCalculator` (log feeds, calibration) and `FeedingHistory` (show feeds, record peaks). Each used to call the hook and get its **own copy**: a logged feed did not appear in the history card until a reload, and recording a peak saved the card's old copy over the newer one, deleting the feed just logged. Now `FeedingHistoryProvider` holds the one copy and `useFeedingHistory()` reads it. Starters work the same way (`PersonasProvider` / `usePersonas()`), because the menu and the calculator both change them. Do the same for any new state shared between components.
+**State that several components need must have one owner.** The feeding history is used by `SourdoughCalculator` (log feeds, calibration) and `FeedingHistory` (show feeds, record peaks). Each used to call the hook and get its **own copy**: a logged feed did not appear in the history card until a reload, and recording a peak saved the card's old copy over the newer one, deleting the feed just logged. Now `FeedingHistoryProvider` holds the one copy and `useFeedingHistory()` reads it. Both providers also reload when **another browser tab** saves (the `storage` event), so two open tabs don't overwrite each other's starters or feeds. Starters work the same way (`PersonasProvider` / `usePersonas()`), because the menu and the calculator both change them. Do the same for any new state shared between components.
 
 ## Translations
 
@@ -170,7 +171,7 @@ All text shown to the baker is in [`src/lib/i18n.tsx`](../src/lib/i18n.tsx). One
 
 Flour and sugar names are looked up by their type key (for example `t('spelt-whole')`), and flour descriptions by `'<key>-desc'`. When you add a flour or sugar type, add these keys in **both** languages.
 
-Many calls are written `t('key' as any)`. That cast is why `npm run lint` reports `no-explicit-any` errors. They were there before the docs were written and are harmless.
+`t()` only accepts keys that exist in `translations.en` (type `TranslationKey`), so a misspelled key is a type error. Never cast it with `as any`. Keys the calculator returns (tips, warnings, timeline phases) are typed `TranslationKey` too.
 
 ## Libraries in use
 

@@ -1,0 +1,26 @@
+name: Checks
+
+# Runs on every pull request, so a broken build or test shows up before merging.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+      - run: npx tsc -p tsconfig.app.json --noEmit
+      - run: npx tsc -p tsconfig.node.json --noEmit
+      - run: npm run lint
+      - run: npm run build

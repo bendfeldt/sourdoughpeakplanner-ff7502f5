@@ -108,5 +108,5 @@ All components share one history through `FeedingHistoryProvider` (in `App.tsx`)
 ## Things to know
 
 - **Entries from before this change** have no `calibrationFactor` and count as 1.0. Their predictions included the old minute-based correction, so the first few new feeds retrain the factor.
-- History keeps the **latest 50 feeds** across all starters (`MAX_HISTORY_ENTRIES`), and calibration uses the **latest 10** per starter (`CALIBRATION_WINDOW`), so it follows a starter that changes over time.
+- History keeps the **latest 50 feeds per starter** (`MAX_ENTRIES_PER_STARTER`), so a starter fed daily can't push out another's data, and calibration uses the **latest 10** per starter (`CALIBRATION_WINDOW`), so it follows a starter that changes over time. Deleting a starter deletes its feeds.
 - Deleting a feed from the history removes it from calibration immediately.

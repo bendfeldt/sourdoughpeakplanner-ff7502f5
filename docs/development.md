@@ -30,7 +30,7 @@ Open <http://localhost:8080>. The page reloads when you save a file.
 
 ### Before you open a pull request
 
-Run these and make sure the first three pass:
+Run these and make sure they all pass. The same checks run on every pull request (`.github/workflows/checks.yml`):
 
 ```sh
 npm test
@@ -39,7 +39,7 @@ npm run build
 npm run lint
 ```
 
-`npm run lint` currently reports 55 errors that already exist on `main`, all `no-explicit-any` from `t('key' as any)` in the components. **Don't add new ones.** To compare, run lint on `main` and on your branch.
+`npm run lint` reports no errors. Its few warnings are hints about live reload during development.
 
 ## Tests
 
@@ -64,6 +64,7 @@ What is covered:
 | unreachable window | warns instead of faking the peak |
 | old flour keys | saved starters with `spelt`, `kamut`, `einkorn` still calculate |
 | calibration | settles on the true factor; sweet and plain feeds kept apart |
+| grams view | a flour or water amount typed in grams is kept, whatever the starter part of the ratio |
 | docs links (`docs.test.ts`) | every file in `docs/` is in the menu, and every link and `#section` inside the docs points to a real page and heading |
 
 To add a test, copy an existing `test('…', () => { … })` block. The `input()` helper at the top builds a reference feed (all-purpose, 1:1:1, 24 °C) and you override only what matters:
@@ -176,6 +177,4 @@ TypeScript 7 (the compiler rewritten in Go) ships without the JavaScript API tha
 
 | Issue | Where |
 |---|---|
-| `npm run lint` reports existing `no-explicit-any` errors | `t('key' as any)` calls |
 | `npm audit` reports warnings in build tools only | `@tailwindcss/typography` uses an older CSS parser. Nothing reaches the built site |
-| Settings hook still stores unused fields | `use-calculator-cache.ts` |

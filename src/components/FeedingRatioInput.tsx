@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Scale, ToggleLeft, ToggleRight } from 'lucide-react';
 import type { FeedingRatio } from '@/types/sourdough';
 import { useI18n } from '@/lib/i18n';
-import { parseDecimalInput } from '@/lib/sourdough-calculator';
+import { parseDecimalInput, ratioPartFromGrams } from '@/lib/sourdough-calculator';
 
 interface FeedingRatioInputProps {
   feedingRatio: FeedingRatio;
@@ -82,7 +82,7 @@ export function FeedingRatioInput({
       });
     } else {
       // Calculate new ratio from gram amount
-      const ratioValue = Math.round((grams / oldSourdoughAmount) * 100) / 100;
+      const ratioValue = ratioPartFromGrams(grams, oldSourdoughAmount, feedingRatio.starter);
       const newRatio = { ...feedingRatio, [key]: ratioValue };
       const newInputs = { ...ratioInputs, [key]: ratioValue.toFixed(2) };
       onRatioChange(newRatio, newInputs);
@@ -123,12 +123,12 @@ export function FeedingRatioInput({
           {showGrams ? (
             <>
               <ToggleRight className="h-4 w-4 text-primary" />
-              <span>{t('showingGrams') || 'Grams'}</span>
+              <span>{t('showingGrams')}</span>
             </>
           ) : (
             <>
               <ToggleLeft className="h-4 w-4" />
-              <span>{t('showingRatio') || 'Ratio'}</span>
+              <span>{t('showingRatio')}</span>
             </>
           )}
         </Button>
@@ -172,7 +172,7 @@ export function FeedingRatioInput({
         <Scale className="h-3 w-3" />
         {showGrams ? (
           <span>
-            {t('ratio') || 'Ratio'}: {formatRatioValue(feedingRatio.starter)}:{formatRatioValue(feedingRatio.flour)}:{formatRatioValue(feedingRatio.water)}
+            {t('ratio')}: {formatRatioValue(feedingRatio.starter)}:{formatRatioValue(feedingRatio.flour)}:{formatRatioValue(feedingRatio.water)}
           </span>
         ) : (
           <span>

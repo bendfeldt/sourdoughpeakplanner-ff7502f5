@@ -163,7 +163,6 @@ export const translations = {
     
     // Reset
     resetSettings: 'Reset to defaults',
-    resetTimer: 'Reset Timer',
     
     // Multi-starter & timer
     allStarters: 'All Starters',
@@ -207,6 +206,15 @@ export const translations = {
     tip2: 'Your starter should roughly double or triple in size at peak.',
     tip3: 'A "young" starter (before peak) gives more rise power, while a "mature" starter (at or past peak) gives more flavour.',
     tip4: 'If your starter is peaking too fast or slow, adjust the temperature or ratio accordingly.',
+    fastFermentation: 'Fast Fermentation',
+    fastFermentationFlours: 'Whole wheat, Rye, Whole spelt, Whole einkorn',
+    slowFermentation: 'Slow Fermentation',
+    slowFermentationFlours: 'White wheat, Manitoba, Tipo 00',
+    tempCoolNote: 'Slower, more flavour',
+    tempIdealNote: 'Ideal balance',
+    tempWarmNote: 'Faster, less complex',
+    pageNotFound: 'Oops! Page not found',
+    returnHome: 'Return to Home',
     viewGuidance: 'How to Use',
     // Menu
     menu: 'Menu',
@@ -427,7 +435,6 @@ export const translations = {
     
     // Reset
     resetSettings: 'Nulstil til standarder',
-    resetTimer: 'Nulstil Timer',
     
     // Multi-starter & timer
     allStarters: 'Alle Surdejer',
@@ -471,6 +478,15 @@ export const translations = {
     tip2: 'Din surdej skal omtrent fordoble eller tredoble i størrelse ved peak.',
     tip3: 'En "ung" surdej (før peak) giver mere hævekraft, mens en "moden" surdej (ved eller efter peak) giver mere smag.',
     tip4: 'Hvis din surdej topper for hurtigt eller langsomt, justér temperaturen eller forholdet tilsvarende.',
+    fastFermentation: 'Hurtig Gæring',
+    fastFermentationFlours: 'Fuldkornshvede, Rug, Fuldkornsspelt, Fuldkornsenkorn',
+    slowFermentation: 'Langsom Gæring',
+    slowFermentationFlours: 'Hvidt hvedemel, Manitoba, Tipo 00',
+    tempCoolNote: 'Langsommere, mere smag',
+    tempIdealNote: 'Ideel balance',
+    tempWarmNote: 'Hurtigere, mindre kompleks',
+    pageNotFound: 'Ups! Siden findes ikke',
+    returnHome: 'Tilbage til forsiden',
     viewGuidance: 'Sådan Bruges',
     // Menu
     menu: 'Menu',
@@ -533,7 +549,7 @@ export const translations = {
   },
 };
 
-type TranslationKey = keyof typeof translations.en;
+export type TranslationKey = keyof typeof translations.en;
 
 interface I18nContextType {
   language: Language;

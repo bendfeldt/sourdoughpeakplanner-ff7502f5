@@ -6,6 +6,7 @@ import {
   calculateFermentationTime,
   calculateRequiredRatio,
   calibrationFactorFor,
+  ratioPartFromGrams,
   sugarConcentration,
   sugarFactor,
   temperatureFactor,
@@ -153,4 +154,12 @@ test('feeds with sugar are calibrated separately from plain feeds', () => {
     : { sweet: false, trueFactor: 1.1 }));
   close(calibrationFactorFor(history, 'p', false), 1.1, 0.001);
   close(calibrationFactorFor(history, 'p', true), 1.5, 0.001);
+});
+
+test('grams typed in the grams view give back the same grams, whatever the starter part', () => {
+  // 2:1:1 with 50 g starter is 25 g flour; typing 50 g must give a ratio that feeds 50 g
+  const flourPart = ratioPartFromGrams(50, 50, 2);
+  assert.equal(flourPart, 2);
+  assert.equal((50 / 2) * flourPart, 50);
+  assert.equal(ratioPartFromGrams(250, 50, 1), 5);
 });
