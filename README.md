@@ -1,73 +1,37 @@
-# Welcome to your Lovable project
+# Sourdough Peak Planner
 
-## Project info
+Know when your sourdough starter will peak, and how to feed it so it peaks when you need it.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+**Use it:** <https://bendfeldt.github.io/sourdoughpeakplanner-ff7502f5/>
 
-## How can I edit this code?
+- Predicts the peak from flour blend, feeding ratio, hydration, temperature (10–40 °C) and added sugar (up to the weight of the flour).
+- Works backwards: give a time window or a total amount, and it recommends the feeding ratio and grams.
+- Learns each starter's own speed from feeds you log.
+- Several starters, English and Danish, all in the browser. No account; data stays on your device.
 
-There are several ways of editing your application.
+## Documentation
 
-**Use Lovable**
+Start at **[docs/README.md](docs/README.md)**.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+| Page | About |
+|---|---|
+| [Architecture](docs/architecture.md) | How the code fits together |
+| [Fermentation model](docs/fermentation-model.md) | The peak-time formula and the science behind it |
+| [Calculation modes](docs/calculation-modes.md) | Normal, Target Window, Total Sourdough |
+| [Calibration](docs/calibration.md) | How the app learns from logged feeds |
+| [Data and storage](docs/data-storage.md) | What is saved in the browser |
+| [Development](docs/development.md) | Run, test and change the code |
+| [Deployment](docs/deployment.md) | Publishing to GitHub Pages |
+| [Glossary](docs/glossary.md) | Baking and code terms |
 
-Changes made via Lovable will be committed automatically to this repo.
+AI coding agents: see [AGENTS.md](AGENTS.md).
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+## Quick start
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+npm ci
+npm run dev     # http://localhost:8080
+npm test
 ```
 
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Requires Node.js 22.18 or newer. Built with Vite, React, TypeScript, Tailwind CSS and shadcn/ui. The project was started in [Lovable](https://lovable.dev).
