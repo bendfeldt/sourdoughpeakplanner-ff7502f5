@@ -39,6 +39,10 @@ Run `npm test`, the type check and `npm run build` before every commit. All thre
 
 ## Rules
 
+### Dependencies
+
+- Stay on TypeScript 6.0. TypeScript 7.0 has no JavaScript API, so typescript-eslint can't support it; move to 7 only once typescript-eslint supports TypeScript 7.1.
+
 ### Git
 
 - `main` is protected. Never commit or push to `main`. Work on a branch and open a pull request.

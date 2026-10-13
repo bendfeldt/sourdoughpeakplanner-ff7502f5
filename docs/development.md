@@ -168,6 +168,10 @@ cp /tmp/numbers.mts ./numbers.mts && node numbers.mts; rm numbers.mts
 
 Diagrams are Mermaid code blocks. GitHub draws them; to preview locally, paste a block into <https://mermaid.live>.
 
+## Why TypeScript 6, not 7
+
+TypeScript 7 (the compiler rewritten in Go) ships without the JavaScript API that `typescript-eslint` needs, so ESLint can't run on it. The project stays on TypeScript 6.0 until `typescript-eslint` supports TypeScript 7.1, which is planned to bring a new API. Then the upgrade is a version change plus a check of the `tsconfig` options TypeScript 7 removed. The gain here is small anyway: the build uses SWC, not `tsc`, and type checking already takes seconds.
+
 ## Known issues
 
 | Issue | Where |
