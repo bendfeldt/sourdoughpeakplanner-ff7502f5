@@ -173,5 +173,5 @@ Diagrams are Mermaid code blocks. GitHub draws them; to preview locally, paste a
 | Issue | Where |
 |---|---|
 | `npm run lint` reports existing `no-explicit-any` errors | `t('key' as any)` calls |
-| `npm audit` reports warnings in build tools only | `lovable-tagger` (dev-only Lovable plugin) still pulls in Tailwind 3 internals, and `@tailwindcss/typography` an older CSS parser. Nothing reaches the built site |
+| `npm audit` reports warnings in build tools only | `@tailwindcss/typography` uses an older CSS parser. Nothing reaches the built site |
 | Settings hook still stores unused fields | `use-calculator-cache.ts` |

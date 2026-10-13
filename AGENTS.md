@@ -74,7 +74,3 @@ Read `docs/fermentation-model.md` before changing it.
 - Update `docs/` in the same pull request as the code it describes. Numbers in the tables come from running the calculator; regenerate them (see `docs/development.md#updating-the-docs`) instead of estimating.
 - Diagrams are Mermaid code blocks. Every diagram must also be explained in text. Prefer `flowchart TB` for long chains so they stay readable on phones.
 - New docs files must be added to `DOC_PAGES` in `src/lib/docs.ts`; `npm test` checks this and every docs link.
-
-## Known quirks (not bugs to fix unless asked)
-
-- `lovable-tagger` (dev-only Lovable plugin) still depends on old Tailwind 3 internals; it causes most `npm audit` warnings. Remove it if the project stops using Lovable.

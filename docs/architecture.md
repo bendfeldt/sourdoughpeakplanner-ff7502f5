@@ -189,8 +189,4 @@ Many calls are written `t('key' as any)`. That cast is why `npm run lint` report
 
 The docs page, react-markdown and mermaid are **loaded only when a docs page is opened** (`lazy()` in `App.tsx`, `import('mermaid')` in `MermaidDiagram`), so the calculator does not get bigger.
 
-`src/components/ui/` holds only the shadcn/ui components the app uses. The Lovable template came with about 50, plus a Supabase client and React Query; the unused ones were removed with their packages. If you need another component, add it with the shadcn CLI (`npx shadcn@latest add <name>`).
-
-## Lovable
-
-The project was started in [Lovable](https://lovable.dev), an AI app builder that can push commits to this repository. That is why the README used to be Lovable boilerplate and why some generated files exist. You do not need Lovable to work on the code.
+`src/components/ui/` holds only the shadcn/ui components the app uses. The project template came with about 50, plus a Supabase client and React Query; the unused ones were removed with their packages. If you need another component, add it with the shadcn CLI (`npx shadcn@latest add <name>`).

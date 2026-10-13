@@ -2,17 +2,16 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
-import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   // Relative asset paths, so the build works from any sub-path (e.g. GitHub Pages)
   base: "./",
   server: {
     host: "::",
     port: 8080,
   },
-  plugins: [react(), tailwindcss(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), tailwindcss()],
   build: {
     // The main chunk is ~580 kB (175 kB gzipped). The biggest is Mermaid's optional ELK layout
     // engine (~1.4 MB), which only loads for diagrams using `layout: elk`; the docs use none.
@@ -23,4 +22,4 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
-}));
+});
