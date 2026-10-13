@@ -4,6 +4,7 @@ export type FlourType =
   | 'whole-wheat'
   | 'rye'
   | 'spelt'
+  | 'spelt-whole'
   | 'oland-wheat'
   | 'danish-wheat'
   | 'oat-flour'
@@ -14,7 +15,9 @@ export type FlourType =
   | 'durum'
   | 'semolina'
   | 'kamut'
-  | 'einkorn';
+  | 'kamut-whole'
+  | 'einkorn'
+  | 'einkorn-whole';
 
 export type SugarType = 
   | 'white-sugar'
@@ -26,7 +29,9 @@ export type SugarType =
 
 export interface SugarInfo {
   name: string;
-  fermentationModifier: number;
+  // Share of the sweetener's weight that is sugar, and that is water
+  sugarFraction: number;
+  waterFraction: number;
   description: string;
 }
 
@@ -98,10 +103,8 @@ export interface CalculationInput {
   inputMode: InputMode;
   targetTotalSourdough: number;
   targetPeakTime: Date | null;
-  // Learned calibration from feeding history.
-  // Positive = predictions historically ran late (actual peaked earlier),
-  // so we subtract this from estimated peak.
-  calibrationOffsetMinutes?: number;
+  // Learned per-starter multiplier from feeding history (1 = no correction).
+  calibrationFactor?: number;
 }
 
 export interface FermentationPhase {
@@ -123,18 +126,17 @@ export interface FlourBreakdownItem {
 export interface CalculationResult {
   feedingTime: Date;
   estimatedPeakTime: Date;
-  peakWindowStart: Date;
-  peakWindowEnd: Date;
   hoursToReachPeak: number;
-  isWithinTargetWindow: boolean;
+  // The model says these conditions won't produce a normal peak within 48 h
+  exceedsMaxHours: boolean;
   suggestions: string[];
   starterAmount: number;
   flourAmount: number;
   waterAmount: number;
   sugarAmount: number;
+  // Extra minutes the sugar adds compared with the same feed without it
+  sugarDelayMinutes: number;
   totalSourdoughAmount: number;
-  blendedProtein: number;
-  blendedFermentationModifier: number;
   flourBreakdown: FlourBreakdownItem[];
   fermentationPhases: FermentationPhase[];
   recommendedRatio: FeedingRatio | null;

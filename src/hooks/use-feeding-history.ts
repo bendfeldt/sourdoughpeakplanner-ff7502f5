@@ -21,6 +21,8 @@ export interface FeedingHistoryEntry {
   sugarAmount: number;
   notes: string;
   createdAt: number;
+  // Calibration multiplier the prediction used; absent on entries logged before it existed
+  calibrationFactor?: number;
   // Calculated accuracy metrics
   peakTimeDifferenceMinutes: number | null; // positive = peaked later than predicted
 }

@@ -3,12 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Wheat } from 'lucide-react';
 import { PeakTimer } from './PeakTimer';
-import { calculateFeedingSchedule, FLOUR_DATA } from '@/lib/sourdough-calculator';
+import { calculateFeedingSchedule, calibrationFactorFor, FLOUR_DATA, type CalibrationEntry } from '@/lib/sourdough-calculator';
 import type { SourdoughPersona } from '@/types/sourdough';
 import { useI18n } from '@/lib/i18n';
 
 interface StarterOverviewProps {
   personas: SourdoughPersona[];
+  history: CalibrationEntry[];
   activePersonaId: string;
   onSelectPersona: (id: string) => void;
   isVisible: boolean;
@@ -17,6 +18,7 @@ interface StarterOverviewProps {
 
 export function StarterOverview({
   personas,
+  history,
   activePersonaId,
   onSelectPersona,
   isVisible,
@@ -48,6 +50,7 @@ export function StarterOverview({
         inputMode: ts?.inputMode || 'basic',
         targetTotalSourdough: ts?.targetTotalSourdough || 0,
         targetPeakTime: ts ? parseDateTimeToDate(ts.targetPeakDate, ts.targetPeakTime) : null,
+        calibrationFactor: calibrationFactorFor(history, persona.id, persona.isSweetMode && persona.sugarPercentage > 0),
       });
 
       const primaryFlour = persona.flourBlend.reduce((max, curr) => 
@@ -61,7 +64,7 @@ export function StarterOverview({
         primaryFlourType: primaryFlour?.flourType || 'bread-flour',
       };
     });
-  }, [personas]);
+  }, [personas, history]);
 
   if (personas.length <= 1) return null;
 

@@ -195,11 +195,11 @@ function GuidanceContent() {
               <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
                 <div className="p-3 rounded-lg bg-muted/30">
                   <p className="font-medium text-foreground">Fast Fermentation</p>
-                  <p className="text-muted-foreground text-xs mt-1">Whole wheat, Rye, Spelt, Einkorn</p>
+                  <p className="text-muted-foreground text-xs mt-1">Whole wheat, Rye, Whole spelt, Whole einkorn</p>
                 </div>
                 <div className="p-3 rounded-lg bg-muted/30">
                   <p className="font-medium text-foreground">Slow Fermentation</p>
-                  <p className="text-muted-foreground text-xs mt-1">Bread flour, Manitoba, Tipo 00</p>
+                  <p className="text-muted-foreground text-xs mt-1">White wheat, Manitoba, Tipo 00</p>
                 </div>
               </div>
             </CardContent>
@@ -229,7 +229,7 @@ function GuidanceContent() {
                   <p className="text-muted-foreground text-xs mt-1">Ideal balance</p>
                 </div>
                 <div className="flex-1 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                  <p className="font-medium text-orange-600 dark:text-orange-400">27-32°C</p>
+                  <p className="font-medium text-orange-600 dark:text-orange-400">27-31°C</p>
                   <p className="text-muted-foreground text-xs mt-1">Faster, less complex</p>
                 </div>
               </div>

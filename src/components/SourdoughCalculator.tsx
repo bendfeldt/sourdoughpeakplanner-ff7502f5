@@ -18,6 +18,7 @@ import {
   formatTime,
   generateId,
   parseDecimalInput,
+  calibrationFactorFor,
 } from '@/lib/sourdough-calculator';
 import type { FlourType, FlourBlendItem, FeedingRatio, SugarType, InputMode, PersonaTimeSettings } from '@/types/sourdough';
 import { useI18n, Language } from '@/lib/i18n';
@@ -35,7 +36,7 @@ export function SourdoughCalculator() {
   const { settings, updateSettings } = useCalculatorSettings();
   const { personas, activePersona, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, autoSavePersona, duplicatePersona } = usePersonas();
   const { isActive: wakeLockActive, isSupported: wakeLockSupported, toggleWakeLock } = useWakeLock();
-  const { addEntry: addHistoryEntry, history, getAccuracyStats } = useFeedingHistory();
+  const { addEntry: addHistoryEntry, history } = useFeedingHistory();
   
   // Local state from active persona
   const [flourBlend, setFlourBlend] = useState<FlourBlendItem[]>(activePersona.flourBlend);
@@ -204,12 +205,10 @@ export function SourdoughCalculator() {
 
   const totalPercentage = useMemo(() => flourBlend.reduce((sum, item) => sum + item.percentage, 0), [flourBlend]);
 
-  const calibrationOffsetMinutes = useMemo(() => {
-    const stats = getAccuracyStats(activePersonaId);
-    // Negative tendency = actual peaked earlier than predicted (predictions ran late).
-    // We pass the negated tendency so the calculator subtracts it from future predictions.
-    return stats ? -stats.tendencyMinutes : 0;
-  }, [getAccuracyStats, activePersonaId, history]);
+  const calibrationFactor = useMemo(
+    () => calibrationFactorFor(history, activePersonaId, isSweetMode && sugarPercentage > 0),
+    [history, activePersonaId, isSweetMode, sugarPercentage],
+  );
 
   const result = useMemo(() => {
     return calculateFeedingSchedule({
@@ -227,9 +226,9 @@ export function SourdoughCalculator() {
       inputMode: timeSettings.inputMode,
       targetTotalSourdough: timeSettings.targetTotalSourdough,
       targetPeakTime: parseDateTimeToDate(timeSettings.targetPeakDate, timeSettings.targetPeakTime),
-      calibrationOffsetMinutes,
+      calibrationFactor,
     });
-  }, [flourBlend, feedingRatio, temperature, timeSettings, oldSourdoughAmount, isSweetMode, sugarPercentage, sugarType, calibrationOffsetMinutes]);
+  }, [flourBlend, feedingRatio, temperature, timeSettings, oldSourdoughAmount, isSweetMode, sugarPercentage, sugarType, calibrationFactor]);
 
   const addFlour = () => {
     const newId = generateId();
@@ -336,6 +335,23 @@ export function SourdoughCalculator() {
     { value: 'total-sourdough', label: t('totalSourdoughMode' as any) || 'Total Sourdough' },
   ];
 
+  // Shown in both modes that aim for a target peak time
+  const achievabilityWarning = result.achievabilityWarning && (
+    <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 flex items-start gap-2">
+      <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+      <div className="text-sm">
+        <p className="font-medium text-destructive">{t('peakNotAchievable' as any) || 'Target time not achievable'}</p>
+        <p className="text-muted-foreground text-xs mt-1">
+          {t(result.achievabilityWarning as any) || result.achievabilityWarning}{' '}
+          {result.achievabilityWarning === 'targetPeakTooSoon' 
+            ? `${result.minAchievableHours.toFixed(1)} ${t('hoursFromStart' as any) || 'hours from start'}`
+            : `${result.maxAchievableHours.toFixed(1)} ${t('hoursFromStart' as any) || 'hours from start'}`
+          }
+        </p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* Header controls */}
@@ -398,6 +414,7 @@ export function SourdoughCalculator() {
       {/* Multi-starter overview */}
       <StarterOverview
         personas={personas}
+        history={history}
         activePersonaId={activePersonaId}
         onSelectPersona={setActivePersonaId}
         isVisible={showOverview}
@@ -605,22 +622,7 @@ export function SourdoughCalculator() {
                     <span className="text-muted-foreground font-medium">g</span>
                   </div>
                 </div>
-                {/* Achievability warning */}
-                {result.achievabilityWarning && (
-                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-                    <div className="text-sm">
-                      <p className="font-medium text-destructive">{t('peakNotAchievable' as any) || 'Target time not achievable'}</p>
-                      <p className="text-muted-foreground text-xs mt-1">
-                        {t(result.achievabilityWarning as any) || result.achievabilityWarning}{' '}
-                        {result.achievabilityWarning === 'targetPeakTooSoon' 
-                          ? `${result.minAchievableHours.toFixed(1)} ${t('hoursFromStart' as any) || 'hours from start'}`
-                          : `${result.maxAchievableHours.toFixed(1)} ${t('hoursFromStart' as any) || 'hours from start'}`
-                        }
-                      </p>
-                    </div>
-                  </div>
-                )}
+                {achievabilityWarning}
               </CardContent>
             </Card>
           )}
@@ -652,7 +654,7 @@ export function SourdoughCalculator() {
             <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Thermometer className="h-5 w-5 text-primary" />{t('ambientTemperature')}</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between"><span className="text-sm text-muted-foreground">{t('roomTemperature')}</span><span className="text-sm font-medium text-primary">{temperature}°C</span></div>
-              <Slider value={[temperature]} onValueChange={([v]) => setTemperature(v)} min={15} max={35} step={0.5} className="py-2" />
+              <Slider value={[temperature]} onValueChange={([v]) => setTemperature(v)} min={10} max={40} step={0.5} className="py-2" />
             </CardContent>
           </Card>
 
@@ -712,6 +714,7 @@ export function SourdoughCalculator() {
                     {t('invalidTimeWindow')}
                   </p>
                 )}
+                {isValidTimeWindow && achievabilityWarning}
               </CardContent>
             </Card>
           )}
@@ -759,7 +762,7 @@ export function SourdoughCalculator() {
           {showResults ? (
             <>
               {/* Peak Timer Card */}
-              <div className="relative">
+              {!result.exceedsMaxHours && <div className="relative">
                 <PeakTimer key={timerResetKey} peakTime={result.estimatedPeakTime} starterName={activePersona.name} />
                 <Button 
                   variant="ghost" 
@@ -770,13 +773,18 @@ export function SourdoughCalculator() {
                 >
                   <RotateCcw className="h-4 w-4" />
                 </Button>
-              </div>
+              </div>}
 
               <Card className="border-2 border-primary/20 bg-card shadow-lg overflow-hidden">
                 <div className="bg-primary/5 px-6 py-4 border-b border-border/50"><h3 className="font-display text-xl font-semibold text-foreground">{t('yourFeedingSchedule')}</h3></div>
                 <CardContent className="pt-6 space-y-6">
                   <div className="text-center p-6 rounded-xl bg-secondary/50 border border-border/50"><p className="text-sm text-muted-foreground mb-1">{t('feedStarterAt')}</p><p className="text-3xl font-display font-bold text-primary">{formatDateTime(result.feedingTime, language)}</p></div>
-                  <div className="text-center p-6 rounded-xl bg-primary/10 border border-primary/20"><p className="text-sm text-muted-foreground mb-1">{t('estimatedPeak')}</p><p className="text-3xl font-display font-bold text-primary">{formatDateTime(result.estimatedPeakTime, language)}</p></div>
+                  <div className="text-center p-6 rounded-xl bg-primary/10 border border-primary/20">
+                    <p className="text-sm text-muted-foreground mb-1">{t('estimatedPeak')}</p>
+                    {result.exceedsMaxHours
+                      ? <p className="text-lg font-display font-bold text-destructive flex items-center justify-center gap-2"><AlertTriangle className="h-5 w-5" />{t('noPeakExpected')}</p>
+                      : <p className="text-3xl font-display font-bold text-primary">{formatDateTime(result.estimatedPeakTime, language)}</p>}
+                  </div>
                   <div className="grid grid-cols-3 gap-3 text-center">
                     <div className="p-4 rounded-lg bg-muted/50"><p className="text-2xl font-bold text-foreground">{result.starterAmount}g</p><p className="text-xs text-muted-foreground mt-1">{t('starter')}</p></div>
                     <div className="p-4 rounded-lg bg-muted/50"><p className="text-2xl font-bold text-foreground">{result.flourAmount}g</p><p className="text-xs text-muted-foreground mt-1">{t('flour')}</p></div>
@@ -792,9 +800,15 @@ export function SourdoughCalculator() {
                       </div>
                     ))}
                   </div>
-                  {isSweetMode && <div className="text-center p-3 rounded-lg bg-muted/50"><p className="text-lg font-bold text-foreground">{result.sugarAmount}g</p><p className="text-xs text-muted-foreground mt-1">{getSugarName(sugarType)}</p></div>}
+                  {isSweetMode && (
+                    <div className="text-center p-3 rounded-lg bg-muted/50">
+                      <p className="text-lg font-bold text-foreground">{result.sugarAmount}g</p>
+                      <p className="text-xs text-muted-foreground mt-1">{getSugarName(sugarType)}</p>
+                      {!result.exceedsMaxHours && <p className="text-xs text-muted-foreground mt-1">{result.sugarDelayMinutes > 0 ? `+${result.sugarDelayMinutes} min ${t('fromSugar')}` : t('sugarBelowThreshold')}</p>}
+                    </div>
+                  )}
                   <div className="space-y-3 pt-2">
-                    <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('timeToPeak')}</span><span className="font-medium">{result.hoursToReachPeak.toFixed(1)} {t('hours')}</span></div>
+                    <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('timeToPeak')}</span><span className="font-medium">{result.exceedsMaxHours ? '> 48' : result.hoursToReachPeak.toFixed(1)} {t('hours')}</span></div>
                     <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('totalSourdough')}</span><span className="font-medium text-primary text-lg">{result.totalSourdoughAmount}g</span></div>
                   </div>
                   {/* Log feeding button */}
@@ -816,6 +830,7 @@ export function SourdoughCalculator() {
                         waterAmount: result.waterAmount,
                         sugarAmount: result.sugarAmount,
                         notes: '',
+                        calibrationFactor,
                       });
                       toast.success(t('feedingLogged' as any) || 'Feeding logged to history');
                     }}
@@ -840,7 +855,7 @@ export function SourdoughCalculator() {
               )}
 
               {/* Fermentation Timeline */}
-              <Card className="border-border/50 shadow-sm">
+              {!result.exceedsMaxHours && <Card className="border-border/50 shadow-sm">
                 <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Timer className="h-5 w-5 text-primary" />{t('fermentationTimeline')}</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
                   {result.fermentationPhases.map((phase, i) => (
@@ -856,7 +871,7 @@ export function SourdoughCalculator() {
                     </div>
                   ))}
                 </CardContent>
-              </Card>
+              </Card>}
 
               {/* Suggestions */}
               {result.suggestions.length > 0 && (
