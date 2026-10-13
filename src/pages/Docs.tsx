@@ -102,7 +102,7 @@ export default function Docs() {
 
   return (
     <main className="min-h-screen bg-background">
-      <header className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur">
+      <header className="sticky top-0 z-10 border-b border-border/50 bg-background/95 backdrop-blur-sm">
         <div className="container flex items-center gap-2 px-4 py-2">
           <AppMenu />
           <span className="text-sm text-muted-foreground truncate">Docs / {current?.title}</span>

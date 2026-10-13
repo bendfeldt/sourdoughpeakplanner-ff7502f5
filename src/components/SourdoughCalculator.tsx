@@ -387,7 +387,7 @@ export function SourdoughCalculator() {
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-6">
           {/* Flour Blend */}
-          <Card className="border-border/50 shadow-sm">
+          <Card className="border-border/50 shadow-xs">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-lg font-display"><Wheat className="h-5 w-5 text-primary" />{t('flourBlend')}</CardTitle>
@@ -432,7 +432,7 @@ export function SourdoughCalculator() {
           </Card>
 
           {/* Input Mode Toggle */}
-          <Card className="border-border/50 shadow-sm">
+          <Card className="border-border/50 shadow-xs">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg font-display">
                 <Clock className="h-5 w-5 text-primary" />
@@ -458,7 +458,7 @@ export function SourdoughCalculator() {
 
           {/* Start Time - for Normal (basic) mode */}
           {timeSettings.inputMode === 'basic' && (
-            <Card className="border-border/50 shadow-sm">
+            <Card className="border-border/50 shadow-xs">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg font-display"><Clock className="h-5 w-5 text-primary" />{t('startTime')}</CardTitle>
                 <CardDescription>{t('startTimeDesc')}</CardDescription>
@@ -498,7 +498,7 @@ export function SourdoughCalculator() {
 
           {/* Old Sourdough - only for basic and target-window modes */}
           {timeSettings.inputMode !== 'total-sourdough' && (
-            <Card className="border-border/50 shadow-sm">
+            <Card className="border-border/50 shadow-xs">
               <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('oldSourdough')}</CardTitle></CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
@@ -517,7 +517,7 @@ export function SourdoughCalculator() {
 
           {/* Total Sourdough mode inputs */}
           {timeSettings.inputMode === 'total-sourdough' && (
-            <Card className="border-border/50 shadow-sm">
+            <Card className="border-border/50 shadow-xs">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg font-display">
                   <Scale className="h-5 w-5 text-primary" />
@@ -592,7 +592,7 @@ export function SourdoughCalculator() {
 
           {/* Feeding Ratio - only for Normal (basic) mode */}
           {timeSettings.inputMode === 'basic' && (
-            <Card className="border-border/50 shadow-sm">
+            <Card className="border-border/50 shadow-xs">
               <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('feedingRatio')}</CardTitle></CardHeader>
               <CardContent>
                 <FeedingRatioInput
@@ -613,7 +613,7 @@ export function SourdoughCalculator() {
           )}
 
           {/* Temperature */}
-          <Card className="border-border/50 shadow-sm">
+          <Card className="border-border/50 shadow-xs">
             <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Thermometer className="h-5 w-5 text-primary" />{t('ambientTemperature')}</CardTitle></CardHeader>
             <CardContent className="space-y-2">
               <div className="flex justify-between"><span className="text-sm text-muted-foreground">{t('roomTemperature')}</span><span className="text-sm font-medium text-primary">{temperature}°C</span></div>
@@ -623,7 +623,7 @@ export function SourdoughCalculator() {
 
           {/* Target Window - only for target-window mode */}
           {timeSettings.inputMode === 'target-window' && (
-            <Card className="border-border/50 shadow-sm">
+            <Card className="border-border/50 shadow-xs">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg font-display"><Clock className="h-5 w-5 text-primary" />{t('targetPeakWindow')}</CardTitle>
                 <CardDescription>{t('targetWindowDesc')}</CardDescription>
@@ -683,7 +683,7 @@ export function SourdoughCalculator() {
           )}
 
           {/* Sweet Sourdough */}
-          <Card className="border-border/50 shadow-sm">
+          <Card className="border-border/50 shadow-xs">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between"><CardTitle className="flex items-center gap-2 text-lg font-display"><Cookie className="h-5 w-5 text-primary" />{t('sweetSourdough')}</CardTitle><Switch checked={isSweetMode} onCheckedChange={setIsSweetMode} /></div>
             </CardHeader>
@@ -710,7 +710,7 @@ export function SourdoughCalculator() {
           </Card>
 
           {/* Keep Screen On */}
-          <Card className="border-border/50 shadow-sm">
+          <Card className="border-border/50 shadow-xs">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between"><CardTitle className="flex items-center gap-2 text-lg font-display"><Smartphone className="h-5 w-5 text-primary" />{t('keepScreenOn')}</CardTitle><Switch checked={wakeLockActive} onCheckedChange={toggleWakeLock} disabled={!wakeLockSupported} /></div>
               <CardDescription>{t('keepScreenOnDesc')}</CardDescription>
@@ -805,7 +805,7 @@ export function SourdoughCalculator() {
               </Card>
 
               {result.recommendedRatio && (
-                <Card className="border-primary/30 bg-primary/5 shadow-sm">
+                <Card className="border-primary/30 bg-primary/5 shadow-xs">
                   <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('recommendedRatio')}</CardTitle><CardDescription>{t('recommendedRatioDesc')}</CardDescription></CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-3 gap-3 text-center">
@@ -818,7 +818,7 @@ export function SourdoughCalculator() {
               )}
 
               {/* Fermentation Timeline */}
-              {!result.exceedsMaxHours && <Card className="border-border/50 shadow-sm">
+              {!result.exceedsMaxHours && <Card className="border-border/50 shadow-xs">
                 <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Timer className="h-5 w-5 text-primary" />{t('fermentationTimeline')}</CardTitle></CardHeader>
                 <CardContent className="space-y-3">
                   {result.fermentationPhases.map((phase, i) => (
@@ -838,7 +838,7 @@ export function SourdoughCalculator() {
 
               {/* Suggestions */}
               {result.suggestions.length > 0 && (
-                <Card className="border-border/50 shadow-sm">
+                <Card className="border-border/50 shadow-xs">
                   <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Lightbulb className="h-5 w-5 text-primary" />{t('suggestions')}</CardTitle></CardHeader>
                   <CardContent>
                     <ul className="space-y-2">
@@ -859,7 +859,7 @@ export function SourdoughCalculator() {
               />
             </>
           ) : (
-            <Card className="border-border/50 shadow-sm h-full flex items-center justify-center min-h-[300px]">
+            <Card className="border-border/50 shadow-xs h-full flex items-center justify-center min-h-[300px]">
               <CardContent className="text-center space-y-4 py-12">
                 <div className="w-16 h-16 mx-auto rounded-full bg-primary/10 flex items-center justify-center"><Wheat className="h-8 w-8 text-primary" /></div>
                 <div><h3 className="font-display text-lg font-semibold text-foreground mb-2">{t('readyToCalculate')}</h3><p className="text-sm text-muted-foreground max-w-xs mx-auto">{t('readyToCalculate')}</p></div>

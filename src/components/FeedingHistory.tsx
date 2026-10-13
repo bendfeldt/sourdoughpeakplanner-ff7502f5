@@ -52,7 +52,7 @@ export function FeedingHistory({ personaId, personaName }: FeedingHistoryProps) 
   }
 
   return (
-    <Card className="border-border/50 shadow-sm">
+    <Card className="border-border/50 shadow-xs">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2 text-lg font-display">
