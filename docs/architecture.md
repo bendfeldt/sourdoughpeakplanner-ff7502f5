@@ -49,10 +49,13 @@ The calculator has **no React and no browser code**. It takes plain values in an
     ├── main.tsx                   Entry point: mounts <App /> into #root
     ├── App.tsx                    Providers + routes (HashRouter)
     ├── pages/
-    │   ├── Index.tsx              "/"          → the calculator
-    │   ├── Guidance.tsx           "/guidance"  → how-to page for bakers
+    │   ├── Index.tsx              "/"            → the calculator
+    │   ├── Guidance.tsx           "/guidance"    → how-to page for bakers
+    │   ├── Docs.tsx               "/docs/:page"  → these docs, rendered from /docs/*.md
     │   └── NotFound.tsx           anything else
     ├── components/
+    │   ├── AppMenu.tsx               Fold-out menu: manage starters, open the docs
+    │   ├── MermaidDiagram.tsx        Draws a Mermaid diagram on a docs page
     │   ├── SourdoughCalculator.tsx   The main screen: inputs, results, history
     │   ├── FeedingRatioInput.tsx     Starter : flour : water input (ratio or grams)
     │   ├── PeakTimer.tsx             Countdown to the predicted peak
@@ -67,6 +70,8 @@ The calculator has **no React and no browser code**. It takes plain values in an
     ├── lib/
     │   ├── sourdough-calculator.ts       ★ The fermentation model and schedule
     │   ├── sourdough-calculator.test.ts  Tests for the model (npm test)
+    │   ├── docs.ts                       Docs pages list, link and heading helpers
+    │   ├── docs.test.ts                  Checks every link inside the docs
     │   ├── i18n.tsx                      English and Danish texts
     │   └── utils.ts                      cn() helper for CSS classes
     ├── types/sourdough.ts            Shared TypeScript types
@@ -81,6 +86,7 @@ The app uses `HashRouter`, so the route is the part of the URL after `#`. This l
 |---|---|---|
 | `/#/` | [`pages/Index.tsx`](../src/pages/Index.tsx) → `SourdoughCalculator` | The calculator |
 | `/#/guidance` | [`pages/Guidance.tsx`](../src/pages/Guidance.tsx) | Explanation of modes, flours and temperature for bakers |
+| `/#/docs`, `/#/docs/<page>` | [`pages/Docs.tsx`](../src/pages/Docs.tsx) | These docs. `?section=<heading>` jumps to a section |
 | anything else | [`pages/NotFound.tsx`](../src/pages/NotFound.tsx) | "Page not found" with a link home |
 
 ## Component tree
@@ -89,16 +95,23 @@ The app uses `HashRouter`, so the route is the part of the URL after `#`. This l
 
 ```mermaid
 flowchart TB
-    App["App (I18nProvider, FeedingHistoryProvider, HashRouter)"] --> Index
+    App["App (I18nProvider, FeedingHistoryProvider, PersonasProvider, HashRouter)"] --> Index
     App --> Guidance
+    App --> Docs["Docs (loaded on demand)"]
     App --> NotFound
     Index --> SC["SourdoughCalculator"]
+    SC --> Menu["AppMenu"]
+    Guidance --> Menu2["AppMenu"]
+    Docs --> Menu3["AppMenu"]
+    Docs --> MD["MermaidDiagram"]
     SC --> SO["StarterOverview<br/>(only with 2+ starters)"]
     SC --> FRI["FeedingRatioInput<br/>(Normal mode)"]
     SC --> PT["PeakTimer"]
     SC --> FH["FeedingHistory"]
     SO --> PT2["PeakTimer (compact)"]
 ```
+
+**Starters are managed in the menu.** `AppMenu` (☰, top left on every page) selects, adds, renames, duplicates and deletes starters, and links to the calculator, the guidance page and every docs page. Delete asks for a second tap. The main page only shows the active starter's name.
 
 The input cards (flour blend, mode, start time, old sourdough, ratio, temperature, target window, sweet sourdough, keep screen on) are written directly inside `SourdoughCalculator.tsx`. So is the results column (schedule, recommended ratio, fermentation timeline, suggestions).
 
@@ -140,8 +153,8 @@ Two details that surprise new developers:
 
 | State | Owner | Saved? |
 |---|---|---|
-| Starters (flour blend, ratio, temperature, sugar, time settings) | `usePersonas` | Yes, `sourdough-personas` |
-| Which starter is selected | `usePersonas` | Yes, `sourdough-active-persona` |
+| Starters (flour blend, ratio, temperature, sugar, time settings) | `PersonasProvider` in `App.tsx`, read with `usePersonas` | Yes, `sourdough-personas` |
+| Which starter is selected | `PersonasProvider` | Yes, `sourdough-active-persona` |
 | Logged feeds and recorded peaks | `FeedingHistoryProvider` in `App.tsx`, read with `useFeedingHistory` | Yes, `sourdough-feeding-history` (latest 50) |
 | Dark mode | `useCalculatorSettings` | Yes, `sourdough-calculator-settings` |
 | Form values while editing | `useState` in `SourdoughCalculator`, copied from the active starter | Through auto-save |
@@ -150,7 +163,7 @@ Two details that surprise new developers:
 
 Details of every saved field are in [Data and storage](data-storage.md).
 
-**State that several components need must have one owner.** The feeding history is used by `SourdoughCalculator` (log feeds, calibration) and `FeedingHistory` (show feeds, record peaks). Each used to call the hook and get its **own copy**: a logged feed did not appear in the history card until a reload, and recording a peak saved the card's old copy over the newer one, deleting the feed just logged. Now `FeedingHistoryProvider` holds the one copy and `useFeedingHistory()` reads it. Do the same for any new state shared between components.
+**State that several components need must have one owner.** The feeding history is used by `SourdoughCalculator` (log feeds, calibration) and `FeedingHistory` (show feeds, record peaks). Each used to call the hook and get its **own copy**: a logged feed did not appear in the history card until a reload, and recording a peak saved the card's old copy over the newer one, deleting the feed just logged. Now `FeedingHistoryProvider` holds the one copy and `useFeedingHistory()` reads it. Starters work the same way (`PersonasProvider` / `usePersonas()`), because the menu and the calculator both change them. Do the same for any new state shared between components.
 
 ## Translations
 
@@ -170,6 +183,11 @@ Many calls are written `t('key' as any)`. That cast is why `npm run lint` report
 | Tailwind CSS + shadcn/ui (Radix UI) | Styling and accessible components |
 | lucide-react | Icons |
 | sonner | "Feeding logged" toast messages |
+| react-markdown + remark-gfm | Rendering the docs pages (with tables) |
+| mermaid | Drawing the diagrams in the docs |
+| @tailwindcss/typography | `prose` styles for the docs pages |
+
+The docs page, react-markdown and mermaid are **loaded only when a docs page is opened** (`lazy()` in `App.tsx`, `import('mermaid')` in `MermaidDiagram`), so the calculator does not get bigger.
 
 `src/components/ui/` contains about 50 shadcn/ui components, but the app only uses a handful (button, card, input, label, select, slider, switch, badge, toast, tooltip). The rest came with the Lovable template. `@supabase/supabase-js` and `src/integrations/supabase/` are also template leftovers: nothing imports the client.
 

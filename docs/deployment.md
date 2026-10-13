@@ -4,6 +4,8 @@ The app is published on **GitHub Pages**:
 
 **<https://bendfeldt.github.io/sourdoughpeakplanner-ff7502f5/>**
 
+The docs in `docs/` are part of the site too: menu (☰) → **Documentation**, or `…/#/docs/<page>`. They are built into the app, so deploying a branch also publishes that branch's docs.
+
 GitHub Pages hosts static files: it sends the browser whatever files you give it and runs no code on the server. That fits this app, which is a static build with everything running in the browser.
 
 ## How to deploy

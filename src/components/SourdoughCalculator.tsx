@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
-import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, Copy, Edit2, Check, X, RotateCcw, HelpCircle, History, AlertTriangle } from 'lucide-react';
+import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, RotateCcw, HelpCircle, History, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { 
@@ -31,11 +31,12 @@ import { PeakTimer } from './PeakTimer';
 import { StarterOverview } from './StarterOverview';
 import { FeedingRatioInput } from './FeedingRatioInput';
 import { FeedingHistory } from './FeedingHistory';
+import { AppMenu } from './AppMenu';
 
 export function SourdoughCalculator() {
   const { t, language, setLanguage } = useI18n();
   const { settings, updateSettings } = useCalculatorSettings();
-  const { personas, activePersona, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, autoSavePersona, duplicatePersona } = usePersonas();
+  const { personas, activePersona, activePersonaId, setActivePersonaId, autoSavePersona } = usePersonas();
   const { isActive: wakeLockActive, isSupported: wakeLockSupported, toggleWakeLock } = useWakeLock();
   const { addEntry: addHistoryEntry, history } = useFeedingHistory();
   
@@ -70,9 +71,6 @@ export function SourdoughCalculator() {
     return inputs;
   });
   
-  // Rename state
-  const [editingName, setEditingName] = useState(false);
-  const [editNameValue, setEditNameValue] = useState('');
 
   // Sync dark mode with device preference
   useEffect(() => {
@@ -303,27 +301,6 @@ export function SourdoughCalculator() {
     }
   };
 
-  const handleAddPersona = () => {
-    const name = `Starter ${personas.length + 1}`;
-    addPersona(name);
-  };
-
-  const handleStartRename = () => {
-    setEditNameValue(activePersona.name);
-    setEditingName(true);
-  };
-
-  const handleConfirmRename = () => {
-    if (editNameValue.trim()) {
-      renamePersona(activePersonaId, editNameValue.trim());
-    }
-    setEditingName(false);
-  };
-
-  const handleCancelRename = () => {
-    setEditingName(false);
-  };
-
   const handleResetTimer = () => {
     setTimerResetKey(k => k + 1);
   };
@@ -364,36 +341,12 @@ export function SourdoughCalculator() {
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* Header controls */}
       <div className="flex flex-wrap justify-between gap-4">
-        <div className="flex items-center gap-2 flex-wrap">
-          {editingName ? (
-            <div className="flex items-center gap-1">
-              <Input 
-                value={editNameValue} 
-                onChange={(e) => setEditNameValue(e.target.value)}
-                className="w-40 h-9"
-                autoFocus
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleConfirmRename();
-                  if (e.key === 'Escape') handleCancelRename();
-                }}
-              />
-              <Button variant="ghost" size="icon" onClick={handleConfirmRename}><Check className="h-4 w-4" /></Button>
-              <Button variant="ghost" size="icon" onClick={handleCancelRename}><X className="h-4 w-4" /></Button>
-            </div>
-          ) : (
-            <>
-              <Select value={activePersonaId} onValueChange={setActivePersonaId}>
-                <SelectTrigger className="w-48"><SelectValue placeholder="Select starter" /></SelectTrigger>
-                <SelectContent>
-                  {personas.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Button variant="ghost" size="icon" onClick={handleStartRename} title="Rename"><Edit2 className="h-4 w-4" /></Button>
-            </>
-          )}
-          <Button variant="ghost" size="icon" onClick={handleAddPersona} title="Add new starter"><Plus className="h-4 w-4" /></Button>
-          <Button variant="ghost" size="icon" onClick={() => duplicatePersona(activePersonaId, `${activePersona.name} (copy)`)} title="Duplicate"><Copy className="h-4 w-4" /></Button>
-          {personas.length > 1 && <Button variant="ghost" size="icon" onClick={() => deletePersona(activePersonaId)} title="Delete"><Trash2 className="h-4 w-4" /></Button>}
+        <div className="flex items-center gap-2 min-w-0">
+          <AppMenu />
+          <span className="flex items-center gap-1.5 text-sm font-medium truncate">
+            <Wheat className="h-4 w-4 shrink-0 text-primary" />
+            <span className="truncate">{activePersona.name}</span>
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <Link to="/guidance">

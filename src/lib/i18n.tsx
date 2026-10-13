@@ -208,6 +208,17 @@ export const translations = {
     tip3: 'A "young" starter (before peak) gives more rise power, while a "mature" starter (at or past peak) gives more flavour.',
     tip4: 'If your starter is peaking too fast or slow, adjust the temperature or ratio accordingly.',
     viewGuidance: 'How to Use',
+    // Menu
+    menu: 'Menu',
+    calculator: 'Calculator',
+    starters: 'Starters',
+    addStarter: 'Add starter',
+    renameStarter: 'Rename starter',
+    duplicateStarter: 'Duplicate starter',
+    copySuffix: 'copy',
+    delete: 'Delete',
+    deleteStarterConfirm: 'Delete',
+    documentation: 'Documentation',
     desiredPeakTime: 'Desired Peak Time',
     
     // History & Warnings
@@ -461,6 +472,17 @@ export const translations = {
     tip3: 'En "ung" surdej (før peak) giver mere hævekraft, mens en "moden" surdej (ved eller efter peak) giver mere smag.',
     tip4: 'Hvis din surdej topper for hurtigt eller langsomt, justér temperaturen eller forholdet tilsvarende.',
     viewGuidance: 'Sådan Bruges',
+    // Menu
+    menu: 'Menu',
+    calculator: 'Beregner',
+    starters: 'Surdeje',
+    addStarter: 'Tilføj surdej',
+    renameStarter: 'Omdøb surdej',
+    duplicateStarter: 'Kopiér surdej',
+    copySuffix: 'kopi',
+    delete: 'Slet',
+    deleteStarterConfirm: 'Slet',
+    documentation: 'Dokumentation',
     desiredPeakTime: 'Ønsket Peak-tid',
     
     // History & Warnings

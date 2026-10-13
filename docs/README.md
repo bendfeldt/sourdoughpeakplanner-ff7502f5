@@ -2,6 +2,8 @@
 
 The Sourdough Peak Planner tells a baker **when their sourdough starter will peak** (be at its most active) after a feeding, and **how to feed it** so it peaks at a time they choose.
 
+You can read these docs on GitHub or **inside the app**: open the menu (☰, top left) and pick a page under **Documentation**.
+
 These docs explain how the app works, why the calculation looks the way it does, and how to change it safely. They are written for developers at any level, including people new to React or to sourdough, and for AI coding agents.
 
 ## Where to start
@@ -17,7 +19,7 @@ These docs explain how the app works, why the calculation looks the way it does,
 ## Map of the docs
 
 ```mermaid
-flowchart LR
+flowchart TB
     idx["docs/README.md<br/>(you are here)"]
     arch["architecture.md<br/>How the code fits together"]
     model["fermentation-model.md<br/>The peak-time formula and the science"]

@@ -11,7 +11,7 @@ Know when your sourdough starter will peak, and how to feed it so it peaks when 
 
 ## Documentation
 
-Start at **[docs/README.md](docs/README.md)**.
+Start at **[docs/README.md](docs/README.md)**, or read the docs in the app: menu (☰) → Documentation.
 
 | Page | About |
 |---|---|
