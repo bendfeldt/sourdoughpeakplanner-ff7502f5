@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
+import { format } from 'date-fns';
 import type { SourdoughPersona, FlourBlendItem, FeedingRatio, PersonaTimeSettings } from '@/types/sourdough';
 import { FLOUR_DATA, generateId } from '@/lib/sourdough-calculator';
 
 const PERSONAS_KEY = 'sourdough-personas';
 const ACTIVE_PERSONA_KEY = 'sourdough-active-persona';
 
-const formatDateString = (date: Date): string => date.toISOString().split('T')[0];
+// Local date, not UTC (toISOString)
+const formatDateString = (date: Date): string => format(date, 'yyyy-MM-dd');
 const formatTimeString = (date: Date): string => date.toTimeString().slice(0, 5);
 
 export function createDefaultTimeSettings(): PersonaTimeSettings {

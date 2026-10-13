@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Wheat, Clock, Thermometer, Scale, Lightbulb, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { I18nProvider, useI18n } from '@/lib/i18n';
+import { useI18n } from '@/lib/i18n';
 
 function GuidanceContent() {
   const { t } = useI18n();
@@ -284,9 +284,5 @@ function GuidanceContent() {
 }
 
 export default function Guidance() {
-  return (
-    <I18nProvider>
-      <GuidanceContent />
-    </I18nProvider>
-  );
+  return <GuidanceContent />;
 }

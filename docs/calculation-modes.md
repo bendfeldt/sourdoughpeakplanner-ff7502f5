@@ -61,7 +61,7 @@ The baker wants the peak inside a window, for example between 07:00 and 09:00 to
 
 The ratio card is hidden in this mode, but the **hydration** of the starter's saved ratio is kept: if the starter is normally fed 1:1:0.6, the recommendation keeps 60 % water.
 
-If the window cannot be reached, for example only 1–1.5 h away, the app uses the closest allowed ratio (1:0.5:0.5), shows the real peak time (22:18 in that example, 2.3 h), and shows a red **"Target time not achievable"** box with the shortest possible time.
+If the window cannot be reached, for example only 1–1.5 h away, the app uses the closest allowed ratio (1:0.5:0.5), shows the real peak time (22:18 in that example, 2.3 h), and shows a red **"Target time not achievable"** box with the shortest possible time. The warning is only shown in that box, not in the tips list.
 
 ## Total Sourdough mode
 
@@ -138,7 +138,6 @@ To reach a target outside the range, the baker can change the temperature: warme
 
 | Key | When |
 |---|---|
-| `targetPeakTooSoon` / `targetPeakTooLate` | Target can't be reached |
 | `adjustedRatioRecommendation` | Target Window mode used a recommended ratio |
 | `insufficientStarterForTargetTotal` | Not enough old starter in Total Sourdough mode |
 | `noPeakExpected` | Over 48 h |
@@ -152,5 +151,5 @@ Each key has an English and a Danish text in [`src/lib/i18n.tsx`](../src/lib/i18
 ## In the UI
 
 - The **Calculate Feeding Schedule** button is disabled when the flour blend doesn't add up to 100 %, or (Target Window) when the window end is not after its start, or the window start is not after the feeding time.
-- The results are calculated continuously; the button only shows them. Changing any input hides them again until the button is pressed (see [Architecture](architecture.md#how-one-calculation-flows)).
+- The results are calculated continuously; the button only shows them, and they then update live as inputs change. Switching to another starter hides them again.
 - **Log Feeding** saves the feed to the history, including the calibration factor used, so the baker can later record the real peak. See [Calibration](calibration.md).

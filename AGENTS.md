@@ -59,6 +59,7 @@ Read `docs/fermentation-model.md` before changing it.
 
 ### Text and UI
 
+- Make date strings with `format(date, 'yyyy-MM-dd')` from `date-fns`, never `toISOString()` (UTC: wrong day after midnight in Denmark).
 - Every visible string goes in `src/lib/i18n.tsx`, in **both** `en` and `da`. Flours and sugars need `'<key>'` and flours also `'<key>-desc'`.
 - Use React Router `<Link>` for internal links, never `<a href="/">` (breaks on GitHub Pages).
 - Keep `HashRouter` and `base: "./"` in `vite.config.ts`. The deploy workflow refuses branches without `HashRouter`.
@@ -70,6 +71,4 @@ Read `docs/fermentation-model.md` before changing it.
 
 ## Known quirks (not bugs to fix unless asked)
 
-- Results hide after any input change until **Calculate Feeding Schedule** is pressed again.
-- Language resets to English on reload.
 - `src/integrations/supabase` and most of `src/components/ui` are unused template files from Lovable.

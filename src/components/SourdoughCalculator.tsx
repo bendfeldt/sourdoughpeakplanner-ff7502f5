@@ -10,6 +10,7 @@ import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
 import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, Copy, Edit2, Check, X, RotateCcw, HelpCircle, History, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 import { 
   FLOUR_DATA, 
   SUGAR_DATA,
@@ -104,7 +105,10 @@ export function SourdoughCalculator() {
       inputs[f.id] = f.proteinContent.toString().replace('.', ',');
     });
     setProteinInputs(inputs);
-  }, [activePersonaId, activePersona]);
+    // Only on switching starters: auto-save also changes activePersona, and re-syncing then
+    // hid the results and overwrote half-typed inputs such as "11,".
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activePersonaId]);
 
   // Auto-reset timer when start time changes
   useEffect(() => {
@@ -149,7 +153,8 @@ export function SourdoughCalculator() {
     return isNaN(date.getTime()) ? null : date;
   };
 
-  const formatDateString = (date: Date): string => date.toISOString().split('T')[0];
+  // Local date; toISOString() would give the UTC date, a day early just after midnight in Denmark
+  const formatDateString = (date: Date): string => format(date, 'yyyy-MM-dd');
   const formatTimeStr = (date: Date): string => date.toTimeString().slice(0, 5);
 
   const updateTimeSettings = useCallback((updates: Partial<PersonaTimeSettings>) => {
@@ -330,7 +335,7 @@ export function SourdoughCalculator() {
   const formatDuration = (minutes: number) =>
     minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`;
 
-  const getTodayString = () => new Date().toISOString().split('T')[0];
+  const getTodayString = () => formatDateString(new Date());
 
   const inputModeOptions: { value: InputMode; label: string }[] = [
     { value: 'basic', label: t('basicMode' as any) || 'Basic' },
@@ -524,7 +529,7 @@ export function SourdoughCalculator() {
                   onClick={() => {
                     const now = new Date();
                     updateTimeSettings({
-                      targetStartDate: now.toISOString().split('T')[0],
+                      targetStartDate: formatDateString(now),
                       targetStartTime: now.toTimeString().slice(0, 5)
                     });
                   }}
@@ -596,7 +601,7 @@ export function SourdoughCalculator() {
                     onClick={() => {
                       const now = new Date();
                       updateTimeSettings({
-                        targetStartDate: now.toISOString().split('T')[0],
+                        targetStartDate: formatDateString(now),
                         targetStartTime: now.toTimeString().slice(0, 5)
                       });
                     }}
@@ -690,7 +695,7 @@ export function SourdoughCalculator() {
                     className="w-full"
                     onClick={() => {
                       const now = new Date();
-                      shiftTargetWindowFromStart(now.toISOString().split('T')[0], now.toTimeString().slice(0, 5));
+                      shiftTargetWindowFromStart(formatDateString(now), now.toTimeString().slice(0, 5));
                     }}
                   >
                     <Clock className="h-3 w-3 mr-1" />

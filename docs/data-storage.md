@@ -8,7 +8,7 @@ What that means in practice:
 - Clearing site data, or using a private window, starts from scratch.
 - Nothing is sent anywhere. There are no accounts.
 
-## The four keys
+## The five keys
 
 | `localStorage` key | Written by | Contains |
 |---|---|---|
@@ -16,6 +16,7 @@ What that means in practice:
 | `sourdough-active-persona` | [`use-personas.ts`](../src/hooks/use-personas.ts) | The `id` of the selected starter (plain string) |
 | `sourdough-feeding-history` | [`use-feeding-history.ts`](../src/hooks/use-feeding-history.ts) | JSON array of logged feeds, newest first, at most 50 |
 | `sourdough-calculator-settings` | [`use-calculator-cache.ts`](../src/hooks/use-calculator-cache.ts) | JSON object with app settings |
+| `sourdough-language` | [`i18n.tsx`](../src/lib/i18n.tsx) | `"en"` or `"da"` (plain string) |
 
 Each hook follows the same pattern:
 
@@ -136,7 +137,11 @@ Only the newest 50 entries are kept (`MAX_HISTORY_ENTRIES`). See [Calibration](c
 
 ### Settings (`CalculatorSettings`)
 
-Only `isDarkMode` is used today; it follows the device's dark-mode setting when the app opens. The other fields (`language`, `useTargetWindow` and target times) are left over from before starters had their own time settings. The language is **not** read from here, so it resets to English on reload.
+Only `isDarkMode` is used today; it follows the device's dark-mode setting when the app opens. The other fields (`language`, `useTargetWindow` and target times) are left over from before starters had their own time settings. The language is saved under its own key, `sourdough-language`.
+
+### Dates and times
+
+Date and time inputs are stored as **local** strings: `YYYY-MM-DD` and `HH:MM`. Make dates with `format(date, 'yyyy-MM-dd')` from `date-fns`, **never** `date.toISOString().split('T')[0]`. `toISOString` gives the UTC date, which in Denmark is the previous day between midnight and 01:00 (winter) or 02:00 (summer); combined with the local time, the feed would land 24 hours in the past.
 
 ## Changing what is saved safely
 
@@ -158,4 +163,4 @@ Starters and history from older versions of the app are still in bakers' browser
 
 ## Inspecting the data
 
-In the browser: open the developer tools, go to **Application** (Chrome) or **Storage** (Firefox) → **Local Storage** → the site. You can read, edit or delete each key there. Deleting all four resets the app.
+In the browser: open the developer tools, go to **Application** (Chrome) or **Storage** (Firefox) → **Local Storage** → the site. You can read, edit or delete each key there. Deleting all five resets the app.
