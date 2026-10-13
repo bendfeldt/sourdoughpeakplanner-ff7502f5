@@ -4,7 +4,7 @@ How to run the app, test it, and make the most common changes.
 
 ## Setup
 
-You need **Node.js 22.18 or newer** (needed by the tests, see below) and npm, which comes with Node.
+You need **Node.js 24** (the current LTS) or newer, and npm, which comes with Node. `package.json` sets `"engines": { "node": ">=24" }`.
 
 ```sh
 git clone https://github.com/bendfeldt/sourdoughpeakplanner-ff7502f5.git
@@ -39,11 +39,11 @@ npm run build
 npm run lint
 ```
 
-`npm run lint` currently reports about 58 errors that already exist on `main`, almost all `no-explicit-any` from `t('key' as any)` in the components. **Don't add new ones.** To compare, run lint on `main` and on your branch.
+`npm run lint` currently reports 55 errors that already exist on `main`, all `no-explicit-any` from `t('key' as any)` in the components. **Don't add new ones.** To compare, run lint on `main` and on your branch.
 
 ## Tests
 
-The tests live next to the code they test: [`src/lib/sourdough-calculator.test.ts`](../src/lib/sourdough-calculator.test.ts) for the calculator and [`src/lib/docs.test.ts`](../src/lib/docs.test.ts) for the docs pages. They use **`node:test`** and **`node:assert`**, which are built into Node, so there is no test framework to install. Node 22.18+ can run TypeScript files directly by stripping the types, which is why the test imports end in `.ts`.
+The tests live next to the code they test: [`src/lib/sourdough-calculator.test.ts`](../src/lib/sourdough-calculator.test.ts) for the calculator and [`src/lib/docs.test.ts`](../src/lib/docs.test.ts) for the docs pages. They use **`node:test`** and **`node:assert`**, which are built into Node, so there is no test framework to install. Node 24 runs TypeScript files directly by stripping the types, which is why the test imports end in `.ts`. TypeScript 6 no longer loads `@types` packages on its own, so `tsconfig.app.json` lists `"types": ["node"]` for the tests.
 
 ```sh
 npm test
@@ -173,5 +173,5 @@ Diagrams are Mermaid code blocks. GitHub draws them; to preview locally, paste a
 | Issue | Where |
 |---|---|
 | `npm run lint` reports existing `no-explicit-any` errors | `t('key' as any)` calls |
-| `src/integrations/supabase` and most of `src/components/ui` are unused | Template leftovers from Lovable |
+| `npm audit` reports warnings in build tools only | `lovable-tagger` (dev-only Lovable plugin) still pulls in Tailwind 3 internals, and `@tailwindcss/typography` an older CSS parser. Nothing reaches the built site |
 | Settings hook still stores unused fields | `use-calculator-cache.ts` |
