@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Wheat, Clock, Thermometer, Scale, Lightbulb, History } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { useI18n } from '@/lib/i18n';
 import { AppMenu } from '@/components/AppMenu';
 

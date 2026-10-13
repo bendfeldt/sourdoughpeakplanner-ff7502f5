@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { BookOpen, Calculator, Check, Copy, Edit2, HelpCircle, Menu, Plus, Trash2, Wheat, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

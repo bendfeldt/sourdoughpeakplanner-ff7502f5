@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ArrowLeft } from 'lucide-react';
@@ -62,12 +62,13 @@ export default function Docs() {
   const { page = '' } = useParams();
   const [searchParams] = useSearchParams();
   const section = searchParams.get('section');
-  const [markdown, setMarkdown] = useState<string | null | undefined>(undefined);
+  // Text of the last loaded page; while another page loads, `markdown` is undefined
+  const [loaded, setLoaded] = useState<{ page: string; markdown: string | null } | null>(null);
+  const markdown = loaded?.page === page ? loaded.markdown : undefined;
 
   useEffect(() => {
     let cancelled = false;
-    setMarkdown(undefined);
-    loadDoc(page).then(md => !cancelled && setMarkdown(md));
+    loadDoc(page).then(md => !cancelled && setLoaded({ page, markdown: md }));
     return () => { cancelled = true; };
   }, [page]);
 

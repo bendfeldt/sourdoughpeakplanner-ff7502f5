@@ -7,7 +7,7 @@ import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, RotateCcw, HelpCircle, History, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -82,10 +82,15 @@ export function SourdoughCalculator() {
     updateSettings({ isDarkMode: mediaQuery.matches });
     mediaQuery.addEventListener('change', handleChange);
     return () => mediaQuery.removeEventListener('change', handleChange);
-  }, []);
+  }, [updateSettings]);
 
-  // Sync from active persona when switching
-  useEffect(() => {
+  // Load the form from the starter when switching starters. Done during render (React's
+  // "adjust state when a prop changes" pattern), and only on switching: auto-save also
+  // changes activePersona, and re-syncing then would hide the results and overwrite
+  // half-typed inputs such as "11,".
+  const [loadedPersonaId, setLoadedPersonaId] = useState(activePersonaId);
+  if (loadedPersonaId !== activePersonaId) {
+    setLoadedPersonaId(activePersonaId);
     setFlourBlend(activePersona.flourBlend);
     setFeedingRatio(activePersona.feedingRatio);
     setRatioInputs(activePersona.ratioInputs);
@@ -103,10 +108,7 @@ export function SourdoughCalculator() {
       inputs[f.id] = f.proteinContent.toString().replace('.', ',');
     });
     setProteinInputs(inputs);
-    // Only on switching starters: auto-save also changes activePersona, and re-syncing then
-    // hid the results and overwrote half-typed inputs such as "11,".
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePersonaId]);
+  }
 
   // Auto-reset timer when start time changes
   useEffect(() => {

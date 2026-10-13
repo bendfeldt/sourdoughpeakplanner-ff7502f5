@@ -12,9 +12,14 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  build: {
+    // React 19 + React Router make the main chunk ~580 kB (175 kB gzipped); Mermaid's chunks are
+    // larger but only load on docs pages. Warn only above that, so real growth still shows.
+    chunkSizeWarningLimit: 700,
+  },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": path.resolve(import.meta.dirname, "./src"),
     },
   },
 }));
