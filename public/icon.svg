@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#be6a28"/>
+  <!-- jar lid -->
+  <rect x="166" y="104" width="180" height="40" rx="12" fill="#5a3418"/>
+  <!-- jar -->
+  <path d="M176 144h160v20c22 12 34 32 34 58v156c0 30-22 52-52 52H194c-30 0-52-22-52-52V222c0-26 12-46 34-58z" fill="#f8f5f1"/>
+  <!-- risen starter -->
+  <path d="M154 250c26-26 52-26 78-6s52 20 78 0 40-18 48-8v142c0 22-16 38-38 38H192c-22 0-38-16-38-38z" fill="#e8c592"/>
+  <!-- bubbles -->
+  <circle cx="200" cy="320" r="14" fill="#f8f5f1"/>
+  <circle cx="262" cy="292" r="9" fill="#f8f5f1"/>
+  <circle cx="300" cy="352" r="17" fill="#f8f5f1"/>
+  <circle cx="236" cy="372" r="8" fill="#f8f5f1"/>
+  <circle cx="320" cy="290" r="7" fill="#f8f5f1"/>
+  <!-- rubber band marking the peak -->
+  <rect x="142" y="206" width="228" height="12" fill="#5a3418"/>
+</svg>
