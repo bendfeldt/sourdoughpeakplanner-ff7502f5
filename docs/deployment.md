@@ -64,6 +64,18 @@ With `HashRouter`, the route lives after the `#` (`…/#/guidance`). The browser
 
 That is also why links inside the app use React Router's `<Link to="/">` rather than `<a href="/">`: a plain link to `/` would leave the app for the root of `bendfeldt.github.io`.
 
+## App icon and home screen
+
+The icon lives in [`public/`](../public/): `icon.svg` is the source drawing (a starter jar with a rubber band at the peak), and the other files are made from it.
+
+| File | Used by |
+|---|---|
+| `favicon.ico` (16, 32, 48 px), `icon.svg` | Browser tabs |
+| `apple-touch-icon.png` (180 px) | iPhone and iPad "Add to Home Screen" |
+| `manifest.webmanifest`, `icon-192.png`, `icon-512.png` | Android and Chrome "Add to Home screen" / "Install app" |
+
+All are linked in [`index.html`](../index.html). Paths in the manifest are relative, so they work under the Pages sub-folder. The drawing keeps clear of the outer 10 % so Android can crop it to a circle or rounded square. If you change `icon.svg`, render the PNGs and `favicon.ico` again at the same sizes.
+
 ## One-time setup (already done)
 
 For reference, if the repository is ever moved or recreated:
@@ -83,3 +95,4 @@ For reference, if the repository is ever moved or recreated:
 | Blank page, 404s for `.js`/`.css` in the browser console | Asset paths are absolute. Check `base: "./"` in `vite.config.ts` |
 | A page works from the menu but 404s on reload | The branch uses `BrowserRouter` instead of `HashRouter` |
 | Old version still showing | Hard-reload (Ctrl/Cmd + Shift + R); the browser cached the old files |
+| Home-screen shortcut shows an old icon | Phones copy the icon when the shortcut is made. Remove the shortcut and add it again |
