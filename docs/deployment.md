@@ -12,7 +12,7 @@ Deploys are started by hand, and **you choose which branch** to publish:
 
 1. On GitHub, open **Actions**.
 2. Select **Deploy to GitHub Pages** in the list on the left.
-3. Press **Run workflow**, type the branch name (default `main`) and press **Run workflow** again.
+3. Press **Run workflow**. Leave **Use workflow from** on `main`, type the branch to publish in the **branch** box (default `main`) and press **Run workflow** again.
 4. After a minute or two the site shows that branch. The run's summary has a link to it.
 
 Publishing a feature branch is a good way to try a change on your phone before merging. Remember to deploy `main` again afterwards, so the public site shows the released version.
@@ -75,6 +75,7 @@ For reference, if the repository is ever moved or recreated:
 | Symptom | Cause and fix |
 |---|---|
 | No **Run workflow** button | The workflow file is not on `main` |
+| `deploy` fails within a second, with no log | **Use workflow from** was set to another branch. Only `main` may deploy to the `github-pages` environment, so GitHub refuses the job. Run it again with **Use workflow from** on `main` and the branch typed in the **branch** box |
 | Run fails at "Check the branch can run on GitHub Pages" | The branch was created before the Pages change. Merge `main` into it |
 | Run fails at `npm test` | Fix the failing test on that branch; the site keeps the previous version |
 | Blank page, 404s for `.js`/`.css` in the browser console | Asset paths are absolute. Check `base: "./"` in `vite.config.ts` |
