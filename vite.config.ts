@@ -13,9 +13,9 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
   build: {
-    // React 19 + React Router make the main chunk ~580 kB (175 kB gzipped); Mermaid's chunks are
-    // larger but only load on docs pages. Warn only above that, so real growth still shows.
-    chunkSizeWarningLimit: 700,
+    // The main chunk is ~580 kB (175 kB gzipped). The biggest is Mermaid's optional ELK layout
+    // engine (~1.4 MB), which only loads for diagrams using `layout: elk`; the docs use none.
+    chunkSizeWarningLimit: 1500,
   },
   resolve: {
     alias: {
