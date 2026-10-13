@@ -32,7 +32,9 @@ Run `npm test`, the type check and `npm run build` before every commit. All thre
 | Saved starters ("personas") | `src/hooks/use-personas.ts` |
 | Logged feeds | `src/hooks/use-feeding-history.ts` |
 | English and Danish texts | `src/lib/i18n.tsx` |
-| Routes | `src/App.tsx` |
+| Routes, providers | `src/App.tsx` |
+| Fold-out menu (starters, docs) | `src/components/AppMenu.tsx` |
+| Docs inside the app | `src/pages/Docs.tsx`, `src/lib/docs.ts` (`DOC_PAGES`) |
 | GitHub Pages deploy | `.github/workflows/deploy-pages.yml` |
 
 ## Rules
@@ -54,7 +56,7 @@ Read `docs/fermentation-model.md` before changing it.
 
 ### Saved data
 
-- State used by more than one component needs one owner. Feeding history lives in `FeedingHistoryProvider`; read it with `useFeedingHistory()`, never keep a second copy.
+- State used by more than one component needs one owner. Feeding history lives in `FeedingHistoryProvider` and starters in `PersonasProvider`; read them with `useFeedingHistory()` / `usePersonas()`, never keep a second copy.
 
 - Data from older versions lives in users' browsers. New fields must be optional with a default where read (`x ?? default`).
 - Never rename or remove keys of `FLOUR_DATA`, `SUGAR_DATA`, `FlourType`, `SugarType`, or the `localStorage` keys. Add new ones.
@@ -69,7 +71,8 @@ Read `docs/fermentation-model.md` before changing it.
 ### Docs
 
 - Update `docs/` in the same pull request as the code it describes. Numbers in the tables come from running the calculator; regenerate them (see `docs/development.md#updating-the-docs`) instead of estimating.
-- Diagrams are Mermaid code blocks. Every diagram must also be explained in text.
+- Diagrams are Mermaid code blocks. Every diagram must also be explained in text. Prefer `flowchart TB` for long chains so they stay readable on phones.
+- New docs files must be added to `DOC_PAGES` in `src/lib/docs.ts`; `npm test` checks this and every docs link.
 
 ## Known quirks (not bugs to fix unless asked)
 

@@ -35,7 +35,7 @@ hours to peak = 3.5 h × flour × temperature × ratio × hydration × sugar × 
 - less than 1 means faster (earlier peak).
 
 ```mermaid
-flowchart LR
+flowchart TB
     base["3.5 h<br/>reference feed"]
     flour["× flour<br/>whole grain is faster"]
     temp["× temperature<br/>fastest near 30–31 °C"]

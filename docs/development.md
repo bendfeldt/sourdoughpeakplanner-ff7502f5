@@ -43,7 +43,7 @@ npm run lint
 
 ## Tests
 
-The tests live in [`src/lib/sourdough-calculator.test.ts`](../src/lib/sourdough-calculator.test.ts) and cover the calculator only. They use **`node:test`** and **`node:assert`**, which are built into Node, so there is no test framework to install. Node 22.18+ can run TypeScript files directly by stripping the types, which is why the test imports end in `.ts`.
+The tests live next to the code they test: [`src/lib/sourdough-calculator.test.ts`](../src/lib/sourdough-calculator.test.ts) for the calculator and [`src/lib/docs.test.ts`](../src/lib/docs.test.ts) for the docs pages. They use **`node:test`** and **`node:assert`**, which are built into Node, so there is no test framework to install. Node 22.18+ can run TypeScript files directly by stripping the types, which is why the test imports end in `.ts`.
 
 ```sh
 npm test
@@ -64,6 +64,7 @@ What is covered:
 | unreachable window | warns instead of faking the peak |
 | old flour keys | saved starters with `spelt`, `kamut`, `einkorn` still calculate |
 | calibration | settles on the true factor; sweet and plain feeds kept apart |
+| docs links (`docs.test.ts`) | every file in `docs/` is in the menu, and every link and `#section` inside the docs points to a real page and heading |
 
 To add a test, copy an existing `test('…', () => { … })` block. The `input()` helper at the top builds a reference feed (all-purpose, 1:1:1, 24 °C) and you override only what matters:
 
@@ -124,6 +125,15 @@ Every visible text is a key in `translations.en` and `translations.da` in [`src/
 ### Change the model
 
 Read [Fermentation model → Rules for changing the model](fermentation-model.md#rules-for-changing-the-model) first. In short: change constants or factors inside `conditionsFactor()` so the prediction and the solver stay in step, keep the reference feed at 3.5 h, add a test, and update the docs tables.
+
+### Add a docs page
+
+1. Write `docs/<name>.md`. Start it with one `# Title` line.
+2. Add `{ slug: '<name>', file: '<name>', title: '…' }` to `DOC_PAGES` in [`src/lib/docs.ts`](../src/lib/docs.ts), in the order it should appear in the menu.
+3. Link to it from [`docs/README.md`](README.md).
+4. Run `npm test`. It fails if a file is missing from `DOC_PAGES` or a link points to a heading that doesn't exist.
+
+Links in the docs are written the GitHub way (`calibration.md#sugar`, `#tests`, `../src/App.tsx`); the app turns them into its own routes, or into links to the file on GitHub.
 
 ### Add a new tip
 

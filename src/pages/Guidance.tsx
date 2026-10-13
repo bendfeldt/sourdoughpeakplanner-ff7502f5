@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Wheat, Clock, Thermometer, Scale, Lightbulb, History } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n';
+import { AppMenu } from '@/components/AppMenu';
 
 function GuidanceContent() {
   const { t } = useI18n();
@@ -10,7 +11,8 @@ function GuidanceContent() {
   return (
     <main className="min-h-screen bg-background">
       <div className="container py-8 px-4 md:py-12 max-w-4xl mx-auto">
-        <div className="mb-8">
+        <div className="mb-8 flex items-center gap-2">
+          <AppMenu />
           <Link to="/">
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="h-4 w-4" />

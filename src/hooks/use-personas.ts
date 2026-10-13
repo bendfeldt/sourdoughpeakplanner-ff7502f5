@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, createContext, createElement, useContext, type ReactNode } from 'react';
 import { format } from 'date-fns';
 import type { SourdoughPersona, FlourBlendItem, FeedingRatio, PersonaTimeSettings } from '@/types/sourdough';
 import { FLOUR_DATA, generateId } from '@/lib/sourdough-calculator';
@@ -53,7 +53,7 @@ export function createDefaultPersona(name: string = 'My Starter'): SourdoughPers
   };
 }
 
-export function usePersonas() {
+function usePersonasState() {
   const [personas, setPersonas] = useState<SourdoughPersona[]>(() => {
     if (typeof window === 'undefined') return [createDefaultPersona()];
     
@@ -185,4 +185,19 @@ export function usePersonas() {
     autoSavePersona,
     duplicatePersona,
   };
+}
+
+type PersonasContextValue = ReturnType<typeof usePersonasState>;
+
+const PersonasContext = createContext<PersonasContextValue | null>(null);
+
+/** One shared list of starters, so the menu and the calculator always agree. */
+export function PersonasProvider({ children }: { children: ReactNode }) {
+  return createElement(PersonasContext.Provider, { value: usePersonasState() }, children);
+}
+
+export function usePersonas(): PersonasContextValue {
+  const value = useContext(PersonasContext);
+  if (!value) throw new Error('usePersonas must be used inside <PersonasProvider>');
+  return value;
 }
