@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router';
-import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, RotateCcw, HelpCircle, History, AlertTriangle } from 'lucide-react';
+import { Clock, Thermometer, Wheat, Scale, CheckCircle, AlertCircle, Lightbulb, Plus, Trash2, Cookie, Moon, Sun, Timer, Smartphone, HelpCircle, History, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { 
@@ -23,7 +23,7 @@ import {
 } from '@/lib/sourdough-calculator';
 import type { FlourType, FlourBlendItem, FeedingRatio, SugarType, InputMode, PersonaTimeSettings } from '@/types/sourdough';
 import { useI18n, Language } from '@/lib/i18n';
-import { useCalculatorSettings } from '@/hooks/use-calculator-cache';
+import { useTheme } from '@/hooks/use-theme';
 import { usePersonas, createDefaultTimeSettings } from '@/hooks/use-personas';
 import { useWakeLock } from '@/hooks/use-wake-lock';
 import { useFeedingHistory } from '@/hooks/use-feeding-history';
@@ -35,7 +35,7 @@ import { AppMenu } from './AppMenu';
 
 export function SourdoughCalculator() {
   const { t, language, setLanguage } = useI18n();
-  const { settings, updateSettings } = useCalculatorSettings();
+  const { isDark, toggleTheme } = useTheme();
   const { personas, activePersona, activePersonaId, setActivePersonaId, autoSavePersona } = usePersonas();
   const { isActive: wakeLockActive, isSupported: wakeLockSupported, toggleWakeLock } = useWakeLock();
   const { addEntry: addHistoryEntry, history } = useFeedingHistory();
@@ -58,10 +58,6 @@ export function SourdoughCalculator() {
     activePersona.timeSettings || createDefaultTimeSettings()
   );
   
-  // Timer reset key - increments when start time changes
-  const [timerResetKey, setTimerResetKey] = useState(0);
-  const prevStartTimeRef = useRef({ date: timeSettings.targetStartDate, time: timeSettings.targetStartTime });
-  
   // Raw protein input strings (for comma support)
   const [proteinInputs, setProteinInputs] = useState<Record<string, string>>(() => {
     const inputs: Record<string, string> = {};
@@ -71,18 +67,6 @@ export function SourdoughCalculator() {
     return inputs;
   });
   
-
-  // Sync dark mode with device preference
-  useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
-      updateSettings({ isDarkMode: e.matches });
-    };
-    // Always sync with device preference on mount
-    updateSettings({ isDarkMode: mediaQuery.matches });
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
-  }, [updateSettings]);
 
   // Load the form from the starter when switching starters. Done during render (React's
   // "adjust state when a prop changes" pattern), and only on switching: auto-save also
@@ -110,17 +94,6 @@ export function SourdoughCalculator() {
     setProteinInputs(inputs);
   }
 
-  // Auto-reset timer when start time changes
-  useEffect(() => {
-    if (
-      prevStartTimeRef.current.date !== timeSettings.targetStartDate ||
-      prevStartTimeRef.current.time !== timeSettings.targetStartTime
-    ) {
-      setTimerResetKey(k => k + 1);
-      prevStartTimeRef.current = { date: timeSettings.targetStartDate, time: timeSettings.targetStartTime };
-    }
-  }, [timeSettings.targetStartDate, timeSettings.targetStartTime]);
-
   // Auto-save persona data when it changes
   const saveCurrentState = useCallback(() => {
     autoSavePersona(activePersonaId, {
@@ -142,10 +115,6 @@ export function SourdoughCalculator() {
     const timeout = setTimeout(saveCurrentState, 500);
     return () => clearTimeout(timeout);
   }, [saveCurrentState]);
-
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', settings.isDarkMode);
-  }, [settings.isDarkMode]);
 
   const parseDateTimeToDate = (dateStr: string, timeStr: string): Date | null => {
     if (!dateStr || !timeStr) return null;
@@ -303,13 +272,9 @@ export function SourdoughCalculator() {
     }
   };
 
-  const handleResetTimer = () => {
-    setTimerResetKey(k => k + 1);
-  };
-
-  const getFlourName = (flourType: FlourType): string => t(flourType as any) || FLOUR_DATA[flourType].name;
-  const getFlourDescription = (flourType: FlourType): string => t(`${flourType}-desc` as any) || FLOUR_DATA[flourType].description;
-  const getSugarName = (sugar: SugarType): string => t(sugar as any) || SUGAR_DATA[sugar].name;
+  const getFlourName = (flourType: FlourType): string => t(flourType);
+  const getFlourDescription = (flourType: FlourType): string => t(`${flourType}-desc`);
+  const getSugarName = (sugar: SugarType): string => t(sugar);
 
   const formatDuration = (minutes: number) =>
     minutes < 60 ? `${minutes} min` : `${Math.floor(minutes / 60)} h${minutes % 60 ? ` ${minutes % 60} min` : ''}`;
@@ -317,9 +282,9 @@ export function SourdoughCalculator() {
   const getTodayString = () => formatDateString(new Date());
 
   const inputModeOptions: { value: InputMode; label: string }[] = [
-    { value: 'basic', label: t('basicMode' as any) || 'Basic' },
-    { value: 'target-window', label: t('targetWindowMode' as any) || 'Target Window' },
-    { value: 'total-sourdough', label: t('totalSourdoughMode' as any) || 'Total Sourdough' },
+    { value: 'basic', label: t('basicMode') },
+    { value: 'target-window', label: t('targetWindowMode') },
+    { value: 'total-sourdough', label: t('totalSourdoughMode') },
   ];
 
   // Shown in both modes that aim for a target peak time
@@ -327,12 +292,12 @@ export function SourdoughCalculator() {
     <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 flex items-start gap-2">
       <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
       <div className="text-sm">
-        <p className="font-medium text-destructive">{t('peakNotAchievable' as any) || 'Target time not achievable'}</p>
+        <p className="font-medium text-destructive">{t('peakNotAchievable')}</p>
         <p className="text-muted-foreground text-xs mt-1">
-          {t(result.achievabilityWarning as any) || result.achievabilityWarning}{' '}
+          {t(result.achievabilityWarning)}{' '}
           {result.achievabilityWarning === 'targetPeakTooSoon' 
-            ? `${result.minAchievableHours.toFixed(1)} ${t('hoursFromStart' as any) || 'hours from start'}`
-            : `${result.maxAchievableHours.toFixed(1)} ${t('hoursFromStart' as any) || 'hours from start'}`
+            ? `${result.minAchievableHours.toFixed(1)} ${t('hoursFromStart')}`
+            : `${result.maxAchievableHours.toFixed(1)} ${t('hoursFromStart')}`
           }
         </p>
       </div>
@@ -352,12 +317,12 @@ export function SourdoughCalculator() {
         </div>
         <div className="flex items-center gap-2">
           <Link to="/guidance">
-            <Button variant="ghost" size="icon" title={t('viewGuidance' as any) || 'How to Use'}>
+            <Button variant="ghost" size="icon" title={t('viewGuidance')}>
               <HelpCircle className="h-5 w-5" />
             </Button>
           </Link>
-          <Button variant="ghost" size="icon" onClick={() => updateSettings({ isDarkMode: !settings.isDarkMode })}>
-            {settings.isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+            {isDark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
           </Button>
           <Select value={language} onValueChange={(v) => setLanguage(v as Language)}>
             <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
@@ -436,7 +401,7 @@ export function SourdoughCalculator() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 text-lg font-display">
                 <Clock className="h-5 w-5 text-primary" />
-                {t('calculationMode' as any) || 'Calculation Mode'}
+                {t('calculationMode')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -490,7 +455,7 @@ export function SourdoughCalculator() {
                   }}
                 >
                   <Clock className="h-3 w-3 mr-1" />
-                  {t('useCurrentTime' as any) || 'Use Current Time'}
+                  {t('useCurrentTime')}
                 </Button>
               </CardContent>
             </Card>
@@ -521,9 +486,9 @@ export function SourdoughCalculator() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-lg font-display">
                   <Scale className="h-5 w-5 text-primary" />
-                  {t('targetTotalSourdough' as any) || 'Target Total Sourdough'}
+                  {t('targetTotalSourdough')}
                 </CardTitle>
-                <CardDescription>{t('targetTotalSourdoughDesc' as any) || 'Enter desired total amount and peak time to calculate required ratio'}</CardDescription>
+                <CardDescription>{t('targetTotalSourdoughDesc')}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -562,11 +527,11 @@ export function SourdoughCalculator() {
                     }}
                   >
                     <Clock className="h-3 w-3 mr-1" />
-                    {t('useCurrentTime' as any) || 'Use Current Time'}
+                    {t('useCurrentTime')}
                   </Button>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">{t('desiredPeakTime' as any) || 'Desired Peak Time'}</Label>
+                  <Label className="text-xs text-muted-foreground">{t('desiredPeakTime')}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     <Input type="date" value={timeSettings.targetPeakDate} min={getTodayString()} onChange={(e) => updateTimeSettings({ targetPeakDate: e.target.value })} />
                     <Input type="time" value={timeSettings.targetPeakTime} onChange={(e) => updateTimeSettings({ targetPeakTime: e.target.value })} />
@@ -654,7 +619,7 @@ export function SourdoughCalculator() {
                     }}
                   >
                     <Clock className="h-3 w-3 mr-1" />
-                    {t('useCurrentTime' as any) || 'Use Current Time'}
+                    {t('useCurrentTime')}
                   </Button>
                 </div>
                 <div className="space-y-2">
@@ -690,7 +655,7 @@ export function SourdoughCalculator() {
             {isSweetMode && (
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label className="text-xs text-muted-foreground">{t('sugarType' as any) || 'Sugar Type'}</Label>
+                  <Label className="text-xs text-muted-foreground">{t('sugarType')}</Label>
                   <Select value={sugarType} onValueChange={(v) => setSugarType(v as SugarType)}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -725,18 +690,7 @@ export function SourdoughCalculator() {
           {showResults ? (
             <>
               {/* Peak Timer Card */}
-              {!result.exceedsMaxHours && <div className="relative">
-                <PeakTimer key={timerResetKey} peakTime={result.estimatedPeakTime} starterName={activePersona.name} />
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="absolute top-2 right-2 h-8 w-8"
-                  onClick={handleResetTimer}
-                  title={t('resetTimer' as any) || 'Reset Timer'}
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </div>}
+              {!result.exceedsMaxHours && <PeakTimer peakTime={result.estimatedPeakTime} starterName={activePersona.name} />}
 
               <Card className="border-2 border-primary/20 bg-card shadow-lg overflow-hidden">
                 <div className="bg-primary/5 px-6 py-4 border-b border-border/50"><h3 className="font-display text-xl font-semibold text-foreground">{t('yourFeedingSchedule')}</h3></div>
@@ -792,14 +746,13 @@ export function SourdoughCalculator() {
                         flourAmount: result.flourAmount,
                         waterAmount: result.waterAmount,
                         sugarAmount: result.sugarAmount,
-                        notes: '',
                         calibrationFactor,
                       });
-                      toast.success(t('feedingLogged' as any) || 'Feeding logged to history');
+                      toast.success(t('feedingLogged'));
                     }}
                   >
                     <History className="h-4 w-4 mr-2" />
-                    {t('logFeeding' as any) || 'Log Feeding'}
+                    {t('logFeeding')}
                   </Button>
                 </CardContent>
               </Card>
@@ -828,8 +781,8 @@ export function SourdoughCalculator() {
                         {i < result.fermentationPhases.length - 1 && <div className="w-0.5 h-8 bg-muted-foreground/20" />}
                       </div>
                       <div className="flex-1 pb-2">
-                        <div className="flex justify-between items-baseline"><span className="font-medium text-sm">{t(phase.nameKey as any) || phase.name}</span><span className="text-xs text-muted-foreground">{formatTime(phase.startTime)} - {formatTime(phase.endTime)}</span></div>
-                        <p className="text-xs text-muted-foreground">{t(phase.descriptionKey as any) || phase.description}</p>
+                        <div className="flex justify-between items-baseline"><span className="font-medium text-sm">{t(phase.nameKey)}</span><span className="text-xs text-muted-foreground">{formatTime(phase.startTime)} - {formatTime(phase.endTime)}</span></div>
+                        <p className="text-xs text-muted-foreground">{t(phase.descriptionKey)}</p>
                       </div>
                     </div>
                   ))}
@@ -845,7 +798,7 @@ export function SourdoughCalculator() {
                       {result.suggestions.map((s, i) => (
                         <li key={i} className="flex items-start gap-2 text-sm text-muted-foreground">
                           <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                          <span>{t(s as any) || s}</span>
+                          <span>{t(s)}</span>
                         </li>
                       ))}
                     </ul>

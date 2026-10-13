@@ -10,6 +10,7 @@ import type {
   SugarType,
   SugarInfo,
 } from '@/types/sourdough';
+import type { TranslationKey } from '@/lib/i18n';
 
 export type {
   FlourType,
@@ -302,6 +303,14 @@ export function calculateFermentationTime(input: CalculationInput, customRatio?:
   return Math.max(MIN_FERMENTATION_HOURS, Math.min(MAX_FERMENTATION_HOURS, hours));
 }
 
+/**
+ * Ratio part for a flour or water amount typed in grams, so that feeding `starterGrams` of
+ * starter at the new ratio gives exactly `grams`. Keeps the ratio's starter part as it is.
+ */
+export function ratioPartFromGrams(grams: number, starterGrams: number, starterPart: number): number {
+  return Math.round((grams / starterGrams) * starterPart * 100) / 100;
+}
+
 /** A feeding ratio with the given flour per starter, keeping the user's hydration. */
 function ratioWithFlour(input: CalculationInput, flourPerStarter: number): FeedingRatio {
   return { starter: 1, flour: flourPerStarter, water: flourPerStarter * hydrationOf(input.feedingRatio) };
@@ -338,12 +347,12 @@ export function calculateRequiredRatio(input: CalculationInput, targetHours: num
  * Check whether hitting the target means a ratio outside 1:0.5 – 1:15.
  */
 function checkTargetAchievability(input: CalculationInput, feedingTime: Date, targetTime: Date | null): {
-  warningKey: string | null;
+  warningKey: TranslationKey | null;
   minAchievableHours: number;
   maxAchievableHours: number;
 } {
   const { minHours, maxHours } = calculateAchievableRange(input);
-  let warningKey: string | null = null;
+  let warningKey: TranslationKey | null = null;
   if (targetTime) {
     const hoursUntilTarget = (targetTime.getTime() - feedingTime.getTime()) / (1000 * 60 * 60);
     if (hoursUntilTarget < minHours) warningKey = 'targetPeakTooSoon';
@@ -425,7 +434,7 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
   const sweetenerPerFlour = input.isSweetMode ? input.sugarPercentage / 100 : 0;
   const sweetenerWaterFraction = input.isSweetMode ? (SUGAR_DATA[input.sugarType]?.waterFraction ?? 0) : 0;
 
-  const suggestions: string[] = [];
+  const suggestions: TranslationKey[] = [];
   let starterAmount: number;
   let flourAmount: number;
 

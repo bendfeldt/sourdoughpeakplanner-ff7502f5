@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { usePersonas } from '@/hooks/use-personas';
+import { useFeedingHistory } from '@/hooks/use-feeding-history';
 import { DOC_PAGES } from '@/lib/docs';
 import { useI18n } from '@/lib/i18n';
 import { cn } from '@/lib/utils';
@@ -15,6 +16,7 @@ export function AppMenu() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const { personas, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, duplicatePersona } = usePersonas();
+  const { deleteEntriesForPersona } = useFeedingHistory();
   const [open, setOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -98,7 +100,7 @@ export function AppMenu() {
                   ) : confirmDeleteId === p.id ? (
                     <div className="flex items-center gap-1 p-1 text-sm">
                       <span className="flex-1 px-1">{t('deleteStarterConfirm')} “{p.name}”?</span>
-                      <Button variant="destructive" size="sm" className="h-8" onClick={() => { deletePersona(p.id); setConfirmDeleteId(null); }}>{t('delete')}</Button>
+                      <Button variant="destructive" size="sm" className="h-8" onClick={() => { deletePersona(p.id); deleteEntriesForPersona(p.id); setConfirmDeleteId(null); }}>{t('delete')}</Button>
                       <Button variant="ghost" size="sm" className="h-8" onClick={() => setConfirmDeleteId(null)}>{t('cancel')}</Button>
                     </div>
                   ) : (

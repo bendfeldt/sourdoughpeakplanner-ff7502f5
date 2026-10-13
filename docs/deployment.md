@@ -21,7 +21,7 @@ Publishing a feature branch is a good way to try a change on your phone before m
 
 ## What the workflow does
 
-File: [`.github/workflows/deploy-pages.yml`](../.github/workflows/deploy-pages.yml)
+File: [`.github/workflows/deploy-pages.yml`](../.github/workflows/deploy-pages.yml). A separate workflow, [`checks.yml`](../.github/workflows/checks.yml), runs the same tests plus type check, lint and build on every pull request.
 
 ```mermaid
 flowchart TD

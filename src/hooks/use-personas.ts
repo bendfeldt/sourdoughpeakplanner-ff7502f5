@@ -53,26 +53,42 @@ export function createDefaultPersona(name: string = 'My Starter'): SourdoughPers
   };
 }
 
+/** Saved starters, or null if there are none or they can't be read. */
+function parsePersonas(stored: string | null): SourdoughPersona[] | null {
+  if (!stored) return null;
+  try {
+    const parsed = JSON.parse(stored);
+    if (!Array.isArray(parsed) || parsed.length === 0) return null;
+    // Starters saved before time settings existed get the defaults
+    return parsed.map((p: SourdoughPersona) =>
+      p.timeSettings ? p : { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' }
+    );
+  } catch (e) {
+    console.warn('Failed to load personas:', e);
+    return null;
+  }
+}
+
 function usePersonasState() {
   const [personas, setPersonas] = useState<SourdoughPersona[]>(() => {
     if (typeof window === 'undefined') return [createDefaultPersona()];
-    
     try {
-      const stored = localStorage.getItem(PERSONAS_KEY);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          // Starters saved before time settings existed get the defaults
-          return parsed.map((p: SourdoughPersona) =>
-            p.timeSettings ? p : { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' }
-          );
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to load personas:', e);
+      return parsePersonas(localStorage.getItem(PERSONAS_KEY)) ?? [createDefaultPersona()];
+    } catch {
+      return [createDefaultPersona()];
     }
-    return [createDefaultPersona()];
   });
+
+  // Another tab saved starters: take its list, so this tab's next save doesn't overwrite it
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== PERSONAS_KEY) return;
+      const next = parsePersonas(e.newValue);
+      if (next) setPersonas(next);
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
 
   const [activePersonaId, setActivePersonaId] = useState<string>(() => {
     if (typeof window === 'undefined') return personas[0]?.id || '';
