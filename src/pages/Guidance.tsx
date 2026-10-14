@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Wheat, Clock, Thermometer, Scale, Lightbulb, History } from 'lucide-react';
+import { ArrowLeft, Wheat, Thermometer, Scale, Lightbulb, History } from 'lucide-react';
 import { Link } from 'react-router';
 import { useI18n } from '@/lib/i18n';
 import { AppMenu } from '@/components/AppMenu';
@@ -75,37 +75,27 @@ function GuidanceContent() {
             </CardContent>
           </Card>
 
-          {/* Target Window Mode */}
+          {/* Weights Mode */}
           <Card className="border-border/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-3 text-xl font-display">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-primary" />
+                  <Scale className="h-5 w-5 text-primary" />
                 </div>
-                {t('targetWindowModeTitle')}
+                {t('weightsModeTitle')}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
-                {t('targetWindowModeDesc')}
+                {t('weightsModeDesc')}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Set when you need the starter ready (start and end of window)
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Optionally set when you'll start feeding
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Calculator recommends the optimal ratio
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  No need to manually set feeding ratio
-                </li>
+                {(['weightsStep1', 'weightsStep2', 'weightsStep3', 'weightsStep4'] as const).map(key => (
+                  <li key={key} className="flex items-start gap-2">
+                    <span className="text-primary font-bold">•</span>
+                    {t(key)}
+                  </li>
+                ))}
               </ul>
             </CardContent>
           </Card>

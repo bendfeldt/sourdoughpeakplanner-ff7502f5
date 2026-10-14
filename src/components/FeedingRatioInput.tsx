@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Scale, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Scale } from 'lucide-react';
 import type { FeedingRatio } from '@/types/sourdough';
 import { useI18n } from '@/lib/i18n';
 import { parseDecimalInput, ratioPartFromGrams } from '@/lib/sourdough-calculator';
@@ -13,6 +12,8 @@ interface FeedingRatioInputProps {
   oldSourdoughAmount: number;
   onRatioChange: (ratio: FeedingRatio, inputs: { starter: string; flour: string; water: string }) => void;
   onOldSourdoughChange?: (amount: number, input: string) => void;
+  // Weights mode: type grams of starter, flour and water instead of ratio parts
+  showGrams?: boolean;
 }
 
 export function FeedingRatioInput({
@@ -21,9 +22,9 @@ export function FeedingRatioInput({
   oldSourdoughAmount,
   onRatioChange,
   onOldSourdoughChange,
+  showGrams = false,
 }: FeedingRatioInputProps) {
   const { t } = useI18n();
-  const [showGrams, setShowGrams] = useState(false);
   const [gramInputs, setGramInputs] = useState<{ starter: string; flour: string; water: string }>({
     starter: oldSourdoughAmount.toString(),
     flour: Math.round((oldSourdoughAmount / feedingRatio.starter) * feedingRatio.flour).toString(),
@@ -68,18 +69,15 @@ export function FeedingRatioInput({
     }
 
     if (key === 'starter') {
-      // Changing starter amount changes the base
-      if (onOldSourdoughChange) {
-        onOldSourdoughChange(grams, value);
-      }
-      // Recalculate ratios to keep same proportions with new base
-      const newFlourGrams = Math.round((grams / oldSourdoughAmount) * gramAmounts.flour);
-      const newWaterGrams = Math.round((grams / oldSourdoughAmount) * gramAmounts.water);
-      setGramInputs({
-        starter: value,
-        flour: newFlourGrams.toString(),
-        water: newWaterGrams.toString(),
-      });
+      // Keep the flour and water grams as typed; the ratio follows the new starter amount
+      onOldSourdoughChange?.(grams, value);
+      const typed = (k: 'flour' | 'water') => {
+        const g = parseDecimalInput(gramInputs[k]);
+        return isNaN(g) || g <= 0 ? gramAmounts[k] : g;
+      };
+      const flour = ratioPartFromGrams(typed('flour'), grams, feedingRatio.starter);
+      const water = ratioPartFromGrams(typed('water'), grams, feedingRatio.starter);
+      onRatioChange({ ...feedingRatio, flour, water }, { ...ratioInputs, flour: flour.toFixed(2), water: water.toFixed(2) });
     } else {
       // Calculate new ratio from gram amount
       const ratioValue = ratioPartFromGrams(grams, oldSourdoughAmount, feedingRatio.starter);
@@ -88,19 +86,6 @@ export function FeedingRatioInput({
       onRatioChange(newRatio, newInputs);
       setGramInputs(prev => ({ ...prev, [key]: grams.toString() }));
     }
-  };
-
-  // Update gram inputs when amounts change externally
-  const handleToggleView = () => {
-    if (!showGrams) {
-      // Switching to grams view - update gram inputs
-      setGramInputs({
-        starter: gramAmounts.starter.toString(),
-        flour: gramAmounts.flour.toString(),
-        water: gramAmounts.water.toString(),
-      });
-    }
-    setShowGrams(!showGrams);
   };
 
   // Format ratio for display (round to 2 decimals when in grams view)
@@ -113,27 +98,6 @@ export function FeedingRatioInput({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleToggleView}
-          className="h-7 px-2 text-xs gap-1"
-        >
-          {showGrams ? (
-            <>
-              <ToggleRight className="h-4 w-4 text-primary" />
-              <span>{t('showingGrams')}</span>
-            </>
-          ) : (
-            <>
-              <ToggleLeft className="h-4 w-4" />
-              <span>{t('showingRatio')}</span>
-            </>
-          )}
-        </Button>
-      </div>
-
       <div className="flex items-center gap-3">
         {(['starter', 'flour', 'water'] as const).map((key, i) => (
           <div key={key} className="flex items-center gap-2">
@@ -181,7 +145,7 @@ export function FeedingRatioInput({
         )}
       </div>
 
-      <p className="text-xs text-muted-foreground">{t('commonRatios')}</p>
+      {!showGrams && <p className="text-xs text-muted-foreground">{t('commonRatios')}</p>}
     </div>
   );
 }

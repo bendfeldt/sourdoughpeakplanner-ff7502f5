@@ -23,7 +23,7 @@ flowchart TB
     idx["docs/README.md<br/>(you are here)"]
     arch["architecture.md<br/>How the code fits together"]
     model["fermentation-model.md<br/>The peak-time formula and the science"]
-    modes["calculation-modes.md<br/>Basic, Target Window, Total Sourdough"]
+    modes["calculation-modes.md<br/>Normal, Weights, Total Sourdough"]
     cal["calibration.md<br/>Learning from logged feeds"]
     data["data-storage.md<br/>What is saved in the browser"]
     dev["development.md<br/>Run, test, change the code"]

@@ -37,7 +37,8 @@ export interface SugarInfo {
   description: string;
 }
 
-export type InputMode = 'basic' | 'target-window' | 'total-sourdough';
+// 'target-window' was replaced by 'weights'; migratePersonas() moves old starters over
+export type InputMode = 'basic' | 'weights' | 'total-sourdough';
 
 export interface FlourInfo {
   name: string;
@@ -63,10 +64,6 @@ export interface PersonaTimeSettings {
   inputMode: InputMode;
   targetStartDate: string;
   targetStartTime: string;
-  targetPeakStartDate: string;
-  targetPeakStartTime: string;
-  targetPeakEndDate: string;
-  targetPeakEndTime: string;
   targetPeakDate: string;
   targetPeakTime: string;
   targetTotalSourdough: number;
@@ -95,9 +92,6 @@ export interface CalculationInput {
   feedingRatio: FeedingRatio;
   temperature: number;
   targetStartTime: Date | null;
-  targetPeakStart: Date | null;
-  targetPeakEnd: Date | null;
-  useTargetWindow: boolean;
   oldSourdoughAmount: number;
   isSweetMode: boolean;
   sugarPercentage: number;

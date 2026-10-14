@@ -412,12 +412,9 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
   const now = new Date();
   const feedingTime = input.targetStartTime ? new Date(input.targetStartTime) : now;
   const isTotalMode = input.inputMode === 'total-sourdough' && input.targetTotalSourdough > 0;
-  const isWindowMode = !isTotalMode && input.useTargetWindow && input.targetPeakStart && input.targetPeakEnd;
 
-  // Desired peak: the window's midpoint, or the single target time in total-sourdough mode.
-  const targetTime = isWindowMode
-    ? new Date((input.targetPeakStart!.getTime() + input.targetPeakEnd!.getTime()) / 2)
-    : isTotalMode ? input.targetPeakTime : null;
+  // Only Total Sourdough mode aims at a peak time; Normal and Weights predict from the feed as given.
+  const targetTime = isTotalMode ? input.targetPeakTime : null;
 
   let recommendedRatio: FeedingRatio | null = null;
   if (targetTime) {
@@ -468,7 +465,6 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
   }));
 
   const achievability = checkTargetAchievability(input, feedingTime, targetTime);
-  if (isWindowMode && recommendedRatio) suggestions.push('adjustedRatioRecommendation');
 
   const exceedsMaxHours = rawHours > MAX_FERMENTATION_HOURS;
   if (exceedsMaxHours) suggestions.push('noPeakExpected');

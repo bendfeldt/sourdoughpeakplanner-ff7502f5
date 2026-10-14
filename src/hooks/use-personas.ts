@@ -12,18 +12,12 @@ const formatTimeString = (date: Date): string => date.toTimeString().slice(0, 5)
 
 export function createDefaultTimeSettings(): PersonaTimeSettings {
   const now = new Date();
-  const peakStart = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-  const peakEnd = new Date(now.getTime() + 10 * 60 * 60 * 1000);
   const peakTarget = new Date(now.getTime() + 8 * 60 * 60 * 1000);
   
   return {
     inputMode: 'basic',
     targetStartDate: formatDateString(now),
     targetStartTime: formatTimeString(now),
-    targetPeakStartDate: formatDateString(peakStart),
-    targetPeakStartTime: formatTimeString(peakStart),
-    targetPeakEndDate: formatDateString(peakEnd),
-    targetPeakEndTime: formatTimeString(peakEnd),
     targetPeakDate: formatDateString(peakTarget),
     targetPeakTime: formatTimeString(peakTarget),
     targetTotalSourdough: 200,
@@ -55,10 +49,13 @@ export function createDefaultPersona(name: string = 'My Starter'): SourdoughPers
 
 /** Starters saved by an older version, brought up to date. */
 function migratePersonas(list: SourdoughPersona[]): SourdoughPersona[] {
-  // Starters saved before time settings existed get the defaults
-  return list.map(p =>
-    p.timeSettings ? p : { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' }
-  );
+  return list.map(p => {
+    // Starters saved before time settings existed get the defaults
+    if (!p.timeSettings) return { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' };
+    // Target Window mode was replaced by Weights mode; the grams come from the saved ratio and starter amount
+    if ((p.timeSettings.inputMode as string) === 'target-window') return { ...p, timeSettings: { ...p.timeSettings, inputMode: 'weights' } };
+    return p;
+  });
 }
 
 /** Saved starters, or null if there are none or they can't be read. */

@@ -113,7 +113,7 @@ flowchart TB
 
 **Starters are managed in the menu.** `AppMenu` (☰, top left on every page) selects, adds, renames, duplicates and deletes starters, and links to the calculator, the guidance page and every docs page. Delete asks for a second tap. The main page only shows the active starter's name.
 
-The input cards (flour blend, mode, start time, old sourdough, ratio, temperature, target window, sweet sourdough, keep screen on) are written directly inside `SourdoughCalculator.tsx`. So is the results column (schedule, recommended ratio, fermentation timeline, suggestions).
+The input cards (flour blend, mode, start time, old sourdough, ratio or feed weights, temperature, sweet sourdough, keep screen on) are written directly inside `SourdoughCalculator.tsx`. So is the results column (schedule, recommended ratio, fermentation timeline, suggestions).
 
 ## How one calculation flows
 

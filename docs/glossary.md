@@ -43,7 +43,7 @@
 | **Sweet feed** | A logged feed with `sugarAmount > 0`. Calibrated separately |
 | **Ratio solver** | `calculateRequiredRatio`: works out the ratio for a target time |
 | **Conditions factor** | `conditionsFactor`: everything in the formula except the ratio. Shared by prediction and solver |
-| **Input mode** | `'basic'` (Normal), `'target-window'`, `'total-sourdough'` |
+| **Input mode** | `'basic'` (Normal), `'weights'`, `'total-sourdough'`. Old starters saved as `'target-window'` load as `'weights'` |
 | **Suggestion** | A translation key for a tip shown under the results |
 | **`localStorage`** | Browser storage where all data is saved |
 | **SPA** | Single-page application: one HTML page updated by JavaScript |

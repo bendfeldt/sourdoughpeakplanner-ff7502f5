@@ -22,9 +22,6 @@ function input(overrides: Partial<CalculationInput> = {}): CalculationInput {
     feedingRatio: { starter: 1, flour: 1, water: 1 },
     temperature: 24,
     targetStartTime: START,
-    targetPeakStart: null,
-    targetPeakEnd: null,
-    useTargetWindow: false,
     oldSourdoughAmount: 100,
     isSweetMode: false,
     sugarPercentage: 0,
@@ -110,13 +107,12 @@ test('the ratio solver gives back the target time, with sugar and calibration', 
   }
 });
 
-test('an unreachable target window warns instead of faking the peak time', () => {
-  const peakStart = new Date(START.getTime() + 30 * 60 * 1000);
-  const peakEnd = new Date(START.getTime() + 60 * 60 * 1000);
-  const result = calculateFeedingSchedule(input({ inputMode: 'target-window', useTargetWindow: true, targetPeakStart: peakStart, targetPeakEnd: peakEnd }));
+test('an unreachable target peak time warns instead of faking the peak time', () => {
+  const target = new Date(START.getTime() + 45 * 60 * 1000);
+  const result = calculateFeedingSchedule(input({ inputMode: 'total-sourdough', targetTotalSourdough: 200, targetPeakTime: target }));
   assert.equal(result.achievabilityWarning, 'targetPeakTooSoon');
   assert.ok(!result.suggestions.includes('targetPeakTooSoon'), 'shown in its own box, not as a cut-off tip');
-  assert.ok(result.estimatedPeakTime > peakEnd, 'peak shows what the starter will really do');
+  assert.ok(result.estimatedPeakTime > target, 'peak shows what the starter will really do');
 });
 
 test('saved starters using the original flour keys still calculate', () => {
@@ -162,4 +158,18 @@ test('grams typed in the grams view give back the same grams, whatever the start
   assert.equal(flourPart, 2);
   assert.equal((50 / 2) * flourPart, 50);
   assert.equal(ratioPartFromGrams(250, 50, 1), 5);
+});
+
+test('Weights mode: typed grams come back unchanged and give the same peak as the ratio', () => {
+  // 37 g starter, 113 g flour, 89 g water, as typed in Weights mode
+  const ratio = { starter: 1, flour: ratioPartFromGrams(113, 37, 1), water: ratioPartFromGrams(89, 37, 1) };
+  const weights = calculateFeedingSchedule(input({ inputMode: 'weights', feedingRatio: ratio, oldSourdoughAmount: 37 }));
+  assert.deepEqual([weights.starterAmount, weights.flourAmount, weights.waterAmount], [37, 113, 89]);
+  assert.equal(weights.recommendedRatio, null, 'Weights mode predicts from the feed, it does not aim at a time');
+
+  // 50/50/50 g is the reference feed 1:1:1
+  const even = calculateFeedingSchedule(input({ inputMode: 'weights', oldSourdoughAmount: 50 }));
+  const normal = calculateFeedingSchedule(input({ inputMode: 'basic', oldSourdoughAmount: 50 }));
+  assert.equal(even.estimatedPeakTime.getTime(), normal.estimatedPeakTime.getTime());
+  close(even.hoursToReachPeak, 3.5, 0.01);
 });

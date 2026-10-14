@@ -55,15 +55,9 @@ export const translations = {
     ambientTemperature: 'Ambient Temperature',
     roomTemperature: 'Room temperature',
     
-    // Target window
-    targetPeakWindow: 'Target Peak Window',
-    targetWindowDesc: 'When do you need your starter to be at peak?',
-    from: 'From',
-    to: 'To',
+    // Start time
     startTime: 'Start Time',
     startTimeDesc: 'When do you want to start feeding?',
-    useWindow: 'Use target window',
-    invalidTimeWindow: 'End time must be after start time, and peak window must be after feeding time',
     
     // Old sourdough
     oldSourdough: 'Old Sourdough Amount',
@@ -102,7 +96,6 @@ export const translations = {
     feedStarterAt: 'Feed your starter at',
     timeToPeak: 'Time to peak',
     estimatedPeak: 'Estimated peak',
-    peakWindow: 'Peak window',
     totalSourdough: 'Total sourdough',
     hours: 'hours',
     
@@ -112,8 +105,6 @@ export const translations = {
     // Status
     perfectTiming: 'Perfect timing!',
     timingAdjustmentNeeded: 'Timing adjustment needed',
-    starterWillPeak: 'Your starter will peak within your target window.',
-    peakOutsideWindow: 'The estimated peak time falls outside your target window.',
     
     // Tips
     tips: 'Tips',
@@ -141,7 +132,6 @@ export const translations = {
     fromSugar: 'from sugar',
     noPeakExpected: 'No normal peak expected within 48 hours',
     tooHotForYeast: 'Above 35°C the yeast struggles and the starter slows down again - aim for 24-31°C',
-    adjustedRatioRecommendation: 'Ratio adjusted to hit your target window - see recommended ratio below',
     insufficientStarterForTargetTotal: 'Not enough starter available for the target total; using all available starter instead',
     autolyseGlutenDevelopment: 'Autolyse improves gluten development and extensibility',
     fermentolyseEnhancedFlavour: 'Fermentolyse adds extra flavour complexity from early fermentation',
@@ -159,15 +149,13 @@ export const translations = {
     
     // Recommended ratio
     recommendedRatio: 'Recommended Ratio',
-    recommendedRatioDesc: 'Adjusted ratio to hit your target window',
+    recommendedRatioDesc: 'Ratio that peaks at your desired time',
     
     // Reset
     resetSettings: 'Reset to defaults',
     
     // Multi-starter & timer
     allStarters: 'All Starters',
-    showingGrams: 'Grams',
-    showingRatio: 'Ratio',
     ratio: 'Ratio',
     peakTimer: 'Peak Timer',
     untilPeak: 'until peak',
@@ -179,7 +167,7 @@ export const translations = {
     // Input modes
     calculationMode: 'Calculation Mode',
     basicMode: 'Normal',
-    targetWindowMode: 'Target Window',
+    weightsMode: 'Weights',
     totalSourdoughMode: 'Total Sourdough',
     targetTotalSourdough: 'Target Total Sourdough',
     targetTotalSourdoughDesc: 'Enter desired total amount and peak time to calculate required ratio',
@@ -191,8 +179,14 @@ export const translations = {
     guidanceIntro: 'This calculator helps you plan your sourdough feeding schedule to have your starter peak exactly when you need it.',
     normalModeTitle: 'Normal Mode',
     normalModeDesc: 'The simplest mode. Set your feeding ratio, temperature, and start time to see when your starter will peak. Great for regular feeding schedules.',
-    targetWindowModeTitle: 'Target Window Mode',
-    targetWindowModeDesc: 'Set when you need your starter to peak, and the calculator will recommend the optimal feeding ratio. Perfect for planning around your schedule.',
+    weightsModeTitle: 'Weights Mode',
+    weightsModeDesc: 'Weigh the starter, flour and water you feed, type the grams, and the calculator tells you when it will peak. The ratio is worked out for you.',
+    feedWeights: 'Feed Weights',
+    feedWeightsDesc: 'Grams of starter, flour and water in this feed',
+    weightsStep1: 'Weigh the starter, flour and water you feed',
+    weightsStep2: 'Type the grams; the ratio is shown underneath',
+    weightsStep3: 'Set when you feed (use "Use Current Time" for now)',
+    weightsStep4: 'Calculator shows when peak will occur',
     totalSourdoughModeTitle: 'Total Sourdough Mode',
     totalSourdoughModeDesc: 'Specify how much total sourdough you need and when you need it ready. The calculator will work backwards to determine amounts and timing.',
     flourTypesTitle: 'Flour Types Matter',
@@ -334,15 +328,9 @@ export const translations = {
     ambientTemperature: 'Omgivelsestemperatur',
     roomTemperature: 'Rumtemperatur',
     
-    // Target window
-    targetPeakWindow: 'Ønsket Peak-vindue',
-    targetWindowDesc: 'Hvornår har du brug for at din surdej topper?',
-    from: 'Fra',
-    to: 'Til',
+    // Start time
     startTime: 'Starttidspunkt',
     startTimeDesc: 'Hvornår vil du starte fodringen?',
-    useWindow: 'Brug målvindue',
-    invalidTimeWindow: 'Sluttidspunkt skal være efter starttidspunkt, og peak-vindue skal være efter fodringstidspunkt',
     
     // Old sourdough
     oldSourdough: 'Gammel Surdejsmængde',
@@ -381,7 +369,6 @@ export const translations = {
     feedStarterAt: 'Fodr din surdej kl.',
     timeToPeak: 'Tid til peak',
     estimatedPeak: 'Forventet peak',
-    peakWindow: 'Peak-vindue',
     totalSourdough: 'Total surdej',
     hours: 'timer',
     
@@ -391,8 +378,6 @@ export const translations = {
     // Status
     perfectTiming: 'Perfekt timing!',
     timingAdjustmentNeeded: 'Timing justering nødvendig',
-    starterWillPeak: 'Din surdej vil toppe inden for dit målvindue.',
-    peakOutsideWindow: 'Den forventede peak-tid falder uden for dit målvindue.',
     
     // Tips
     tips: 'Tips',
@@ -420,7 +405,6 @@ export const translations = {
     fromSugar: 'pga. sukker',
     noPeakExpected: 'Ingen normal peak forventet inden for 48 timer',
     tooHotForYeast: 'Over 35°C har gæren det svært, og surdejen bliver langsommere igen - sigt efter 24-31°C',
-    adjustedRatioRecommendation: 'Forholdet er justeret for at ramme dit målvindue - se anbefalet forhold nedenfor',
     insufficientStarterForTargetTotal: 'Ikke nok surdej til den ønskede total; bruger al tilgængelig surdej i stedet',
     autolyseGlutenDevelopment: 'Autolyse forbedrer glutenudvikling og smidighed',
     fermentolyseEnhancedFlavour: 'Fermentolyse tilføjer ekstra smagskompleksitet fra tidlig gæring',
@@ -438,15 +422,13 @@ export const translations = {
     
     // Recommended ratio
     recommendedRatio: 'Anbefalet Forhold',
-    recommendedRatioDesc: 'Justeret forhold for at ramme dit målvindue',
+    recommendedRatioDesc: 'Forhold der topper på dit ønskede tidspunkt',
     
     // Reset
     resetSettings: 'Nulstil til standarder',
     
     // Multi-starter & timer
     allStarters: 'Alle Surdejer',
-    showingGrams: 'Gram',
-    showingRatio: 'Forhold',
     ratio: 'Forhold',
     peakTimer: 'Peak Timer',
     untilPeak: 'til peak',
@@ -458,7 +440,7 @@ export const translations = {
     // Input modes
     calculationMode: 'Beregningstilstand',
     basicMode: 'Normal',
-    targetWindowMode: 'Målvindue',
+    weightsMode: 'Vægt',
     totalSourdoughMode: 'Total Surdej',
     targetTotalSourdough: 'Ønsket Total Surdej',
     targetTotalSourdoughDesc: 'Indtast ønsket totalmængde og peak-tid for at beregne nødvendigt forhold',
@@ -470,8 +452,14 @@ export const translations = {
     guidanceIntro: 'Denne beregner hjælper dig med at planlægge din surdejs fodringsplan, så din surdej topper præcis når du har brug for det.',
     normalModeTitle: 'Normal Tilstand',
     normalModeDesc: 'Den enkleste tilstand. Sæt dit fodringsforhold, temperatur og starttid for at se hvornår din surdej topper. God til regelmæssige fodringsplaner.',
-    targetWindowModeTitle: 'Målvindue Tilstand',
-    targetWindowModeDesc: 'Sæt hvornår du har brug for din surdej topper, og beregneren anbefaler det optimale fodringsforhold. Perfekt til planlægning omkring din tidsplan.',
+    weightsModeTitle: 'Vægt Tilstand',
+    weightsModeDesc: 'Vej surdej, mel og vand til fodringen, skriv grammene, og beregneren fortæller hvornår den topper. Forholdet regnes ud for dig.',
+    feedWeights: 'Fodringens Vægt',
+    feedWeightsDesc: 'Gram surdej, mel og vand i denne fodring',
+    weightsStep1: 'Vej surdej, mel og vand til fodringen',
+    weightsStep2: 'Skriv grammene; forholdet vises nedenunder',
+    weightsStep3: 'Sæt hvornår du fodrer (brug "Brug Nuværende Tid" for nu)',
+    weightsStep4: 'Beregneren viser hvornår den topper',
     totalSourdoughModeTitle: 'Total Surdej Tilstand',
     totalSourdoughModeDesc: 'Angiv hvor meget total surdej du har brug for og hvornår du har brug for den. Beregneren beregner baglæns for at bestemme mængder og timing.',
     flourTypesTitle: 'Meltyper Betyder Noget',

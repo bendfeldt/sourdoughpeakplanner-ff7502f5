@@ -5,7 +5,8 @@ Know when your sourdough starter will peak, and how to feed it so it peaks when 
 **Use it:** <https://bendfeldt.github.io/sourdoughpeakplanner-ff7502f5/>
 
 - Predicts the peak from flour blend, feeding ratio, hydration, temperature (10–40 °C) and added sugar (up to the weight of the flour).
-- Works backwards: give a time window or a total amount, and it recommends the feeding ratio and grams.
+- Type the feed as a ratio or as grams of starter, flour and water.
+- Works backwards: give a total amount and a peak time, and it recommends the feeding ratio and grams.
 - Learns each starter's own speed from feeds you log.
 - Several starters, English and Danish, all in the browser. No account; data stays on your device.
 
@@ -17,7 +18,7 @@ Start at **[docs/README.md](docs/README.md)**, or read the docs in the app: menu
 |---|---|
 | [Architecture](docs/architecture.md) | How the code fits together |
 | [Fermentation model](docs/fermentation-model.md) | The peak-time formula and the science behind it |
-| [Calculation modes](docs/calculation-modes.md) | Normal, Target Window, Total Sourdough |
+| [Calculation modes](docs/calculation-modes.md) | Normal, Weights, Total Sourdough |
 | [Calibration](docs/calibration.md) | How the app learns from logged feeds |
 | [Data and storage](docs/data-storage.md) | What is saved in the browser |
 | [Development](docs/development.md) | Run, test and change the code |
