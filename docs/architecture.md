@@ -74,8 +74,8 @@ The calculator has **no React and no browser code**. It takes plain values in an
     │   ├── docs.ts                       Docs pages list, link and heading helpers
     │   ├── docs.test.ts                  Checks every link inside the docs
     │   ├── i18n.tsx                      English and Danish texts
-    │   ├── saved-data.ts                 Backup file, asks the browser to keep saved data
-    │   ├── saved-data.test.ts            Tests for backups (npm test)
+    │   ├── saved-data.ts                 Backup file, keeps saved data, brings old starters up to date
+    │   ├── saved-data.test.ts            Tests for backups and old starters (npm test)
     │   └── utils.ts                      cn() helper for CSS classes
     ├── types/sourdough.ts            Shared TypeScript types
 ```
