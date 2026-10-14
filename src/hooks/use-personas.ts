@@ -53,16 +53,21 @@ export function createDefaultPersona(name: string = 'My Starter'): SourdoughPers
   };
 }
 
+/** Starters saved by an older version, brought up to date. */
+function migratePersonas(list: SourdoughPersona[]): SourdoughPersona[] {
+  // Starters saved before time settings existed get the defaults
+  return list.map(p =>
+    p.timeSettings ? p : { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' }
+  );
+}
+
 /** Saved starters, or null if there are none or they can't be read. */
 function parsePersonas(stored: string | null): SourdoughPersona[] | null {
   if (!stored) return null;
   try {
     const parsed = JSON.parse(stored);
     if (!Array.isArray(parsed) || parsed.length === 0) return null;
-    // Starters saved before time settings existed get the defaults
-    return parsed.map((p: SourdoughPersona) =>
-      p.timeSettings ? p : { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' }
-    );
+    return migratePersonas(parsed);
   } catch (e) {
     console.warn('Failed to load personas:', e);
     return null;
@@ -183,6 +188,12 @@ function usePersonasState() {
   }, [personas]);
 
 
+  // Replace all starters with those from a backup
+  const restorePersonas = useCallback((list: SourdoughPersona[], activeId: string) => {
+    setPersonas(migratePersonas(list));
+    setActivePersonaId(activeId);
+  }, []);
+
   return {
     personas,
     activePersona,
@@ -194,6 +205,7 @@ function usePersonasState() {
     renamePersona,
     autoSavePersona,
     duplicatePersona,
+    restorePersonas,
   };
 }
 

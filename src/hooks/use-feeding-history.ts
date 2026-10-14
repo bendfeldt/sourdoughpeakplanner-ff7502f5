@@ -105,6 +105,11 @@ function useFeedingHistoryState() {
     setHistory(prev => prev.filter(entry => entry.personaId !== personaId));
   }, []);
 
+  // Replace all feeds with those from a backup
+  const restoreHistory = useCallback((entries: FeedingHistoryEntry[]) => {
+    setHistory(entries);
+  }, []);
+
   // Calculate average prediction accuracy for a persona
   const getAccuracyStats = useCallback((personaId: string) => {
     const entries = history.filter(
@@ -132,6 +137,7 @@ function useFeedingHistoryState() {
     recordActualPeak,
     deleteEntry,
     deleteEntriesForPersona,
+    restoreHistory,
     getAccuracyStats,
   };
 }
