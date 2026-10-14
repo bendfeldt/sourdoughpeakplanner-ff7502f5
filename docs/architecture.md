@@ -55,7 +55,7 @@ The calculator has **no React and no browser code**. It takes plain values in an
     │   ├── Docs.tsx               "/docs/:page"  → these docs, rendered from /docs/*.md
     │   └── NotFound.tsx           anything else
     ├── components/
-    │   ├── AppMenu.tsx               Fold-out menu: manage starters, open the docs
+    │   ├── AppMenu.tsx               Fold-out menu: manage starters, backup, open the docs
     │   ├── MermaidDiagram.tsx        Draws a Mermaid diagram on a docs page
     │   ├── SourdoughCalculator.tsx   The main screen: inputs, results, history
     │   ├── FeedingRatioInput.tsx     Starter : flour : water input (ratio or grams)
@@ -74,6 +74,8 @@ The calculator has **no React and no browser code**. It takes plain values in an
     │   ├── docs.ts                       Docs pages list, link and heading helpers
     │   ├── docs.test.ts                  Checks every link inside the docs
     │   ├── i18n.tsx                      English and Danish texts
+    │   ├── saved-data.ts                 Backup file, asks the browser to keep saved data
+    │   ├── saved-data.test.ts            Tests for backups (npm test)
     │   └── utils.ts                      cn() helper for CSS classes
     ├── types/sourdough.ts            Shared TypeScript types
 ```
