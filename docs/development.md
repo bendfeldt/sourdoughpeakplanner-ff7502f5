@@ -43,7 +43,7 @@ npm run lint
 
 ## Tests
 
-The tests live next to the code they test: [`src/lib/sourdough-calculator.test.ts`](../src/lib/sourdough-calculator.test.ts) for the calculator and [`src/lib/docs.test.ts`](../src/lib/docs.test.ts) for the docs pages. They use **`node:test`** and **`node:assert`**, which are built into Node, so there is no test framework to install. Node 24 runs TypeScript files directly by stripping the types, which is why the test imports end in `.ts`. TypeScript 6 no longer loads `@types` packages on its own, so `tsconfig.app.json` lists `"types": ["node"]` for the tests.
+The tests live next to the code they test: [`src/lib/sourdough-calculator.test.ts`](../src/lib/sourdough-calculator.test.ts) for the calculator and [`src/lib/docs.test.ts`](../src/lib/docs.test.ts) for the docs pages. [`src/lib/saved-data.test.ts`](../src/lib/saved-data.test.ts) covers backups. They use **`node:test`** and **`node:assert`**, which are built into Node, so there is no test framework to install. Node 24 runs TypeScript files directly by stripping the types, which is why the test imports end in `.ts`. TypeScript 6 no longer loads `@types` packages on its own, so `tsconfig.app.json` lists `"types": ["node"]` for the tests.
 
 ```sh
 npm test
@@ -65,6 +65,7 @@ What is covered:
 | old flour keys | saved starters with `spelt`, `kamut`, `einkorn` still calculate |
 | calibration | settles on the true factor; sweet and plain feeds kept apart |
 | grams view | a flour or water amount typed in grams is kept, whatever the starter part of the ratio |
+| backups (`saved-data.test.ts`) | a backup restores the same starters, selection and feeds; other files are refused; broken entries are dropped |
 | docs links (`docs.test.ts`) | every file in `docs/` is in the menu, and every link and `#section` inside the docs points to a real page and heading |
 
 To add a test, copy an existing `test('…', () => { … })` block. The `input()` helper at the top builds a reference feed (all-purpose, 1:1:1, 24 °C) and you override only what matters:

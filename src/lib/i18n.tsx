@@ -227,6 +227,13 @@ export const translations = {
     delete: 'Delete',
     deleteStarterConfirm: 'Delete',
     documentation: 'Documentation',
+    backup: 'Backup',
+    backupHint: 'Starters and feeds are saved only in this browser. Save a backup to keep them safe or move them to another device.',
+    backupSave: 'Save backup',
+    backupRestore: 'Restore',
+    backupRestoreConfirm: 'Replace the starters and feeds on this device with the {count} starter(s) in the backup?',
+    backupRestored: 'Backup restored',
+    backupInvalid: 'This file is not a Sourdough Peak Planner backup',
     desiredPeakTime: 'Desired Peak Time',
     
     // History & Warnings
@@ -499,6 +506,13 @@ export const translations = {
     delete: 'Slet',
     deleteStarterConfirm: 'Slet',
     documentation: 'Dokumentation',
+    backup: 'Sikkerhedskopi',
+    backupHint: 'Surdeje og fodringer gemmes kun i denne browser. Gem en sikkerhedskopi for at passe på dem eller flytte dem til en anden enhed.',
+    backupSave: 'Gem kopi',
+    backupRestore: 'Gendan',
+    backupRestoreConfirm: 'Erstat surdejene og fodringerne på denne enhed med de {count} surdej(e) i sikkerhedskopien?',
+    backupRestored: 'Sikkerhedskopi gendannet',
+    backupInvalid: 'Filen er ikke en sikkerhedskopi fra Sourdough Peak Planner',
     desiredPeakTime: 'Ønsket Peak-tid',
     
     // History & Warnings

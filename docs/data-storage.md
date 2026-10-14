@@ -8,6 +8,38 @@ What that means in practice:
 - Clearing site data, or using a private window, starts from scratch.
 - Nothing is sent anywhere. There are no accounts.
 
+## When saved data disappears
+
+**Deploying a new version never touches saved data.** A deploy replaces the files on the server; `localStorage` lives in the browser on the device and belongs to the site's *origin* (`https://bendfeldt.github.io`), which a deploy doesn't change. Starters disappear when the **browser** deletes them:
+
+| What happens | Why the data is gone |
+|---|---|
+| The shortcut is removed from an iPhone/iPad home screen | iOS gives each home-screen app its own storage, separate from Safari, and deletes it with the shortcut. Adding the shortcut again starts empty |
+| The app is used both in Safari and from the home screen (iOS) | They are two separate stores. Starters made in one are not visible in the other |
+| The site isn't opened for 7 days of Safari use | Safari may delete storage of sites that haven't been visited (it doesn't do this to home-screen apps) |
+| The device runs low on space | Browsers may clear storage they consider "best effort", oldest-used sites first |
+| Site data or history is cleared, or a private window is used | The data is deleted along with it |
+
+Cookies wouldn't help: they are cleared by the same rules, hold only about 4 KB, and would be sent to the server with every request for nothing. The app instead does two things, the usual approach for apps without a server:
+
+1. **Asks the browser to keep the data.** On start, [`main.tsx`](../src/main.tsx) calls `keepSavedData()` in [`src/lib/saved-data.ts`](../src/lib/saved-data.ts), which calls `navigator.storage.persist()`. Storage the browser grants this to is not cleared when space runs low. Chrome and Safari decide without asking (usually yes for installed or often-used sites); Firefox may ask the user.
+2. **Lets the baker save a backup.** Menu (☰) → **Backup** → **Save backup** writes all starters, the selected starter and the feeding history to a `sourdough-backup-YYYY-MM-DD.json` file. On phones this opens the share sheet, so the file can go to Files, iCloud, Google Drive or mail. **Restore** reads such a file back and, after a confirmation, replaces the starters and feeds on this device. This is also how to move starters between Safari and the home-screen app, or to another device.
+
+The backup file looks like this:
+
+```json
+{
+  "app": "sourdough-peak-planner",
+  "version": 1,
+  "exportedAt": "2026-10-13T08:00:00.000Z",
+  "personas": [ … ],
+  "activePersonaId": "k3j9x2a",
+  "history": [ … ]
+}
+```
+
+`parseBackup` refuses files without `"app": "sourdough-peak-planner"` or without a usable starter, drops entries it can't read, and the restored starters go through the same migration as stored ones, so backups from older versions still restore. Theme and language are not in the backup.
+
 ## The five keys
 
 | `localStorage` key | Written by | Contains |
@@ -166,4 +198,4 @@ Starters and history from older versions of the app are still in bakers' browser
 
 ## Inspecting the data
 
-In the browser: open the developer tools, go to **Application** (Chrome) or **Storage** (Firefox) → **Local Storage** → the site. You can read, edit or delete each key there. Deleting all five resets the app.
+In the browser: open the developer tools, go to **Application** (Chrome) or **Storage** (Firefox) → **Local Storage** → the site. You can read, edit or delete each key there. Deleting all five resets the app. To check whether the browser granted persistent storage, run `await navigator.storage.persisted()` in the console.

@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router';
-import { BookOpen, Calculator, Check, Copy, Edit2, HelpCircle, Menu, Plus, Trash2, Wheat, X } from 'lucide-react';
+import { BookOpen, Calculator, Check, Copy, Download, Edit2, HelpCircle, Menu, Plus, Trash2, Upload, Wheat, X } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -8,6 +9,7 @@ import { usePersonas } from '@/hooks/use-personas';
 import { useFeedingHistory } from '@/hooks/use-feeding-history';
 import { DOC_PAGES } from '@/lib/docs';
 import { useI18n } from '@/lib/i18n';
+import { backupFileName, createBackup, keepSavedData, parseBackup, type Backup } from '@/lib/saved-data';
 import { cn } from '@/lib/utils';
 
 /** The fold-out menu: manage starters and open the docs. */
@@ -15,12 +17,14 @@ export function AppMenu() {
   const { t } = useI18n();
   const navigate = useNavigate();
   const { pathname } = useLocation();
-  const { personas, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, duplicatePersona } = usePersonas();
-  const { deleteEntriesForPersona } = useFeedingHistory();
+  const { personas, activePersonaId, setActivePersonaId, addPersona, deletePersona, renamePersona, duplicatePersona, restorePersonas } = usePersonas();
+  const { history, deleteEntriesForPersona, restoreHistory } = useFeedingHistory();
   const [open, setOpen] = useState(false);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [pendingRestore, setPendingRestore] = useState<Backup | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   const goToCalculator = () => {
     setOpen(false);
@@ -40,6 +44,41 @@ export function AppMenu() {
   const confirmRename = () => {
     if (renamingId && renameValue.trim()) renamePersona(renamingId, renameValue.trim());
     setRenamingId(null);
+  };
+
+  // Phones get the share sheet (save to Files, Drive, mail…); other browsers download the file
+  const saveBackup = async () => {
+    const file = new File([createBackup({ personas, activePersonaId, history })], backupFileName(), { type: 'application/json' });
+    if (navigator.canShare?.({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file] });
+        return;
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return;
+      }
+    }
+    const url = URL.createObjectURL(file);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const openBackup = async (file: File | undefined) => {
+    if (!file) return;
+    const backup = parseBackup(await file.text());
+    if (backup) setPendingRestore(backup);
+    else toast.error(t('backupInvalid'));
+  };
+
+  const confirmRestore = () => {
+    if (!pendingRestore) return;
+    restorePersonas(pendingRestore.personas, pendingRestore.activePersonaId);
+    restoreHistory(pendingRestore.history);
+    setPendingRestore(null);
+    keepSavedData();
+    toast.success(t('backupRestored'));
   };
 
   const navLink = (to: string, label: string, Icon: typeof BookOpen) => (
@@ -128,6 +167,38 @@ export function AppMenu() {
               <Plus className="h-4 w-4 mr-1" />
               {t('addStarter')}
             </Button>
+          </section>
+
+          <section className="space-y-2">
+            <h2 className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('backup')}</h2>
+            <p className="px-2 text-xs text-muted-foreground">{t('backupHint')}</p>
+            {pendingRestore ? (
+              <div className="space-y-2 rounded-md border p-2 text-sm">
+                <p>{t('backupRestoreConfirm').replace('{count}', String(pendingRestore.personas.length))}</p>
+                <div className="flex gap-2">
+                  <Button variant="destructive" size="sm" onClick={confirmRestore}>{t('backupRestore')}</Button>
+                  <Button variant="ghost" size="sm" onClick={() => setPendingRestore(null)}>{t('cancel')}</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" onClick={saveBackup}>
+                  <Download className="h-4 w-4 mr-1" />
+                  {t('backupSave')}
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => fileInput.current?.click()}>
+                  <Upload className="h-4 w-4 mr-1" />
+                  {t('backupRestore')}
+                </Button>
+                <input
+                  ref={fileInput}
+                  type="file"
+                  accept="application/json,.json"
+                  className="hidden"
+                  onChange={e => { openBackup(e.target.files?.[0]); e.target.value = ''; }}
+                />
+              </div>
+            )}
           </section>
 
           <section className="space-y-1">

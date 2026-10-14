@@ -31,6 +31,7 @@ Run `npm test`, the type check, `npm run lint` and `npm run build` before every 
 | Main screen: all inputs and results | `src/components/SourdoughCalculator.tsx` |
 | Saved starters ("personas") | `src/hooks/use-personas.ts` |
 | Logged feeds | `src/hooks/use-feeding-history.ts` |
+| Backup file, persistent storage request | `src/lib/saved-data.ts` |
 | English and Danish texts | `src/lib/i18n.tsx` |
 | Routes, providers | `src/App.tsx` |
 | Fold-out menu (starters, docs) | `src/components/AppMenu.tsx` |
@@ -63,6 +64,7 @@ Read `docs/fermentation-model.md` before changing it.
 
 - State used by more than one component needs one owner. Feeding history lives in `FeedingHistoryProvider` and starters in `PersonasProvider`; read them with `useFeedingHistory()` / `usePersonas()`, never keep a second copy.
 
+- A deploy never clears `localStorage`; the browser does (see `docs/data-storage.md#when-saved-data-disappears`). Anything new that the baker saves must also go into the backup in `src/lib/saved-data.ts`.
 - Data from older versions lives in users' browsers. New fields must be optional with a default where read (`x ?? default`).
 - Never rename or remove keys of `FLOUR_DATA`, `SUGAR_DATA`, `FlourType`, `SugarType`, or the `localStorage` keys. Add new ones.
 
