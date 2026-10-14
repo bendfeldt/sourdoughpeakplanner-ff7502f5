@@ -119,7 +119,7 @@ The flour picker lists every key in `FLOUR_DATA` automatically.
 
 1. Add the key to `SugarType` in [`src/types/sourdough.ts`](../src/types/sourdough.ts).
 2. Add an entry to `SUGAR_DATA` with `sugarFraction` and `waterFraction` (shares of the sweetener's weight; look up the composition) and a `description`.
-3. Add the name to both languages in `i18n.tsx`.
+3. Add the name (`'<key>'`) and description (`'<key>-desc'`) to both languages in `i18n.tsx`. The app shows the translated description, not the one in `SUGAR_DATA`.
 4. Add the row to the sweetener table in [`docs/fermentation-model.md`](fermentation-model.md#sugar).
 
 ### Add or change a text

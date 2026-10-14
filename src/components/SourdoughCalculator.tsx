@@ -336,7 +336,7 @@ export function SourdoughCalculator() {
                         onChange={(e) => handleProteinInput(flour.id, e.target.value)}
                         onBlur={() => handleProteinBlur(flour.id)}
                         className="text-center" 
-                        placeholder="e.g. 11,5"
+                        placeholder={t('proteinPlaceholder')}
                       />
                     </div>
                   </div>
@@ -577,7 +577,7 @@ export function SourdoughCalculator() {
                       ))}
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">{SUGAR_DATA[sugarType]?.description}</p>
+                  <p className="text-xs text-muted-foreground">{t(`${sugarType}-desc`)}</p>
                 </div>
                 <div className="space-y-2">
                   <div className="flex justify-between"><span className="text-sm text-muted-foreground">{t('sugarAmount')}</span><span className="text-sm font-medium text-primary">{sugarPercentage}%</span></div>

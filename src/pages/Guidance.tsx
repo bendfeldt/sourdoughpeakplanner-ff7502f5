@@ -55,22 +55,12 @@ function GuidanceContent() {
                 {t('normalModeDesc')}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Set your feeding ratio (e.g., 1:2:2)
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Choose your ambient temperature
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Set when you'll start feeding (use "Use Current Time" for now)
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Calculator shows when peak will occur
-                </li>
+                {(['normalStep1', 'normalStep2', 'normalStep3', 'normalStep4'] as const).map(key => (
+                  <li key={key} className="flex items-start gap-2">
+                    <span className="text-primary font-bold">•</span>
+                    {t(key)}
+                  </li>
+                ))}
               </ul>
             </CardContent>
           </Card>
@@ -115,22 +105,12 @@ function GuidanceContent() {
                 {t('totalSourdoughModeDesc')}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Enter how much total sourdough you need
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Set when you'll start and when you need it ready
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Calculator determines starter, flour, and water amounts
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">•</span>
-                  Automatically calculates optimal ratio
-                </li>
+                {(['totalStep1', 'totalStep2', 'totalStep3', 'totalStep4'] as const).map(key => (
+                  <li key={key} className="flex items-start gap-2">
+                    <span className="text-primary font-bold">•</span>
+                    {t(key)}
+                  </li>
+                ))}
               </ul>
             </CardContent>
           </Card>
@@ -150,22 +130,12 @@ function GuidanceContent() {
                 {t('historyDesc')}
               </p>
               <ul className="mt-4 space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">1.</span>
-                  After calculating, click "Log Feeding" to save the prediction
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">2.</span>
-                  When your starter actually peaks, click "Record actual peak"
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">3.</span>
-                  View your history at the bottom of the results section
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-primary font-bold">4.</span>
-                  Track prediction accuracy to improve future estimates
-                </li>
+                {(['historyStep1', 'historyStep2', 'historyStep3', 'historyStep4'] as const).map((key, i) => (
+                  <li key={key} className="flex items-start gap-2">
+                    <span className="text-primary font-bold">{i + 1}.</span>
+                    {t(key)}
+                  </li>
+                ))}
               </ul>
             </CardContent>
           </Card>

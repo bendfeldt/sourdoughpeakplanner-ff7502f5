@@ -1,7 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { useI18n } from '@/lib/i18n';
 
 /** Draws a Mermaid diagram. Mermaid is large, so it is only loaded on pages that have one. */
 export function MermaidDiagram({ chart }: { chart: string }) {
+  const { t } = useI18n();
   const id = 'mermaid-' + useId().replace(/[^a-zA-Z0-9]/g, '');
   const [svg, setSvg] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
@@ -29,6 +31,6 @@ export function MermaidDiagram({ chart }: { chart: string }) {
 
   // If drawing fails, show the diagram's text, which is still readable.
   if (failed) return <pre className="text-xs">{chart}</pre>;
-  if (!svg) return <div className="h-24 animate-pulse rounded-md bg-muted" aria-label="Loading diagram" />;
+  if (!svg) return <div className="h-24 animate-pulse rounded-md bg-muted" aria-label={t('loading')} />;
   return <div ref={box} className="not-prose my-6 overflow-x-auto [&_svg]:mx-auto" dangerouslySetInnerHTML={{ __html: svg }} />;
 }

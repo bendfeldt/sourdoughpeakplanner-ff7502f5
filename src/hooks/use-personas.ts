@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, createContext, createElement, useCont
 import { format } from 'date-fns';
 import type { SourdoughPersona, FlourBlendItem, FeedingRatio, PersonaTimeSettings } from '@/types/sourdough';
 import { FLOUR_DATA, generateId } from '@/lib/sourdough-calculator';
+import { useI18n } from '@/lib/i18n';
 
 const PERSONAS_KEY = 'sourdough-personas';
 const ACTIVE_PERSONA_KEY = 'sourdough-active-persona';
@@ -25,7 +26,7 @@ export function createDefaultTimeSettings(): PersonaTimeSettings {
   };
 }
 
-export function createDefaultPersona(name: string = 'My Starter'): SourdoughPersona {
+export function createDefaultPersona(name: string): SourdoughPersona {
   const now = Date.now();
   return {
     id: generateId(),
@@ -72,12 +73,13 @@ function parsePersonas(stored: string | null): SourdoughPersona[] | null {
 }
 
 function usePersonasState() {
+  const { t } = useI18n();
   const [personas, setPersonas] = useState<SourdoughPersona[]>(() => {
-    if (typeof window === 'undefined') return [createDefaultPersona()];
+    if (typeof window === 'undefined') return [createDefaultPersona(t('myStarter'))];
     try {
-      return parsePersonas(localStorage.getItem(PERSONAS_KEY)) ?? [createDefaultPersona()];
+      return parsePersonas(localStorage.getItem(PERSONAS_KEY)) ?? [createDefaultPersona(t('myStarter'))];
     } catch {
-      return [createDefaultPersona()];
+      return [createDefaultPersona(t('myStarter'))];
     }
   });
 

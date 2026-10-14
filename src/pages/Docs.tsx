@@ -116,7 +116,7 @@ export default function Docs() {
       </header>
       <article className="container px-4 py-8 prose prose-neutral dark:prose-invert max-w-3xl prose-headings:font-display prose-table:text-sm prose-th:text-left prose-code:before:content-none prose-code:after:content-none">
         {markdown === undefined
-          ? <div className="h-40 animate-pulse rounded-md bg-muted" aria-label="Loading" />
+          ? <div className="h-40 animate-pulse rounded-md bg-muted" aria-label={t('loading')} />
           : <ReactMarkdown remarkPlugins={[remarkGfm]} components={components}>{markdown}</ReactMarkdown>}
       </article>
     </main>
