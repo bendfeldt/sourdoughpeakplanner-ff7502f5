@@ -163,7 +163,7 @@ export function AppMenu() {
                 </li>
               ))}
             </ul>
-            <Button variant="outline" size="sm" className="w-full" onClick={() => addPersona(`Starter ${personas.length + 1}`)}>
+            <Button variant="outline" size="sm" className="w-full" onClick={() => addPersona(`${t('starter')} ${personas.length + 1}`)}>
               <Plus className="h-4 w-4 mr-1" />
               {t('addStarter')}
             </Button>

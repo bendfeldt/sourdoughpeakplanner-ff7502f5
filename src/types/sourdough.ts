@@ -30,21 +30,17 @@ export type SugarType =
   | 'maple-syrup';
 
 export interface SugarInfo {
-  name: string;
   // Share of the sweetener's weight that is sugar, and that is water
   sugarFraction: number;
   waterFraction: number;
-  description: string;
 }
 
 // 'target-window' was replaced by 'weights'; migratePersonas() moves old starters over
 export type InputMode = 'basic' | 'weights' | 'total-sourdough';
 
 export interface FlourInfo {
-  name: string;
   baseProtein: number;
   fermentationModifier: number;
-  description: string;
 }
 
 export interface FlourBlendItem {
@@ -104,11 +100,9 @@ export interface CalculationInput {
 }
 
 export interface FermentationPhase {
-  name: string;
   nameKey: TranslationKey;
   startTime: Date;
   endTime: Date;
-  description: string;
   descriptionKey: TranslationKey;
 }
 

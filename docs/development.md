@@ -109,7 +109,7 @@ gitGraph
 ### Add a flour type
 
 1. Add the key to `FlourType` in [`src/types/sourdough.ts`](../src/types/sourdough.ts), for example `'rye-white'`.
-2. Add an entry to `FLOUR_DATA` in [`src/lib/sourdough-calculator.ts`](../src/lib/sourdough-calculator.ts) with `name`, `baseProtein`, `fermentationModifier` and `description`. Choose the modifier by how much whole grain the flour contains; compare with the [flour table](fermentation-model.md#flour).
+2. Add an entry to `FLOUR_DATA` in [`src/lib/sourdough-calculator.ts`](../src/lib/sourdough-calculator.ts) with `baseProtein` and `fermentationModifier`. Choose the modifier by how much whole grain the flour contains; compare with the [flour table](fermentation-model.md#flour).
 3. Add the name (`'rye-white'`) and description (`'rye-white-desc'`) to **both** `en` and `da` in [`src/lib/i18n.tsx`](../src/lib/i18n.tsx).
 4. Add the row to the flour table in [`docs/fermentation-model.md`](fermentation-model.md#flour).
 
@@ -118,8 +118,8 @@ The flour picker lists every key in `FLOUR_DATA` automatically.
 ### Add a sweetener
 
 1. Add the key to `SugarType` in [`src/types/sourdough.ts`](../src/types/sourdough.ts).
-2. Add an entry to `SUGAR_DATA` with `sugarFraction` and `waterFraction` (shares of the sweetener's weight; look up the composition) and a `description`.
-3. Add the name to both languages in `i18n.tsx`.
+2. Add an entry to `SUGAR_DATA` with `sugarFraction` and `waterFraction` (shares of the sweetener's weight; look up the composition).
+3. Add the name (`'<key>'`) and description (`'<key>-desc'`) to both languages in `i18n.tsx`.
 4. Add the row to the sweetener table in [`docs/fermentation-model.md`](fermentation-model.md#sugar).
 
 ### Add or change a text

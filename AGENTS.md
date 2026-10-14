@@ -71,7 +71,7 @@ Read `docs/fermentation-model.md` before changing it.
 ### Text and UI
 
 - Make date strings with `format(date, 'yyyy-MM-dd')` from `date-fns`, never `toISOString()` (UTC: wrong day after midnight in Denmark).
-- Every visible string goes in `src/lib/i18n.tsx`, in **both** `en` and `da`, and is read with `t('key')`. Never cast keys with `as any`; `t()` is typed so typos fail the type check. Flours and sugars need `'<key>'` and flours also `'<key>-desc'`.
+- Every visible string goes in `src/lib/i18n.tsx`, in **both** `en` and `da`, and is read with `t('key')`. Never cast keys with `as any`; `t()` is typed so typos fail the type check. Flours and sugars each need `'<key>'` and `'<key>-desc'`.
 - Use React Router `<Link>` for internal links, never `<a href="/">` (breaks on GitHub Pages).
 - Import routing from `react-router` (not `react-router-dom`).
 - Keep `HashRouter` and `base: "./"` in `vite.config.ts`. The deploy workflow refuses branches without `HashRouter`.

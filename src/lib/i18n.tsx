@@ -15,7 +15,6 @@ export const translations = {
     percentage: 'Percentage',
     protein: 'Protein',
     flourPercentageWarning: 'Flour percentages should total 100%',
-    blendedProtein: 'Blended protein',
     
     // Flour types
     'all-purpose': 'All-Purpose',
@@ -45,7 +44,6 @@ export const translations = {
     
     // Feeding ratio
     feedingRatio: 'Feeding Ratio',
-    feedingRatioDesc: 'Starter : Flour : Water (in grams)',
     starter: 'Starter',
     flour: 'Flour',
     water: 'Water',
@@ -61,32 +59,16 @@ export const translations = {
     
     // Old sourdough
     oldSourdough: 'Old Sourdough Amount',
-    oldSourdoughDesc: 'Amount of existing starter to use',
-    grams: 'grams',
     
     // Sweet sourdough
     sweetSourdough: 'Sweet Sourdough',
-    sweetSourdoughDesc: 'Add sugar for sweet bread',
-    enableSweetMode: 'Enable sweet mode',
-    powderedSugar: 'Sugar',
     sugarAmount: 'Sugar amount (% of flour)',
-    sweetFlour: 'Flour for sweet',
     
     // Keep screen on
     keepScreenOn: 'Keep Screen On',
     keepScreenOnDesc: 'Prevents screen from sleeping during feeding work',
-    screenOnActive: 'Screen will stay on',
-    screenOnNotSupported: 'Not supported on this device',
     
     // Dough method
-    doughMethod: 'Dough Method',
-    doughMethodDesc: 'Method for mixing dough',
-    direct: 'Direct',
-    directDesc: 'Mix all ingredients at once',
-    autolyse: 'Autolyse',
-    autolyseDesc: 'Rest flour and water before adding starter (+30 min)',
-    fermentolyse: 'Fermentolyse',
-    fermentolyseDesc: 'Rest flour, water, and starter before adding salt (+60 min)',
     
     // Calculate button
     calculateSchedule: 'Calculate Feeding Schedule',
@@ -103,28 +85,19 @@ export const translations = {
     flourBreakdown: 'Flour Breakdown',
     
     // Status
-    perfectTiming: 'Perfect timing!',
-    timingAdjustmentNeeded: 'Timing adjustment needed',
     
     // Tips
-    tips: 'Tips',
     suggestions: 'Suggestions',
     sugarPercentage: 'Sugar Percentage',
     
     // Ready state
     readyToCalculate: 'Ready to Calculate',
-    configureSettings: 'Configure your starter settings on the left and click calculate to see your optimal feeding schedule.',
     
     // Language
-    language: 'Language',
     english: 'English',
     danish: 'Danish',
     
     // Suggestion messages
-    feedLaterOrHigherRatio: 'Consider feeding later or using a higher flour ratio to slow fermentation',
-    lowerTempToExtend: 'You could also lower the temperature to extend fermentation time',
-    feedEarlierOrLowerRatio: 'Consider feeding earlier or using a lower flour ratio to speed up fermentation',
-    increaseTempToSpeed: 'Increasing ambient temperature will also speed things up',
     coolerSlowerFlavourful: 'Cooler temperatures will result in slower but more flavourful fermentation',
     warmerFasterLessComplex: 'Warmer temperatures may lead to faster but less complex flavour development',
     sweetSlowerFermentation: 'At this much sugar the starter is slowed by osmotic stress - the peak time already includes it',
@@ -133,8 +106,6 @@ export const translations = {
     noPeakExpected: 'No normal peak expected within 48 hours',
     tooHotForYeast: 'Above 35°C the yeast struggles and the starter slows down again - aim for 24-31°C',
     insufficientStarterForTargetTotal: 'Not enough starter available for the target total; using all available starter instead',
-    autolyseGlutenDevelopment: 'Autolyse improves gluten development and extensibility',
-    fermentolyseEnhancedFlavour: 'Fermentolyse adds extra flavour complexity from early fermentation',
     
     // Fermentation phases
     fermentationTimeline: 'Fermentation Timeline',
@@ -151,12 +122,10 @@ export const translations = {
     recommendedRatio: 'Recommended Ratio',
     
     // Reset
-    resetSettings: 'Reset to defaults',
     
     // Multi-starter & timer
     allStarters: 'All Starters',
     ratio: 'Ratio',
-    peakTimer: 'Peak Timer',
     untilPeak: 'until peak',
     sincePeak: 'since peak',
     atPeak: 'At Peak',
@@ -192,8 +161,6 @@ export const translations = {
     flourTypesDesc: 'Different flours ferment at different rates. Whole grain and rye flours ferment faster due to higher enzyme activity. Refined flours like bread flour ferment more slowly.',
     temperatureTitle: 'Temperature Effects',
     temperatureDesc: 'Warmer temperatures speed up fermentation up to about 30-31°C, where the starter is fastest. Below that, every 8°C cooler roughly doubles the time, and the cold slows it even more below about 15°C. Above 35°C the yeast struggles, and from about 37°C the starter will not peak normally. Cooler temperatures develop more complex flavours.',
-    ratioTitle: 'Feeding Ratios',
-    ratioDesc: 'Higher ratios (more flour relative to starter) extend fermentation time. A 1:5:5 ratio takes much longer than 1:1:1. The calculator uses this to hit your target times.',
     tipsTitle: 'Pro Tips',
     tip1: 'Always use the same flour in your starter that you use in your bread for consistent results.',
     tip2: 'Your starter should roughly double or triple in size at peak.',
@@ -256,6 +223,30 @@ export const translations = {
     'brown-sugar': 'Brown Sugar',
     'honey': 'Honey',
     'maple-syrup': 'Maple Syrup',
+    normalStep1: 'Set your feeding ratio (e.g., 1:2:2)',
+    normalStep2: 'Choose your ambient temperature',
+    normalStep3: 'Set when you\'ll start feeding (use "Use Current Time" for now)',
+    normalStep4: 'Calculator shows when peak will occur',
+    totalStep1: 'Enter how much total sourdough you need',
+    totalStep2: 'Set when you\'ll start and when you need it ready',
+    totalStep3: 'Calculator determines starter, flour, and water amounts',
+    totalStep4: 'Automatically calculates optimal ratio',
+    historyStep1: 'After calculating, click "Log Feeding" to save the prediction',
+    historyStep2: 'When your starter actually peaks, click "Record actual peak"',
+    historyStep3: 'View your history at the bottom of the results section',
+    historyStep4: 'Track prediction accuracy to improve future estimates',
+    timerHours: 'hrs',
+    timerMinutes: 'min',
+    timerSeconds: 'sec',
+    proteinPlaceholder: 'e.g. 11,5',
+    myStarter: 'My Starter',
+    loading: 'Loading',
+    'white-sugar-desc': 'Pure sucrose',
+    'powdered-sugar-desc': 'Sucrose with about 3% starch',
+    'cane-sugar-desc': 'Lightly refined sucrose',
+    'brown-sugar-desc': 'Sucrose with a little molasses',
+    'honey-desc': 'About 17% water, which is taken off the feeding water',
+    'maple-syrup-desc': 'About 32% water, which is taken off the feeding water',
     
     // New flour types
     'tipo-0': 'Tipo 0',
@@ -287,7 +278,6 @@ export const translations = {
     percentage: 'Procent',
     protein: 'Protein',
     flourPercentageWarning: 'Melprocenter skal udgøre 100%',
-    blendedProtein: 'Blandet protein',
     
     // Flour types
     'all-purpose': 'Almindeligt Hvedemel',
@@ -317,7 +307,6 @@ export const translations = {
     
     // Feeding ratio
     feedingRatio: 'Fodringsforhold',
-    feedingRatioDesc: 'Surdej : Mel : Vand (i gram)',
     starter: 'Surdej',
     flour: 'Mel',
     water: 'Vand',
@@ -333,32 +322,16 @@ export const translations = {
     
     // Old sourdough
     oldSourdough: 'Gammel Surdejsmængde',
-    oldSourdoughDesc: 'Mængde af eksisterende surdej at bruge',
-    grams: 'gram',
     
     // Sweet sourdough
     sweetSourdough: 'Sød Surdej',
-    sweetSourdoughDesc: 'Tilføj sukker til sødt brød',
-    enableSweetMode: 'Aktiver sød tilstand',
-    powderedSugar: 'Sukker',
     sugarAmount: 'Sukkermængde (% af mel)',
-    sweetFlour: 'Mel til sødt',
     
     // Keep screen on
     keepScreenOn: 'Hold Skærm Tændt',
     keepScreenOnDesc: 'Forhindrer skærmen i at slukke under fodringsarbejde',
-    screenOnActive: 'Skærmen forbliver tændt',
-    screenOnNotSupported: 'Ikke understøttet på denne enhed',
     
     // Dough method
-    doughMethod: 'Dejmetode',
-    doughMethodDesc: 'Metode til blanding af dej',
-    direct: 'Direkte',
-    directDesc: 'Bland alle ingredienser på én gang',
-    autolyse: 'Autolyse',
-    autolyseDesc: 'Hvil mel og vand før tilsætning af surdej (+30 min)',
-    fermentolyse: 'Fermentolyse',
-    fermentolyseDesc: 'Hvil mel, vand og surdej før tilsætning af salt (+60 min)',
     
     // Calculate button
     calculateSchedule: 'Beregn Fodringsplan',
@@ -375,28 +348,19 @@ export const translations = {
     flourBreakdown: 'Meloversigt',
     
     // Status
-    perfectTiming: 'Perfekt timing!',
-    timingAdjustmentNeeded: 'Timing justering nødvendig',
     
     // Tips
-    tips: 'Tips',
     suggestions: 'Forslag',
     sugarPercentage: 'Sukkerprocent',
     
     // Ready state
     readyToCalculate: 'Klar til Beregning',
-    configureSettings: 'Konfigurer dine surdejs-indstillinger til venstre og klik beregn for at se din optimale fodringsplan.',
     
     // Language
-    language: 'Sprog',
     english: 'Engelsk',
     danish: 'Dansk',
     
     // Suggestion messages
-    feedLaterOrHigherRatio: 'Overvej at fodre senere eller bruge et højere melforhold for at bremse gæringen',
-    lowerTempToExtend: 'Du kan også sænke temperaturen for at forlænge gæringstiden',
-    feedEarlierOrLowerRatio: 'Overvej at fodre tidligere eller bruge et lavere melforhold for at fremskynde gæringen',
-    increaseTempToSpeed: 'Øgning af omgivelsestemperaturen vil også fremskynde tingene',
     coolerSlowerFlavourful: 'Køligere temperaturer giver langsommere men mere smagsfuld gæring',
     warmerFasterLessComplex: 'Varmere temperaturer kan føre til hurtigere men mindre kompleks smagsudvikling',
     sweetSlowerFermentation: 'Ved så meget sukker bremses surdejen af osmotisk stress - peak-tiden tager allerede højde for det',
@@ -405,8 +369,6 @@ export const translations = {
     noPeakExpected: 'Ingen normal peak forventet inden for 48 timer',
     tooHotForYeast: 'Over 35°C har gæren det svært, og surdejen bliver langsommere igen - sigt efter 24-31°C',
     insufficientStarterForTargetTotal: 'Ikke nok surdej til den ønskede total; bruger al tilgængelig surdej i stedet',
-    autolyseGlutenDevelopment: 'Autolyse forbedrer glutenudvikling og smidighed',
-    fermentolyseEnhancedFlavour: 'Fermentolyse tilføjer ekstra smagskompleksitet fra tidlig gæring',
     
     // Fermentation phases
     fermentationTimeline: 'Gærings-tidslinje',
@@ -423,12 +385,10 @@ export const translations = {
     recommendedRatio: 'Anbefalet Forhold',
     
     // Reset
-    resetSettings: 'Nulstil til standarder',
     
     // Multi-starter & timer
     allStarters: 'Alle Surdejer',
     ratio: 'Forhold',
-    peakTimer: 'Peak Timer',
     untilPeak: 'til peak',
     sincePeak: 'siden peak',
     atPeak: 'Ved Peak',
@@ -464,8 +424,6 @@ export const translations = {
     flourTypesDesc: 'Forskellige meltyper gærer med forskellige hastigheder. Fuldkorn og rugmel gærer hurtigere pga. højere enzymaktivitet. Raffinerede meltyper som brødmel gærer langsommere.',
     temperatureTitle: 'Temperatureffekter',
     temperatureDesc: 'Varmere temperaturer fremskynder gæringen op til omkring 30-31°C, hvor surdejen er hurtigst. Derunder fordobles tiden omtrent for hver 8°C koldere, og under ca. 15°C bremser kulden endnu mere. Over 35°C har gæren det svært, og fra ca. 37°C topper surdejen ikke normalt. Køligere temperaturer udvikler mere komplekse smage.',
-    ratioTitle: 'Fodringsforhold',
-    ratioDesc: 'Højere forhold (mere mel i forhold til surdej) forlænger gæringstiden. Et 1:5:5 forhold tager meget længere tid end 1:1:1. Beregneren bruger dette til at ramme dine måltider.',
     tipsTitle: 'Pro Tips',
     tip1: 'Brug altid det samme mel i din surdej som du bruger i dit brød for konsistente resultater.',
     tip2: 'Din surdej skal omtrent fordoble eller tredoble i størrelse ved peak.',
@@ -528,6 +486,30 @@ export const translations = {
     'brown-sugar': 'Brunt Sukker',
     'honey': 'Honning',
     'maple-syrup': 'Ahornsirup',
+    normalStep1: 'Sæt dit fodringsforhold (f.eks. 1:2:2)',
+    normalStep2: 'Vælg rumtemperaturen',
+    normalStep3: 'Sæt hvornår du fodrer (brug "Brug Nuværende Tid" for nu)',
+    normalStep4: 'Beregneren viser hvornår den topper',
+    totalStep1: 'Skriv hvor meget surdej du skal bruge i alt',
+    totalStep2: 'Sæt hvornår du starter, og hvornår den skal være klar',
+    totalStep3: 'Beregneren finder mængden af surdej, mel og vand',
+    totalStep4: 'Beregner automatisk det bedste forhold',
+    historyStep1: 'Klik "Log Fodring" efter beregning for at gemme forudsigelsen',
+    historyStep2: 'Når din surdej faktisk topper, klik "Registrer faktisk peak"',
+    historyStep3: 'Se din historik nederst i resultatafsnittet',
+    historyStep4: 'Følg hvor præcise forudsigelserne er, så de bliver bedre',
+    timerHours: 't',
+    timerMinutes: 'min',
+    timerSeconds: 'sek',
+    proteinPlaceholder: 'f.eks. 11,5',
+    myStarter: 'Min Surdej',
+    loading: 'Indlæser',
+    'white-sugar-desc': 'Rent sukker (saccharose)',
+    'powdered-sugar-desc': 'Saccharose med ca. 3 % stivelse',
+    'cane-sugar-desc': 'Let raffineret saccharose',
+    'brown-sugar-desc': 'Saccharose med lidt melasse',
+    'honey-desc': 'Ca. 17 % vand, som trækkes fra fodringsvandet',
+    'maple-syrup-desc': 'Ca. 32 % vand, som trækkes fra fodringsvandet',
     
     // New flour types
     'tipo-0': 'Tipo 0',

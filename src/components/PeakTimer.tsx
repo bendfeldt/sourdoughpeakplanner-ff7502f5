@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Timer, CheckCircle, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/lib/i18n';
 
 interface PeakTimerProps {
   peakTime: Date;
@@ -9,6 +10,7 @@ interface PeakTimerProps {
 }
 
 export function PeakTimer({ peakTime, starterName, compact = false }: PeakTimerProps) {
+  const { t } = useI18n();
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
@@ -88,18 +90,18 @@ export function PeakTimer({ peakTime, starterName, compact = false }: PeakTimerP
           <span className="font-medium text-sm">{starterName}</span>
         </div>
         {isAtPeak && (
-          <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-500/20 px-2 py-0.5 rounded-full">
-            AT PEAK
+          <span className="text-xs font-medium text-green-600 dark:text-green-400 bg-green-500/20 px-2 py-0.5 rounded-full uppercase">
+            {t('atPeak')}
           </span>
         )}
         {isPastPeak && (
-          <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full">
-            PAST PEAK
+          <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-red-500/20 px-2 py-0.5 rounded-full uppercase">
+            {t('pastPeak')}
           </span>
         )}
         {isNearPeak && (
-          <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400 bg-yellow-500/20 px-2 py-0.5 rounded-full">
-            ALMOST READY
+          <span className="text-xs font-medium text-yellow-600 dark:text-yellow-400 bg-yellow-500/20 px-2 py-0.5 rounded-full uppercase">
+            {t('almostReady')}
           </span>
         )}
       </div>
@@ -108,15 +110,15 @@ export function PeakTimer({ peakTime, starterName, compact = false }: PeakTimerP
         {timeRemaining.isPast && (
           <span className="text-xl text-muted-foreground">-</span>
         )}
-        {formatUnit(timeRemaining.hours, 'hrs')}
+        {formatUnit(timeRemaining.hours, t('timerHours'))}
         <span className="text-xl text-muted-foreground">:</span>
-        {formatUnit(timeRemaining.minutes, 'min')}
+        {formatUnit(timeRemaining.minutes, t('timerMinutes'))}
         <span className="text-xl text-muted-foreground">:</span>
-        {formatUnit(timeRemaining.seconds, 'sec')}
+        {formatUnit(timeRemaining.seconds, t('timerSeconds'))}
       </div>
       
       <p className="text-xs text-center text-muted-foreground mt-2">
-        {timeRemaining.isPast ? 'since peak' : 'until peak'}
+        {timeRemaining.isPast ? t('sincePeak') : t('untilPeak')}
       </p>
     </div>
   );
