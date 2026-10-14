@@ -31,7 +31,7 @@ Run `npm test`, the type check, `npm run lint` and `npm run build` before every 
 | Main screen: all inputs and results | `src/components/SourdoughCalculator.tsx` |
 | Saved starters ("personas") | `src/hooks/use-personas.ts` |
 | Logged feeds | `src/hooks/use-feeding-history.ts` |
-| Backup file, persistent storage request | `src/lib/saved-data.ts` |
+| Backup file, persistent storage request, migrating old starters (`migratePersonas`) | `src/lib/saved-data.ts` |
 | English and Danish texts | `src/lib/i18n.tsx` |
 | Routes, providers | `src/App.tsx` |
 | Fold-out menu (starters, docs) | `src/components/AppMenu.tsx` |
