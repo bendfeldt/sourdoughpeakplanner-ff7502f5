@@ -638,7 +638,7 @@ export function SourdoughCalculator() {
                     </div>
                   )}
                   <div className="space-y-3 pt-2">
-                    <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('feedingRatio')}</span><span className="font-medium">{formatRatio(result.recommendedRatio || feedingRatio, language)}</span></div>
+                    <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t(result.recommendedRatio ? 'recommendedRatio' : 'feedingRatio')}</span><span className="font-medium">{formatRatio(result.recommendedRatio || feedingRatio, language)}</span></div>
                     <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('timeToPeak')}</span><span className="font-medium">{result.exceedsMaxHours ? '> 48' : result.hoursToReachPeak.toFixed(1)} {t('hours')}</span></div>
                     <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('totalSourdough')}</span><span className="font-medium text-primary text-lg">{result.totalSourdoughAmount}g</span></div>
                   </div>
@@ -670,19 +670,6 @@ export function SourdoughCalculator() {
                   </Button>
                 </CardContent>
               </Card>
-
-              {result.recommendedRatio && (
-                <Card className="border-primary/30 bg-primary/5 shadow-xs">
-                  <CardHeader className="pb-3"><CardTitle className="flex items-center gap-2 text-lg font-display"><Scale className="h-5 w-5 text-primary" />{t('recommendedRatio')}</CardTitle><CardDescription>{t('recommendedRatioDesc')}</CardDescription></CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-3 gap-3 text-center">
-                      <div className="p-3 rounded-lg bg-background/50"><p className="text-xl font-bold text-primary">{result.recommendedRatio.starter}</p><p className="text-xs text-muted-foreground">{t('starter')}</p></div>
-                      <div className="p-3 rounded-lg bg-background/50"><p className="text-xl font-bold text-primary">{result.recommendedRatio.flour}</p><p className="text-xs text-muted-foreground">{t('flour')}</p></div>
-                      <div className="p-3 rounded-lg bg-background/50"><p className="text-xl font-bold text-primary">{result.recommendedRatio.water}</p><p className="text-xs text-muted-foreground">{t('water')}</p></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Fermentation Timeline */}
               {!result.exceedsMaxHours && <Card className="border-border/50 shadow-xs">

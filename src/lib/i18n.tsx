@@ -149,7 +149,6 @@ export const translations = {
     
     // Recommended ratio
     recommendedRatio: 'Recommended Ratio',
-    recommendedRatioDesc: 'Ratio that peaks at your desired time',
     
     // Reset
     resetSettings: 'Reset to defaults',
@@ -422,7 +421,6 @@ export const translations = {
     
     // Recommended ratio
     recommendedRatio: 'Anbefalet Forhold',
-    recommendedRatioDesc: 'Forhold der topper på dit ønskede tidspunkt',
     
     // Reset
     resetSettings: 'Nulstil til standarder',

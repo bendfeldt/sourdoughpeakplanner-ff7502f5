@@ -172,6 +172,6 @@ Each key has an English and a Danish text in [`src/lib/i18n.tsx`](../src/lib/i18
 ## In the UI
 
 - The **Calculate Feeding Schedule** button is disabled when the flour blend doesn't add up to 100 %.
-- The schedule card shows the **feeding ratio** the schedule uses, per part of starter (`formatRatio`): the baker's own ratio in Normal and Weights mode (13 g, 71 g, 47 g shows 1 : 5.46 : 3.62), the recommended one in Total Sourdough mode. Danish uses a decimal comma.
+- The schedule card shows the ratio the schedule uses in the same row in every mode, just above "Time to peak", per part of starter (`formatRatio`). In Normal and Weights mode it is the baker's own ratio, labelled **Feeding Ratio** (13 g, 71 g, 47 g shows 1 : 5.46 : 3.62). In Total Sourdough mode it is the solver's, labelled **Recommended Ratio**. Danish uses a decimal comma.
 - The results are calculated continuously; the button only shows them, and they then update live as inputs change. Switching to another starter hides them again.
 - **Log Feeding** saves the feed to the history, including the calibration factor used, so the baker can later record the real peak. See [Calibration](calibration.md).
