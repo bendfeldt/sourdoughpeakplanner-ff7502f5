@@ -55,37 +55,34 @@ export function FeedingRatioInput({
     }
   };
 
+  // Grams are applied while typing, so the ratio and the schedule follow at once
   const handleGramInputChange = (key: 'starter' | 'flour' | 'water', value: string) => {
-    setGramInputs(prev => ({ ...prev, [key]: value }));
-  };
-
-  const handleGramBlur = (key: 'starter' | 'flour' | 'water') => {
-    const value = gramInputs[key];
+    const next = { ...gramInputs, [key]: value };
+    setGramInputs(next);
+    if (value.endsWith('.') || value.endsWith(',')) return;
     const grams = parseDecimalInput(value);
-    if (isNaN(grams) || grams <= 0) {
-      // Reset to calculated value
-      setGramInputs(prev => ({ ...prev, [key]: gramAmounts[key].toString() }));
-      return;
-    }
+    if (isNaN(grams) || grams <= 0) return;
 
     if (key === 'starter') {
       // Keep the flour and water grams as typed; the ratio follows the new starter amount
       onOldSourdoughChange?.(grams, value);
       const typed = (k: 'flour' | 'water') => {
-        const g = parseDecimalInput(gramInputs[k]);
+        const g = parseDecimalInput(next[k]);
         return isNaN(g) || g <= 0 ? gramAmounts[k] : g;
       };
       const flour = ratioPartFromGrams(typed('flour'), grams, feedingRatio.starter);
       const water = ratioPartFromGrams(typed('water'), grams, feedingRatio.starter);
       onRatioChange({ ...feedingRatio, flour, water }, { ...ratioInputs, flour: flour.toFixed(2), water: water.toFixed(2) });
     } else {
-      // Calculate new ratio from gram amount
-      const ratioValue = ratioPartFromGrams(grams, oldSourdoughAmount, feedingRatio.starter);
-      const newRatio = { ...feedingRatio, [key]: ratioValue };
-      const newInputs = { ...ratioInputs, [key]: ratioValue.toFixed(2) };
-      onRatioChange(newRatio, newInputs);
-      setGramInputs(prev => ({ ...prev, [key]: grams.toString() }));
+      const part = ratioPartFromGrams(grams, oldSourdoughAmount, feedingRatio.starter);
+      onRatioChange({ ...feedingRatio, [key]: part }, { ...ratioInputs, [key]: part.toFixed(2) });
     }
+  };
+
+  // An empty or 0 entry goes back to the amount in use
+  const handleGramBlur = (key: 'starter' | 'flour' | 'water') => {
+    const grams = parseDecimalInput(gramInputs[key]);
+    if (isNaN(grams) || grams <= 0) setGramInputs(prev => ({ ...prev, [key]: gramAmounts[key].toString() }));
   };
 
   // Format ratio for display (round to 2 decimals when in grams view)

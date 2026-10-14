@@ -74,7 +74,7 @@ flowchart TB
 
 In words: the starter grams become `oldSourdoughAmount`, the flour and water grams become ratio parts relative to the starter, and the calculator then runs exactly as in Normal mode. Multiplying back gives the typed grams; the test "Weights mode: typed grams come back unchanged" checks this for 37/113/89 g.
 
-- The grams are applied when the baker leaves a field. An empty or 0 entry goes back to the previous amount.
+- The grams are applied while typing, so the ratio and the schedule follow each keystroke, and any ratio works (13 g, 71 g, 47 g is 1 : 5.46 : 3.62). A comma or a point can be used for decimals. An empty or 0 entry goes back to the amount in use when the baker leaves the field.
 - Changing the starter grams keeps the flour and water grams as typed; the ratio changes instead.
 - Switching between Normal and Weights keeps the same feed: 50 g at 1:5:5 in Normal shows as 50/250/250 g in Weights.
 - Honey or syrup: the water shown in the schedule is reduced by the water in the sweetener, as in the other modes.
