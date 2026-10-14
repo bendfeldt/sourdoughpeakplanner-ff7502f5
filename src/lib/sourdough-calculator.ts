@@ -304,11 +304,11 @@ export function calculateFermentationTime(input: CalculationInput, customRatio?:
 }
 
 /**
- * Ratio part for a flour or water amount typed in grams, so that feeding `starterGrams` of
- * starter at the new ratio gives exactly `grams`. Keeps the ratio's starter part as it is.
+ * The ratio for a feed typed in grams. Not rounded, so the schedule gives back exactly the grams
+ * typed. Keeps the ratio's starter part (2:1:1 stays 2 : …).
  */
-export function ratioPartFromGrams(grams: number, starterGrams: number, starterPart: number): number {
-  return Math.round((grams / starterGrams) * starterPart * 100) / 100;
+export function ratioFromGrams(starter: number, flour: number, water: number, starterPart = 1): FeedingRatio {
+  return { starter: starterPart, flour: (flour / starter) * starterPart, water: (water / starter) * starterPart };
 }
 
 /** A feeding ratio with the given flour per starter, keeping the user's hydration. */
