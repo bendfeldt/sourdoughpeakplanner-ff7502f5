@@ -1,6 +1,36 @@
 import { format } from 'date-fns';
-import type { SourdoughPersona } from '@/types/sourdough';
+import type { PersonaTimeSettings, SourdoughPersona } from '@/types/sourdough';
 import type { FeedingHistoryEntry } from '@/hooks/use-feeding-history';
+
+// Local date, not UTC (toISOString)
+const formatDateString = (date: Date): string => format(date, 'yyyy-MM-dd');
+const formatTimeString = (date: Date): string => date.toTimeString().slice(0, 5);
+
+export function createDefaultTimeSettings(): PersonaTimeSettings {
+  const now = new Date();
+  const peakTarget = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  
+  return {
+    inputMode: 'basic',
+    targetStartDate: formatDateString(now),
+    targetStartTime: formatTimeString(now),
+    targetPeakDate: formatDateString(peakTarget),
+    targetPeakTime: formatTimeString(peakTarget),
+    targetTotalSourdough: 200,
+    targetTotalSourdoughInput: '200',
+  };
+}
+
+/** Starters saved by an older version, brought up to date. */
+export function migratePersonas(list: SourdoughPersona[]): SourdoughPersona[] {
+  return list.map(p => {
+    // Starters saved before time settings existed get the defaults
+    if (!p.timeSettings) return { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' };
+    // Target Window mode was replaced by Weights mode; the grams come from the saved ratio and starter amount
+    if ((p.timeSettings.inputMode as string) === 'target-window') return { ...p, timeSettings: { ...p.timeSettings, inputMode: 'weights' } };
+    return p;
+  });
+}
 
 /**
  * Ask the browser to keep this site's storage, so it isn't cleared when the

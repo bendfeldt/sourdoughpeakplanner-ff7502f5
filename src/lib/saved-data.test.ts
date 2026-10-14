@@ -1,7 +1,7 @@
 // Run with: npm test
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { backupFileName, createBackup, parseBackup } from './saved-data.ts';
+import { backupFileName, createBackup, migratePersonas, parseBackup } from './saved-data.ts';
 
 const starter = {
   id: 's1', name: 'Rye Rita',
@@ -36,4 +36,21 @@ test('broken entries are dropped, a missing selection falls back to the first st
 
 test('backup file is named by the local date', () => {
   assert.equal(backupFileName(new Date(2026, 0, 2, 0, 30)), 'sourdough-backup-2026-01-02.json');
+});
+
+test('starters from older versions are brought up to date', () => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const old = (x: object) => ({ ...starter, ratioInputs: { starter: '1', flour: '5', water: '5' }, ...x }) as any;
+  const settings = { inputMode: 'target-window', targetStartDate: '2026-01-01', targetStartTime: '08:00', targetPeakDate: '2026-01-01', targetPeakTime: '16:00', targetTotalSourdough: 200, targetTotalSourdoughInput: '200' };
+  const current = old({ timeSettings: { ...settings, inputMode: 'basic' } });
+  const [wasWindow, noSettings, now] = migratePersonas([old({ timeSettings: settings }), old({}), current]);
+
+  // Target Window mode became Weights mode; everything else is kept, so the grams follow from ratio and starter amount
+  assert.deepEqual(wasWindow.timeSettings, { ...settings, inputMode: 'weights' });
+  assert.deepEqual(wasWindow.feedingRatio, starter.feedingRatio);
+  // Saved before time settings existed: defaults, and white sugar
+  assert.equal(noSettings.timeSettings.inputMode, 'basic');
+  assert.equal(noSettings.sugarType, 'white-sugar');
+  // Up-to-date starters are returned as they are
+  assert.equal(now, current);
 });

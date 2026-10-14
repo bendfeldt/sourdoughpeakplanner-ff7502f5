@@ -23,7 +23,7 @@ What that means in practice:
 Cookies wouldn't help: they are cleared by the same rules, hold only about 4 KB, and would be sent to the server with every request for nothing. The app instead does two things, the usual approach for apps without a server:
 
 1. **Asks the browser to keep the data.** On start, [`main.tsx`](../src/main.tsx) calls `keepSavedData()` in [`src/lib/saved-data.ts`](../src/lib/saved-data.ts), which calls `navigator.storage.persist()`. Storage the browser grants this to is not cleared when space runs low. Chrome and Safari decide without asking (usually yes for installed or often-used sites); Firefox may ask the user.
-2. **Lets the baker save a backup.** Menu (☰) → **Backup** → **Save backup** writes all starters, the selected starter and the feeding history to a `sourdough-backup-YYYY-MM-DD.json` file. On phones this opens the share sheet, so the file can go to Files, iCloud, Google Drive or mail. **Restore** reads such a file back and, after a confirmation, replaces the starters and feeds on this device. This is also how to move starters between Safari and the home-screen app, or to another device.
+2. **Lets the baker save a backup.** Menu (☰) → **Backup** → **Save backup** writes all starters, the selected starter and the feeding history to a `sourdough-backup-YYYY-MM-DD.json` file. On phones this opens the share sheet, so the file can go to Files, iCloud, Google Drive or mail. **Restore** reads such a file back and, after a confirmation, replaces the starters and feeds on this device. The calculator then reloads its form from the restored starter (`restoreCount` in `usePersonas`, used as the calculator's `key` in `Index.tsx`); without that, restoring on the same device kept the old values on screen and saved them back on the next edit. This is also how to move starters between Safari and the home-screen app, or to another device.
 
 The backup file looks like this:
 
@@ -185,7 +185,7 @@ Starters and history from older versions of the app are still in bakers' browser
 **Do:**
 - Add new fields as **optional** and give them a default where they are read (example: `calibrationFactor ?? 1`).
 - Add new keys to `FLOUR_DATA` or `SUGAR_DATA` instead of renaming old ones.
-- When a field must be filled in for old data, add a migration like the one at the end of `usePersonas` that adds `timeSettings` to starters that lack it.
+- When a field must be filled in for old data, add a step to `migratePersonas()` in [`saved-data.ts`](../src/lib/saved-data.ts), like the ones that add `timeSettings` to starters that lack it and move `'target-window'` to `'weights'`. It runs on every load and every restored backup; add a case to its test in `saved-data.test.ts`.
 
 **Don't:**
 - Rename or remove a `FlourType` or `SugarType` key. Saved starters would point to a missing entry and the calculation would crash.
