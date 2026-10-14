@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Scale } from 'lucide-react';
 import type { FeedingRatio } from '@/types/sourdough';
 import { useI18n } from '@/lib/i18n';
-import { parseDecimalInput, ratioPartFromGrams } from '@/lib/sourdough-calculator';
+import { parseDecimalInput, ratioFromGrams } from '@/lib/sourdough-calculator';
 
 interface FeedingRatioInputProps {
   feedingRatio: FeedingRatio;
@@ -55,7 +55,8 @@ export function FeedingRatioInput({
     }
   };
 
-  // Grams are applied while typing, so the ratio and the schedule follow at once
+  // Grams are applied while typing, so the ratio and the schedule follow at once.
+  // The other two fields keep the grams typed in them; the ratio follows.
   const handleGramInputChange = (key: 'starter' | 'flour' | 'water', value: string) => {
     const next = { ...gramInputs, [key]: value };
     setGramInputs(next);
@@ -63,20 +64,13 @@ export function FeedingRatioInput({
     const grams = parseDecimalInput(value);
     if (isNaN(grams) || grams <= 0) return;
 
-    if (key === 'starter') {
-      // Keep the flour and water grams as typed; the ratio follows the new starter amount
-      onOldSourdoughChange?.(grams, value);
-      const typed = (k: 'flour' | 'water') => {
-        const g = parseDecimalInput(next[k]);
-        return isNaN(g) || g <= 0 ? gramAmounts[k] : g;
-      };
-      const flour = ratioPartFromGrams(typed('flour'), grams, feedingRatio.starter);
-      const water = ratioPartFromGrams(typed('water'), grams, feedingRatio.starter);
-      onRatioChange({ ...feedingRatio, flour, water }, { ...ratioInputs, flour: flour.toFixed(2), water: water.toFixed(2) });
-    } else {
-      const part = ratioPartFromGrams(grams, oldSourdoughAmount, feedingRatio.starter);
-      onRatioChange({ ...feedingRatio, [key]: part }, { ...ratioInputs, [key]: part.toFixed(2) });
-    }
+    const typed = (k: 'starter' | 'flour' | 'water') => {
+      const g = parseDecimalInput(next[k]);
+      return isNaN(g) || g <= 0 ? gramAmounts[k] : g;
+    };
+    const ratio = ratioFromGrams(typed('starter'), typed('flour'), typed('water'), feedingRatio.starter);
+    if (key === 'starter') onOldSourdoughChange?.(grams, value);
+    onRatioChange(ratio, { ...ratioInputs, flour: ratio.flour.toFixed(2), water: ratio.water.toFixed(2) });
   };
 
   // An empty or 0 entry goes back to the amount in use

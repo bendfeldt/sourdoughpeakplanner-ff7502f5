@@ -55,7 +55,7 @@ Amounts: `flour = starter × (flour part ÷ starter part)`, and the same for wat
 For bakers who weigh the feed rather than think in ratios. The baker types the grams of starter, flour and water on the scale, and the app works out the ratio and the peak.
 
 **Example:** 37 g starter, 113 g flour, 89 g water, all-purpose, 24 °C, fed at 20:00.
-→ ratio **1 : 3.05 : 2.41** (79 % hydration), peak at **03:14** (7.3 h). The schedule shows 37 g, 113 g and 89 g again.
+→ ratio **1 : 3.05 : 2.41** (79 % hydration), peak at **03:15** (7.3 h). The schedule shows 37 g, 113 g and 89 g again.
 
 How it works: Weights mode is `FeedingRatioInput` with `showGrams`. Nothing new is stored. Typing grams sets the same two values Normal mode uses:
 
@@ -63,7 +63,7 @@ How it works: Weights mode is `FeedingRatioInput` with `showGrams`. Nothing new 
 flowchart TB
     typed["Grams typed:<br/>starter, flour, water"]
     starter["oldSourdoughAmount = starter grams"]
-    ratio["feedingRatio = 1 : flour ÷ starter : water ÷ starter<br/>(ratioPartFromGrams)"]
+    ratio["feedingRatio = 1 : flour ÷ starter : water ÷ starter<br/>(ratioFromGrams, not rounded)"]
     calc["calculateFeedingSchedule<br/>same path as Normal mode"]
     back["flour = starter × flour part<br/>gives back the typed grams"]
 
@@ -72,10 +72,10 @@ flowchart TB
     calc --> back
 ```
 
-In words: the starter grams become `oldSourdoughAmount`, the flour and water grams become ratio parts relative to the starter, and the calculator then runs exactly as in Normal mode. Multiplying back gives the typed grams; the test "Weights mode: typed grams come back unchanged" checks this for 37/113/89 g.
+In words: the starter grams become `oldSourdoughAmount`, the flour and water grams become ratio parts relative to the starter, and the calculator then runs exactly as in Normal mode. The ratio is not rounded, so multiplying back gives exactly the typed grams (a ratio rounded to two decimals turned 300/100/100 g into 300/99/99 g). The test "grams typed in Weights mode give back exactly those grams" checks this for five feeds, among them 300/100/100 g and 400/150/120 g. The ratio field in Normal mode shows two decimals.
 
 - The grams are applied while typing, so the ratio and the schedule follow each keystroke, and any ratio works (13 g, 71 g, 47 g is 1 : 5.46 : 3.62). A comma or a point can be used for decimals. An empty or 0 entry goes back to the amount in use when the baker leaves the field.
-- Changing the starter grams keeps the flour and water grams as typed; the ratio changes instead.
+- Typing in one field keeps the grams in the other two as typed; the ratio changes instead. This includes the starter field.
 - Switching between Normal and Weights keeps the same feed: 50 g at 1:5:5 in Normal shows as 50/250/250 g in Weights.
 - Honey or syrup: the water shown in the schedule is reduced by the water in the sweetener, as in the other modes.
 

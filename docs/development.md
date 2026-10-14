@@ -64,8 +64,8 @@ What is covered:
 | unreachable peak time | Total Sourdough mode warns instead of faking the peak |
 | old flour keys | saved starters with `spelt`, `kamut`, `einkorn` still calculate |
 | calibration | settles on the true factor; sweet and plain feeds kept apart |
-| grams view | a flour or water amount typed in grams is kept, whatever the starter part of the ratio |
-| Weights mode | 37/113/89 g come back unchanged; 50/50/50 g peaks like Normal mode at 1:1:1 |
+| Weights mode grams | typed grams come back exactly (also 300/100/100 g and 400/150/120 g), whatever the starter part of the ratio |
+| Weights mode | predicts from the feed; 50/50/50 g peaks like Normal mode at 1:1:1 |
 | ratio in the summary | `formatRatio` shows the ratio per part of starter with at most two decimals, comma in Danish |
 | backups (`saved-data.test.ts`) | a backup restores the same starters, selection and feeds; other files are refused; broken entries are dropped |
 | docs links (`docs.test.ts`) | every file in `docs/` is in the menu, and every link and `#section` inside the docs points to a real page and heading |

@@ -7,7 +7,7 @@ import {
   calculateRequiredRatio,
   calibrationFactorFor,
   formatRatio,
-  ratioPartFromGrams,
+  ratioFromGrams,
   sugarConcentration,
   sugarFactor,
   temperatureFactor,
@@ -153,19 +153,21 @@ test('feeds with sugar are calibrated separately from plain feeds', () => {
   close(calibrationFactorFor(history, 'p', true), 1.5, 0.001);
 });
 
-test('grams typed in the grams view give back the same grams, whatever the starter part', () => {
-  // 2:1:1 with 50 g starter is 25 g flour; typing 50 g must give a ratio that feeds 50 g
-  const flourPart = ratioPartFromGrams(50, 50, 2);
-  assert.equal(flourPart, 2);
-  assert.equal((50 / 2) * flourPart, 50);
-  assert.equal(ratioPartFromGrams(250, 50, 1), 5);
+test('grams typed in Weights mode give back exactly those grams', () => {
+  const schedule = (starter: number, flour: number, water: number, starterPart = 1) =>
+    calculateFeedingSchedule(input({ inputMode: 'weights', feedingRatio: ratioFromGrams(starter, flour, water, starterPart), oldSourdoughAmount: starter }));
+  for (const [starter, flour, water] of [[37, 113, 89], [13, 71, 47], [300, 100, 100], [400, 150, 120], [7, 100, 333]]) {
+    const r = schedule(starter, flour, water);
+    assert.deepEqual([r.starterAmount, r.flourAmount, r.waterAmount], [starter, flour, water], `${starter}/${flour}/${water}`);
+  }
+  // A starter saved as 2:1:1 keeps its starter part
+  assert.deepEqual(ratioFromGrams(50, 50, 25, 2), { starter: 2, flour: 2, water: 1 });
+  const r = schedule(50, 50, 25, 2);
+  assert.deepEqual([r.flourAmount, r.waterAmount], [50, 25]);
 });
 
-test('Weights mode: typed grams come back unchanged and give the same peak as the ratio', () => {
-  // 37 g starter, 113 g flour, 89 g water, as typed in Weights mode
-  const ratio = { starter: 1, flour: ratioPartFromGrams(113, 37, 1), water: ratioPartFromGrams(89, 37, 1) };
-  const weights = calculateFeedingSchedule(input({ inputMode: 'weights', feedingRatio: ratio, oldSourdoughAmount: 37 }));
-  assert.deepEqual([weights.starterAmount, weights.flourAmount, weights.waterAmount], [37, 113, 89]);
+test('Weights mode predicts from the feed; 50/50/50 g peaks like 1:1:1', () => {
+  const weights = calculateFeedingSchedule(input({ inputMode: 'weights', feedingRatio: ratioFromGrams(37, 113, 89), oldSourdoughAmount: 37 }));
   assert.equal(weights.recommendedRatio, null, 'Weights mode predicts from the feed, it does not aim at a time');
 
   // 50/50/50 g is the reference feed 1:1:1
@@ -177,7 +179,7 @@ test('Weights mode: typed grams come back unchanged and give the same peak as th
 
 test('the summary shows the ratio per part of starter', () => {
   assert.equal(formatRatio({ starter: 1, flour: 1, water: 1 }), '1 : 1 : 1');
-  assert.equal(formatRatio({ starter: 1, flour: ratioPartFromGrams(71, 13, 1), water: ratioPartFromGrams(47, 13, 1) }), '1 : 5.46 : 3.62');
+  assert.equal(formatRatio(ratioFromGrams(13, 71, 47)), '1 : 5.46 : 3.62');
   assert.equal(formatRatio({ starter: 2, flour: 5, water: 4.5 }), '1 : 2.5 : 2.25');
   assert.equal(formatRatio({ starter: 1, flour: 2.5, water: 1.75 }, 'da'), '1 : 2,5 : 1,75');
 });
