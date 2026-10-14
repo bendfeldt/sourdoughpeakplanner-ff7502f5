@@ -16,6 +16,7 @@ import {
   SUGAR_DATA,
   calculateFeedingSchedule, 
   formatDateTime,
+  formatRatio,
   formatTime,
   generateId,
   parseDecimalInput,
@@ -637,6 +638,7 @@ export function SourdoughCalculator() {
                     </div>
                   )}
                   <div className="space-y-3 pt-2">
+                    <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('feedingRatio')}</span><span className="font-medium">{formatRatio(result.recommendedRatio || feedingRatio, language)}</span></div>
                     <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('timeToPeak')}</span><span className="font-medium">{result.exceedsMaxHours ? '> 48' : result.hoursToReachPeak.toFixed(1)} {t('hours')}</span></div>
                     <div className="flex justify-between items-center py-2 border-b border-border/30"><span className="text-muted-foreground">{t('totalSourdough')}</span><span className="font-medium text-primary text-lg">{result.totalSourdoughAmount}g</span></div>
                   </div>

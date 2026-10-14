@@ -6,6 +6,7 @@ import {
   calculateFermentationTime,
   calculateRequiredRatio,
   calibrationFactorFor,
+  formatRatio,
   ratioPartFromGrams,
   sugarConcentration,
   sugarFactor,
@@ -172,4 +173,11 @@ test('Weights mode: typed grams come back unchanged and give the same peak as th
   const normal = calculateFeedingSchedule(input({ inputMode: 'basic', oldSourdoughAmount: 50 }));
   assert.equal(even.estimatedPeakTime.getTime(), normal.estimatedPeakTime.getTime());
   close(even.hoursToReachPeak, 3.5, 0.01);
+});
+
+test('the summary shows the ratio per part of starter', () => {
+  assert.equal(formatRatio({ starter: 1, flour: 1, water: 1 }), '1 : 1 : 1');
+  assert.equal(formatRatio({ starter: 1, flour: ratioPartFromGrams(71, 13, 1), water: ratioPartFromGrams(47, 13, 1) }), '1 : 5.46 : 3.62');
+  assert.equal(formatRatio({ starter: 2, flour: 5, water: 4.5 }), '1 : 2.5 : 2.25');
+  assert.equal(formatRatio({ starter: 1, flour: 2.5, water: 1.75 }, 'da'), '1 : 2,5 : 1,75');
 });

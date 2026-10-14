@@ -66,6 +66,7 @@ What is covered:
 | calibration | settles on the true factor; sweet and plain feeds kept apart |
 | grams view | a flour or water amount typed in grams is kept, whatever the starter part of the ratio |
 | Weights mode | 37/113/89 g come back unchanged; 50/50/50 g peaks like Normal mode at 1:1:1 |
+| ratio in the summary | `formatRatio` shows the ratio per part of starter with at most two decimals, comma in Danish |
 | backups (`saved-data.test.ts`) | a backup restores the same starters, selection and feeds; other files are refused; broken entries are dropped |
 | docs links (`docs.test.ts`) | every file in `docs/` is in the menu, and every link and `#section` inside the docs points to a real page and heading |
 

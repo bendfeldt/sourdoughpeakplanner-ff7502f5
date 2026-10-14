@@ -546,6 +546,13 @@ export function formatTime(date: Date): string {
   });
 }
 
+/** "1 : 5.46 : 3.62": the ratio per part of starter, at most two decimals (comma in Danish). */
+export function formatRatio(ratio: FeedingRatio, locale: string = 'en'): string {
+  const part = (x: number) => String(Math.round((x / ratio.starter) * 100) / 100);
+  const text = [ratio.starter, ratio.flour, ratio.water].map(part).join(' : ');
+  return locale === 'da' ? text.replace(/\./g, ',') : text;
+}
+
 export function formatDateTime(date: Date, locale: string = 'en-GB'): string {
   const today = new Date();
   const tomorrow = new Date(today);
