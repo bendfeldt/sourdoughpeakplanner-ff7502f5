@@ -304,11 +304,11 @@ export function calculateFermentationTime(input: CalculationInput, customRatio?:
 }
 
 /**
- * Ratio part for a flour or water amount typed in grams, so that feeding `starterGrams` of
- * starter at the new ratio gives exactly `grams`. Keeps the ratio's starter part as it is.
+ * The ratio for a feed typed in grams. Not rounded, so the schedule gives back exactly the grams
+ * typed. Keeps the ratio's starter part (2:1:1 stays 2 : …).
  */
-export function ratioPartFromGrams(grams: number, starterGrams: number, starterPart: number): number {
-  return Math.round((grams / starterGrams) * starterPart * 100) / 100;
+export function ratioFromGrams(starter: number, flour: number, water: number, starterPart = 1): FeedingRatio {
+  return { starter: starterPart, flour: (flour / starter) * starterPart, water: (water / starter) * starterPart };
 }
 
 /** A feeding ratio with the given flour per starter, keeping the user's hydration. */
@@ -412,12 +412,9 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
   const now = new Date();
   const feedingTime = input.targetStartTime ? new Date(input.targetStartTime) : now;
   const isTotalMode = input.inputMode === 'total-sourdough' && input.targetTotalSourdough > 0;
-  const isWindowMode = !isTotalMode && input.useTargetWindow && input.targetPeakStart && input.targetPeakEnd;
 
-  // Desired peak: the window's midpoint, or the single target time in total-sourdough mode.
-  const targetTime = isWindowMode
-    ? new Date((input.targetPeakStart!.getTime() + input.targetPeakEnd!.getTime()) / 2)
-    : isTotalMode ? input.targetPeakTime : null;
+  // Only Total Sourdough mode aims at a peak time; Normal and Weights predict from the feed as given.
+  const targetTime = isTotalMode ? input.targetPeakTime : null;
 
   let recommendedRatio: FeedingRatio | null = null;
   if (targetTime) {
@@ -468,7 +465,6 @@ export function calculateFeedingSchedule(input: CalculationInput): CalculationRe
   }));
 
   const achievability = checkTargetAchievability(input, feedingTime, targetTime);
-  if (isWindowMode && recommendedRatio) suggestions.push('adjustedRatioRecommendation');
 
   const exceedsMaxHours = rawHours > MAX_FERMENTATION_HOURS;
   if (exceedsMaxHours) suggestions.push('noPeakExpected');
@@ -548,6 +544,13 @@ export function formatTime(date: Date): string {
     minute: '2-digit',
     hour12: false 
   });
+}
+
+/** "1 : 5.46 : 3.62": the ratio per part of starter, at most two decimals (comma in Danish). */
+export function formatRatio(ratio: FeedingRatio, locale: string = 'en'): string {
+  const part = (x: number) => String(Math.round((x / ratio.starter) * 100) / 100);
+  const text = [ratio.starter, ratio.flour, ratio.water].map(part).join(' : ');
+  return locale === 'da' ? text.replace(/\./g, ',') : text;
 }
 
 export function formatDateTime(date: Date, locale: string = 'en-GB'): string {

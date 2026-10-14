@@ -61,10 +61,12 @@ What is covered:
 | stiff starter and sugar | same sugar slows a stiff starter more |
 | honey and maple syrup | their water is taken off the feeding water |
 | ratio solver | recommended ratio gives back the target time |
-| unreachable window | warns instead of faking the peak |
+| unreachable peak time | Total Sourdough mode warns instead of faking the peak |
 | old flour keys | saved starters with `spelt`, `kamut`, `einkorn` still calculate |
 | calibration | settles on the true factor; sweet and plain feeds kept apart |
-| grams view | a flour or water amount typed in grams is kept, whatever the starter part of the ratio |
+| Weights mode grams | typed grams come back exactly (also 300/100/100 g and 400/150/120 g), whatever the starter part of the ratio |
+| Weights mode | predicts from the feed; 50/50/50 g peaks like Normal mode at 1:1:1 |
+| ratio in the summary | `formatRatio` shows the ratio per part of starter with at most two decimals, comma in Danish |
 | backups (`saved-data.test.ts`) | a backup restores the same starters, selection and feeds; other files are refused; broken entries are dropped |
 | docs links (`docs.test.ts`) | every file in `docs/` is in the menu, and every link and `#section` inside the docs points to a real page and heading |
 
@@ -150,7 +152,8 @@ Links in the docs are written the GitHub way (`calibration.md#sugar`, `#tests`, 
 - Normal mode with 1:1:1 at 24 °C → peak 3.5 h after the start time.
 - Temperature at 40 °C → "No normal peak expected within 48 hours".
 - Sweet sourdough with honey → water is a little lower, and "+… min from sugar" appears.
-- Target Window 1 h away → red "Target time not achievable" box.
+- Weights mode with 37 g, 113 g, 89 g at 24 °C → ratio 1 : 3.05 : 2.41, peak 7.3 h after the start time.
+- Total Sourdough with the peak 1 h away → red "Target time not achievable" box.
 - Log a feed, record a later actual peak, and calculate again → the peak moves later.
 - Switch to Dansk and reload → still Danish, also on the guidance page.
 

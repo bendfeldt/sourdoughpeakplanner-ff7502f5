@@ -105,8 +105,6 @@ erDiagram
         string inputMode
         string targetStartDate
         string targetStartTime
-        string targetPeakStartDate
-        string targetPeakEndDate
         string targetPeakDate
         number targetTotalSourdough
     }
@@ -144,7 +142,9 @@ In the code a starter is called a **persona** (see [Glossary](glossary.md)). Typ
 
 `FlourBlendItem`: `{ id, flourType, percentage, proteinContent }`. `flourType` is a key in `FLOUR_DATA`. `proteinContent` is shown to the baker but [does not affect timing](fermentation-model.md#flour).
 
-`PersonaTimeSettings`: `inputMode` (`'basic' | 'target-window' | 'total-sourdough'`), and dates as `YYYY-MM-DD` and times as `HH:MM` strings: `targetStartDate/Time`, `targetPeakStartDate/Time`, `targetPeakEndDate/Time` (Target Window), `targetPeakDate/Time` (Total Sourdough), plus `targetTotalSourdough` (number) and `targetTotalSourdoughInput` (string).
+`PersonaTimeSettings`: `inputMode` (`'basic' | 'weights' | 'total-sourdough'`), and dates as `YYYY-MM-DD` and times as `HH:MM` strings: `targetStartDate/Time`, `targetPeakDate/Time` (Total Sourdough), plus `targetTotalSourdough` (number) and `targetTotalSourdoughInput` (string).
+
+Weights mode stores nothing of its own: the typed grams are saved as `oldSourdoughAmount` and `feedingRatio`. Starters saved before Weights mode may have `inputMode: 'target-window'` and four `targetPeakStart*`/`targetPeakEnd*` fields; `migratePersonas()` changes the mode to `'weights'` on load, and the old fields are ignored.
 
 A new starter (`createDefaultPersona`) is bread flour 100 %, 1:1:1, 24 °C, 50 g, not sweet, 5 % white sugar ready if switched on, Normal mode starting now.
 
