@@ -1,30 +1,11 @@
 import { useState, useEffect, useCallback, createContext, createElement, useContext, type ReactNode } from 'react';
-import { format } from 'date-fns';
-import type { SourdoughPersona, FlourBlendItem, FeedingRatio, PersonaTimeSettings } from '@/types/sourdough';
+import type { SourdoughPersona, FlourBlendItem, FeedingRatio } from '@/types/sourdough';
 import { FLOUR_DATA, generateId } from '@/lib/sourdough-calculator';
 import { useI18n } from '@/lib/i18n';
+import { createDefaultTimeSettings, migratePersonas } from '@/lib/saved-data';
 
 const PERSONAS_KEY = 'sourdough-personas';
 const ACTIVE_PERSONA_KEY = 'sourdough-active-persona';
-
-// Local date, not UTC (toISOString)
-const formatDateString = (date: Date): string => format(date, 'yyyy-MM-dd');
-const formatTimeString = (date: Date): string => date.toTimeString().slice(0, 5);
-
-export function createDefaultTimeSettings(): PersonaTimeSettings {
-  const now = new Date();
-  const peakTarget = new Date(now.getTime() + 8 * 60 * 60 * 1000);
-  
-  return {
-    inputMode: 'basic',
-    targetStartDate: formatDateString(now),
-    targetStartTime: formatTimeString(now),
-    targetPeakDate: formatDateString(peakTarget),
-    targetPeakTime: formatTimeString(peakTarget),
-    targetTotalSourdough: 200,
-    targetTotalSourdoughInput: '200',
-  };
-}
 
 export function createDefaultPersona(name: string): SourdoughPersona {
   const now = Date.now();
@@ -46,17 +27,6 @@ export function createDefaultPersona(name: string): SourdoughPersona {
     createdAt: now,
     updatedAt: now,
   };
-}
-
-/** Starters saved by an older version, brought up to date. */
-function migratePersonas(list: SourdoughPersona[]): SourdoughPersona[] {
-  return list.map(p => {
-    // Starters saved before time settings existed get the defaults
-    if (!p.timeSettings) return { ...p, timeSettings: createDefaultTimeSettings(), sugarType: p.sugarType || 'white-sugar' };
-    // Target Window mode was replaced by Weights mode; the grams come from the saved ratio and starter amount
-    if ((p.timeSettings.inputMode as string) === 'target-window') return { ...p, timeSettings: { ...p.timeSettings, inputMode: 'weights' } };
-    return p;
-  });
 }
 
 /** Saved starters, or null if there are none or they can't be read. */
@@ -188,9 +158,12 @@ function usePersonasState() {
 
 
   // Replace all starters with those from a backup
+  // Counts restores, so the calculator reloads its form even when the selected starter keeps its id
+  const [restoreCount, setRestoreCount] = useState(0);
   const restorePersonas = useCallback((list: SourdoughPersona[], activeId: string) => {
     setPersonas(migratePersonas(list));
     setActivePersonaId(activeId);
+    setRestoreCount(n => n + 1);
   }, []);
 
   return {
@@ -205,6 +178,7 @@ function usePersonasState() {
     autoSavePersona,
     duplicatePersona,
     restorePersonas,
+    restoreCount,
   };
 }
 

@@ -25,7 +25,8 @@ import {
 import type { FlourType, FlourBlendItem, FeedingRatio, SugarType, InputMode, PersonaTimeSettings } from '@/types/sourdough';
 import { useI18n, Language } from '@/lib/i18n';
 import { useTheme } from '@/hooks/use-theme';
-import { usePersonas, createDefaultTimeSettings } from '@/hooks/use-personas';
+import { usePersonas } from '@/hooks/use-personas';
+import { createDefaultTimeSettings } from '@/lib/saved-data';
 import { useWakeLock } from '@/hooks/use-wake-lock';
 import { useFeedingHistory } from '@/hooks/use-feeding-history';
 import { PeakTimer } from './PeakTimer';

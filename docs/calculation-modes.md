@@ -81,7 +81,7 @@ In words: the starter grams become `oldSourdoughAmount`, the flour and water gra
 
 ### What happened to Target Window mode
 
-Weights mode replaced Target Window mode (a window for the peak, from which the app recommended a ratio). Total Sourdough mode still aims at a peak time. Starters saved in Target Window mode open in Weights mode: `migratePersonas()` in [`use-personas.ts`](../src/hooks/use-personas.ts) changes the stored `'target-window'` to `'weights'`, and the grams come from the starter's saved ratio and starter amount. Restored backups go through the same function. The window times saved with those starters are ignored.
+Weights mode replaced Target Window mode (a window for the peak, from which the app recommended a ratio). Total Sourdough mode still aims at a peak time. Starters saved in Target Window mode open in Weights mode: `migratePersonas()` in [`saved-data.ts`](../src/lib/saved-data.ts) changes the stored `'target-window'` to `'weights'`, and the grams come from the starter's saved ratio and starter amount. Restored backups go through the same function. The window times saved with those starters are ignored.
 
 ## Total Sourdough mode
 
