@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Eye, EyeOff, Wheat } from 'lucide-react';
 import { PeakTimer } from './PeakTimer';
-import { calculateFeedingSchedule, calibrationFactorFor, FLOUR_DATA, type CalibrationEntry } from '@/lib/sourdough-calculator';
+import { calculateFeedingSchedule, calibrationFactorFor, type CalibrationEntry } from '@/lib/sourdough-calculator';
 import type { SourdoughPersona } from '@/types/sourdough';
 import { useI18n } from '@/lib/i18n';
 
@@ -94,7 +94,7 @@ export function StarterOverview({
                 <div className="flex items-center gap-2">
                   <span className="font-medium text-sm">{starter.name}</span>
                   <span className="text-xs text-muted-foreground">
-                    {FLOUR_DATA[starter.primaryFlourType]?.name || starter.primaryFlourType}
+                    {t(starter.primaryFlourType)}
                   </span>
                 </div>
                 <span className="text-xs text-muted-foreground">{starter.totalSourdoughAmount}g</span>

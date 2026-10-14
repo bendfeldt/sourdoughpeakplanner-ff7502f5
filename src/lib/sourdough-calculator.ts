@@ -50,118 +50,80 @@ export type {
 // Ordered by how much of the whole grain each flour contains (estimates).
 export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
   'all-purpose': {
-    name: 'All-Purpose',
     baseProtein: 10.5,
     fermentationModifier: 1.0,
-    description: 'Refined wheat flour, the reference for timing',
   },
   'bread-flour': {
-    name: 'Bread Flour',
     baseProtein: 12.5,
     fermentationModifier: 1.0,
-    description: 'Refined, high protein, excellent gluten structure',
   },
   'whole-wheat': {
-    name: 'Whole Wheat',
     baseProtein: 13.5,
     fermentationModifier: 0.65,
-    description: 'Whole grain: bran minerals and enzymes speed fermentation',
   },
   'rye': {
-    name: 'Rye',
     baseProtein: 9,
     fermentationModifier: 0.5,
-    description: 'Very active fermentation; rises less visibly than wheat',
   },
   'spelt': {
-    name: 'Spelt (white)',
     baseProtein: 12,
     fermentationModifier: 0.9,
-    description: 'Sifted spelt, close to white wheat in speed',
   },
   'spelt-whole': {
-    name: 'Whole Spelt',
     baseProtein: 13,
     fermentationModifier: 0.65,
-    description: 'Whole grain spelt, fast fermentation',
   },
   'oland-wheat': {
-    name: 'Øland Wheat',
     baseProtein: 11.5,
     fermentationModifier: 0.85,
-    description: 'Danish heritage wheat, usually stone-ground with some bran',
   },
   'danish-wheat': {
-    name: 'Danish Wheat',
     baseProtein: 11,
     fermentationModifier: 1.0,
-    description: 'Traditional refined Danish wheat flour',
   },
   'oat-flour': {
-    name: 'Oat Flour',
     baseProtein: 12,
     fermentationModifier: 0.8,
-    description: 'Whole grain oats, no gluten, adds moisture',
   },
   'fuldkornsmel': {
-    name: 'Fuldkornsmel',
     baseProtein: 12.5,
     fermentationModifier: 0.65,
-    description: 'Danish whole grain wheat, fast fermentation',
   },
   'manitoba': {
-    name: 'Manitoba',
     baseProtein: 14.5,
     fermentationModifier: 1.0,
-    description: 'Refined, very high protein Canadian wheat',
   },
   'tipo-0': {
-    name: 'Tipo 0',
     baseProtein: 11.5,
     fermentationModifier: 1.0,
-    description: 'Italian flour, medium protein, versatile',
   },
   'tipo-00': {
-    name: 'Tipo 00',
     baseProtein: 12.5,
     fermentationModifier: 1.05,
-    description: 'Most refined Italian flour, least bran',
   },
   'durum': {
-    name: 'Durum',
     baseProtein: 13.5,
     fermentationModifier: 1.0,
-    description: 'Hard wheat, high protein, golden colour',
   },
   'semolina': {
-    name: 'Semolina',
     baseProtein: 12.5,
     fermentationModifier: 1.0,
-    description: 'Coarse durum wheat, great for bread crust',
   },
   'kamut': {
-    name: 'Kamut (white)',
     baseProtein: 14.5,
     fermentationModifier: 0.95,
-    description: 'Sifted khorasan wheat, buttery flavour',
   },
   'kamut-whole': {
-    name: 'Whole Kamut',
     baseProtein: 15,
     fermentationModifier: 0.7,
-    description: 'Whole grain khorasan wheat, fast fermentation',
   },
   'einkorn': {
-    name: 'Einkorn (white)',
     baseProtein: 14,
     fermentationModifier: 0.9,
-    description: 'Sifted einkorn, nutty flavour, weak gluten',
   },
   'einkorn-whole': {
-    name: 'Whole Einkorn',
     baseProtein: 15,
     fermentationModifier: 0.65,
-    description: 'Whole grain einkorn, fast fermentation, weak gluten',
   },
 };
 
@@ -169,40 +131,28 @@ export const FLOUR_DATA: Record<FlourType, FlourInfo> = {
 // subtracted from the water you add so the starter keeps its hydration.
 export const SUGAR_DATA: Record<SugarType, SugarInfo> = {
   'white-sugar': {
-    name: 'White Sugar',
     sugarFraction: 1.0,
     waterFraction: 0,
-    description: 'Pure sucrose',
   },
   'powdered-sugar': {
-    name: 'Powdered Sugar',
     sugarFraction: 0.97,
     waterFraction: 0,
-    description: 'Sucrose with about 3% starch',
   },
   'cane-sugar': {
-    name: 'Cane Sugar',
     sugarFraction: 0.995,
     waterFraction: 0,
-    description: 'Lightly refined sucrose',
   },
   'brown-sugar': {
-    name: 'Brown Sugar',
     sugarFraction: 0.97,
     waterFraction: 0.02,
-    description: 'Sucrose with a little molasses',
   },
   'honey': {
-    name: 'Honey',
     sugarFraction: 0.82,
     waterFraction: 0.17,
-    description: 'About 17% water, which is taken off the feeding water',
   },
   'maple-syrup': {
-    name: 'Maple Syrup',
     sugarFraction: 0.67,
     waterFraction: 0.32,
-    description: 'About 32% water, which is taken off the feeding water',
   },
 };
 
@@ -374,35 +324,27 @@ function generateFermentationPhases(feedingTime: Date, peakMidpoint: Date): Ferm
 
   return [
     {
-      name: 'Lag Phase',
       nameKey: 'lagPhase',
       startTime: feedingTime,
       endTime: lagEnd,
-      description: 'Microbes adapting to fresh food',
       descriptionKey: 'lagPhaseDesc',
     },
     {
-      name: 'Rise Phase',
       nameKey: 'risePhase',
       startTime: lagEnd,
       endTime: riseEnd,
-      description: 'Active fermentation and CO2 production',
       descriptionKey: 'risePhaseDesc',
     },
     {
-      name: 'Peak Phase',
       nameKey: 'peakPhase',
       startTime: riseEnd,
       endTime: peakEnd,
-      description: 'Maximum activity - ideal for baking',
       descriptionKey: 'peakPhaseDesc',
     },
     {
-      name: 'Decline Phase',
       nameKey: 'declinePhase',
       startTime: peakEnd,
       endTime: declineEnd,
-      description: 'Activity decreasing - still usable',
       descriptionKey: 'declinePhaseDesc',
     },
   ];
